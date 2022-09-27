@@ -90,8 +90,18 @@ def get_cylinder_array (cur_path):
                     e = e+1
     return cylinder_array
 
+def get_dwi_array(cur_path):
+    # find path with trajectories
+    file_name = "cylinder_gamma_packing_test_DWI.txt"
+    traj_path = cur_path +"/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/"+ str(file_name)
+    # create array with trajectory values
+    signal = []
+    with open(traj_path) as f:
+        [signal.append(float(line)) for line in f.readlines()]
+    return np.array(signal)
 
-def main(Nmax, Cmax):
+
+def main(Nmax = 5, Cmax= 5, plot_dwi = True):
     # find current path
     cur_path = os.getcwd()
     # find number of time steps (T) and number of walkers (N)
@@ -107,20 +117,28 @@ def main(Nmax, Cmax):
             graph[n]._offsets3d = (pd.Series(data[0]), pd.Series(data[1]), pd.Series(data[2]))
         title.set_text('3D Test, time={}'.format(num))
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    fig1 = plt.figure(1)
+    ax = fig1.add_subplot(111, projection='3d')
     title = ax.set_title('3D Test')
 
     data=traj_array[0]
     graph = [ ax.scatter(pd.Series(data[n][0]), pd.Series(data[n][1]), pd.Series(data[n][2])) for n in range(Nmax) ]
 
-    ani = matplotlib.animation.FuncAnimation(fig, update_graph, T, 
+    ani = matplotlib.animation.FuncAnimation(fig1, update_graph, T, 
                                 interval=5, blit=False)
     
     for c in range(Cmax):
         cylinder = cylinder_array[c]
         Xc,Yc,Zc = data_for_cylinder(np.array([cylinder[0],cylinder[1],cylinder[2]]), np.array([cylinder[3],cylinder[4],cylinder[5]*0.1]), R = cylinder[6])
         ax.plot_surface(Xc, Yc, Zc)
-    plt.show()
+    
 
-main(0, 50)
+    if plot_dwi:
+        dwi_signal = get_dwi_array(cur_path)
+        fig2 = plt.figure(2)
+        x = np.linspace(0,len(dwi_signal)-1, len(dwi_signal))
+        plt.plot(x, dwi_signal)
+        plt.title('DWI Signal')
+
+    plt.show()
+main(Nmax= 5, Cmax=5)
