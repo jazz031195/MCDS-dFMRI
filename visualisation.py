@@ -143,3 +143,5 @@ def main(Nmax = 5, Cmax= 5, plot_dwi = True):
     plt.show()
 main(Nmax= 5, Cmax=5)
 
+print("perfect")
+
