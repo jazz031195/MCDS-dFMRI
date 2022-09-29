@@ -6,7 +6,7 @@
 using namespace std;
 using namespace Eigen;
 
-DynCylinderGammaDistribution::DynCylinderGammaDistribution(double dyn_perc, double activation_time, unsigned num_obstacles,double alpha, double beta,double icvf,Eigen::Vector3d min_limits,Eigen::Vector3d max_limits) : CylinderGammaDistribution(num_obstacles, alpha, beta, icvf, min_limits, max_limits){};
+DynCylinderGammaDistribution::DynCylinderGammaDistribution(double dyn_perc, double activation_time, unsigned num_obstacles,double alpha, double beta,double icvf,Eigen::Vector3d min_limits,Eigen::Vector3d max_limits,float min_radius) : CylinderGammaDistribution(num_obstacles, alpha, beta, icvf, min_limits, max_limits, min_radius){};
 
 
 void DynCylinderGammaDistribution::computeMinimalSize(std::vector<double> radiis, double icvf_,Eigen::Vector3d& l){

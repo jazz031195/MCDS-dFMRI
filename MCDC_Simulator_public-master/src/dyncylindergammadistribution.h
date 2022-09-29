@@ -44,7 +44,7 @@ public:
      *  \param scale scale factor for the values passed. Useful when reading a file.
      *  \brief Initialize everything.
      */
-    DynCylinderGammaDistribution(double dyn_perc, double activation_time, unsigned num_obstacles,double alpha, double beta,double icvf,Eigen::Vector3d min_limits,Eigen::Vector3d max_limits);
+    DynCylinderGammaDistribution(double dyn_perc, double activation_time, unsigned num_obstacles,double alpha, double beta,double icvf,Eigen::Vector3d min_limits,Eigen::Vector3d max_limits, float min_radius = 0.001);
 
     /*!
      *  \brief Samples and constructs a Gamma distribution
