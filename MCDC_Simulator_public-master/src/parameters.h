@@ -44,6 +44,7 @@ public:
     Eigen::Vector3d max_limits;                     /*!< voxel max limits (if any)                                                  */
 
     std::vector<std::string> cylinders_files;       /*!< file paths with a list of cilinders obstacles                              */
+    std::vector<std::string> dyn_cylinders_files;       /*!< file paths with a list of cilinders obstacles                              */
     std::vector<std::string> PLY_files;             /*!< file paths with PLY obstacle files                                         */
     std::vector<std::string> spheres_files;         /*!< file paths with spheres obstacle files                                     */
     std::vector<double> PLY_scales;                 /*!< Auxiliary vector to save PLY file scales                                   */
@@ -62,12 +63,14 @@ public:
     std::vector<unsigned> record_prop_times;        /*!< time indexes, used to save the mean propagator of the walkers at c. times  */
 
     bool   hex_cyl_packing;                         /*!< flag, true if an haxagonal packing should be used                          */
+    bool   hex_dyn_cyl_packing;                         /*!< flag, true if an haxagonal packing should be used                          */
     bool   hex_sphere_packing;                      /*!< flag, true if an haxagonal packing OF SPHERES should be used               */
     double hex_packing_radius;                      /*!< float, constant radius for the cylinders                                   */
     double hex_packing_separation;                  /*!< float, separation distance betwen cylinders (separation > 2*radius)        */
     double hex_packing_icvf;                        /*!< float, ICVF computed or passed as parameter                                */
 
     bool        gamma_cyl_packing;                  /*!< flag, true if a gamma distribution of cylinders will be initialized        */
+    bool        gamma_dyn_cyl_packing;                  /*!< flag, true if a gamma distribution of cylinders will be initialized        */
     bool        gamma_sph_packing;                  /*!< flag, true if a gamma distribution of  SPHERES will be initialized         */
     bool        gamma_output_conf;
     double      gamma_packing_alpha;

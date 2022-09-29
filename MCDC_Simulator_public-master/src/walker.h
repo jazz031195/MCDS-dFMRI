@@ -58,6 +58,8 @@ public:
 
     ObstacleCollisionSphere cylinders_collision_sphere;             /*!< Collision sphere for collition against cylidners                       */
 
+    ObstacleCollisionSphere dyn_cylinders_collision_sphere;         /*!< Collision sphere for collition against dynamic cylidners               */
+
     ObstacleCollisionSphere spheres_collision_sphere;               /*!< Collision sphere for collition against cylidners                       */
 
     PLYCollisionSphere ply_collision_sphere;                        /*!< Collision sphere for collition against PLY meshes                      */

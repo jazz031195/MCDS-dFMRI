@@ -4,6 +4,7 @@
 #include "constants.h"
 #include "simerrno.h"
 #include "cylindergammadistribution.h"
+#include "dyncylindergammadistribution.h"
 #include "spheregammadistribution.h"
 
 //* Auxiliare method to split words in a line using the spaces*//
@@ -174,6 +175,7 @@ void ParallelMCSimulation::initializeUnitSimulations()
         MCSimulation* simulation_ = new MCSimulation(params_temp);
         simulation_->plyObstacles_list = &this->plyObstacles_list;
         simulation_->cylinders_list = &this->cylinders_list;
+        simulation_->dyn_cylinders_list = &this->dyn_cylinders_list;
         simulation_->sphere_list = &this->spheres_list;
         simulation_->dynamicsEngine->print_expected_time = 0;
         simulations.push_back(simulation_);
@@ -194,6 +196,7 @@ void ParallelMCSimulation::initializeUnitSimulations()
     //simulation_->dynamicsEngine->print_expected_time = 0;
     simulation_->plyObstacles_list = &this->plyObstacles_list;
     simulation_->cylinders_list = &this->cylinders_list;
+    simulation_->dyn_cylinders_list = &this->dyn_cylinders_list;
     simulation_->sphere_list    = &this->spheres_list;
     simulations.push_back(simulation_);
 
@@ -695,6 +698,53 @@ void ParallelMCSimulation::addObstaclesFromFiles()
         }
     }
 
+    for(unsigned i = 0; i < params.dyn_cylinders_files.size(); i++){
+
+        bool z_flag = false;
+        std::ifstream in(params.dyn_cylinders_files[i]);
+
+        if(!in){
+            //std::cout << "\033[1;37m[INFO]\033[0m Sim: " << count << " " << "[ERROR] Unable to open:" << params.cylinders_files[i] << std::endl;
+            return;
+        }
+
+        bool first=true;
+        for( std::string line; getline( in, line ); )
+        {
+            if(first) {first-=1;continue;}
+
+            std::vector<std::string> jkr = split(line,' ');
+            if (jkr.size() != 7){
+                z_flag = true;
+                //std::cout << "\033[1;33m[Warning]\033[0m Cylinder orientation was set towards the Z direction by default" << std::endl;
+            }
+            break;
+        }
+        in.close();
+
+        in.open(params.dyn_cylinders_files[i]);
+
+        if(z_flag){
+            double x,y,z,r;
+            double scale;
+            in >> scale;
+            while (in >> x >> y >> z >> r)
+            {
+                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,scale));
+            }
+            in.close();
+        }
+        else{
+            double x,y,z,ox,oy,oz,r;
+            double scale;
+            in >> scale;
+            while (in >> x >> y >> z >> ox >> oy >> oz >> r)
+            {
+                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,scale));
+            }
+            in.close();
+        }
+    }
     for(unsigned i = 0; i < params.spheres_files.size(); i++){
         std::ifstream in(params.spheres_files[i]);
         if(!in){

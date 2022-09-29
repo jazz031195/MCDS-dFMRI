@@ -13,6 +13,7 @@ MCSimulation::MCSimulation()
     dataSynth = nullptr;
     sphere_list = nullptr;
     cylinders_list = nullptr;
+    dyn_cylinders_list = nullptr;
     id = count;
     count++;
 }
@@ -25,6 +26,7 @@ MCSimulation::MCSimulation(std::string config_file)
     dataSynth      = nullptr;
     sphere_list    = nullptr;
     cylinders_list = nullptr;
+    dyn_cylinders_list = nullptr;
 
     params.readSchemeFile(config_file);
     dynamicsEngine = new DynamicsSimulation(params);
@@ -59,6 +61,7 @@ MCSimulation::MCSimulation(Parameters& params_)
     dataSynth      = nullptr;
     sphere_list    = nullptr;
     cylinders_list = nullptr;
+    dyn_cylinders_list = nullptr;
 
 
     params = params_;
@@ -134,6 +137,7 @@ void MCSimulation::iniObstacles()
 void MCSimulation::addObstacles()
 {
     this->dynamicsEngine->cylinders_list = this->cylinders_list;
+    this->dynamicsEngine->dyn_cylinders_list = this->dyn_cylinders_list;
     this->dynamicsEngine->spheres_list   = this->sphere_list;
 }
 
@@ -267,6 +271,18 @@ bool cylinderIsCloseBoundery(Cylinder& cyl, Eigen::Vector3d min_limits,Eigen::Ve
     //3 dimensional vector
     for (int i = 0 ; i < 3; i++)
         if( (cyl.P[i] - cyl.radius - gap < min_limits[i]) || (cyl.P[i] + cyl.radius + gap  > max_limits[i]) )
+            return true;
+
+    return false;
+}
+
+bool dyncylinderIsCloseBoundery(Dynamic_Cylinder& cyl, Eigen::Vector3d min_limits,Eigen::Vector3d max_limits){
+
+    //gap to the boundary
+    double gap = 1e-6;
+    //3 dimensional vector
+    for (int i = 0 ; i < 3; i++)
+        if( (cyl.P[i] - cyl.next_radius - gap < min_limits[i]) || (cyl.P[i] + cyl.next_radius + gap  > max_limits[i]) )
             return true;
 
     return false;
