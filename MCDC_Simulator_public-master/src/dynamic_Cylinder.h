@@ -28,7 +28,7 @@ public:
     ~Dynamic_Cylinder();
 
 
-    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_,double curr_rad, double next_rad);
+    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_,double curr_rad, double next_rad, double scale =1);
 
     
     Dynamic_Cylinder(Dynamic_Cylinder const &dyn_cyl);

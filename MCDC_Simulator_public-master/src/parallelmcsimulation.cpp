@@ -730,7 +730,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
             in >> scale;
             while (in >> x >> y >> z >> r)
             {
-                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,scale));
+                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,r,scale));
             }
             in.close();
         }
@@ -740,7 +740,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
             in >> scale;
             while (in >> x >> y >> z >> ox >> oy >> oz >> r)
             {
-                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,scale));
+                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,r,scale));
             }
             in.close();
         }
