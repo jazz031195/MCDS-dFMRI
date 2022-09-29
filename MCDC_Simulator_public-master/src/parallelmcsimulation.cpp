@@ -800,6 +800,31 @@ void ParallelMCSimulation::addObstacleConfigurations()
         pair<Eigen::Vector3d,Eigen::Vector3d> voxel_(Eigen::Vector3d(0,0,0),Eigen::Vector3d(sep,2.0*h,2.0*h));
         params.voxels_list.push_back(voxel_);
     }
+    if(params.hex_dyn_cyl_packing){
+
+        double rad = params.hex_packing_radius,sep = params.hex_packing_separation;
+
+        // h = sqrt(3)/2 * sep
+        double h =0.8660254037844386*sep;
+
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,0,0),Eigen::Vector3d(0,0,1.0),rad, rad));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,0,0),Eigen::Vector3d(sep,0,1.0),rad, rad));
+
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,2.0*h,0),Eigen::Vector3d(0,2.0*h,1.0),rad, rad));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,2.0*h,0),Eigen::Vector3d(sep,2.0*h,1.0),rad, rad));
+
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0.5*sep,h,0),Eigen::Vector3d(0.5*sep,h,1.0),rad, rad));
+
+        // To avoid problems with the boundaries
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(-0.5*sep,h,0),Eigen::Vector3d(-0.5*sep,h,1.0),rad, rad));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(1.5*sep,h,0),Eigen::Vector3d(1.5*sep,h,1.0),rad, rad));
+
+        if(params.voxels_list.size()>0)
+            params.voxels_list.clear();
+
+        pair<Eigen::Vector3d,Eigen::Vector3d> voxel_(Eigen::Vector3d(0,0,0),Eigen::Vector3d(sep,2.0*h,2.0*h));
+        params.voxels_list.push_back(voxel_);
+    }
 
     if(params.hex_sphere_packing){
 
@@ -872,6 +897,46 @@ void ParallelMCSimulation::addObstacleConfigurations()
         gamma_dist.printSubstrate(out);
 
         this->cylinders_list = gamma_dist.cylinders;
+
+        //params.cylinders_files.push_back(file);
+
+        out.close();
+
+        SimErrno::info("Done.\n",cout);
+    }
+
+    if(params.gamma_dyn_cyl_packing == true){
+
+        string message = "Initialializing Gamma distribution (" + std::to_string(params.gamma_packing_alpha) + ","
+                + std::to_string(params.gamma_packing_beta) + ").\n";
+        SimErrno::info(message,cout);
+
+        DynCylinderGammaDistribution gamma_dist(params.dyn_perc, params.activation_time, params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
+                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii);
+
+        gamma_dist.displayGammaDistribution();
+
+        gamma_dist.createGammaSubstrate();
+
+        params.max_limits = gamma_dist.max_limits;
+        params.min_limits = gamma_dist.min_limits;
+
+        if(params.voxels_list.size()<=0){
+            pair<Eigen::Vector3d,Eigen::Vector3d> voxel_(params.min_limits,params.max_limits);
+            params.voxels_list.push_back(voxel_);
+        }
+        else{
+            params.voxels_list[0].first =  params.min_limits;
+            params.voxels_list[0].second = params.max_limits;
+        }
+
+        string file = params.output_base_name + "_gamma_distributed_dyn_cylinder_list.txt";
+
+        ofstream out(file);
+
+        gamma_dist.printSubstrate(params.num_steps, out);
+
+        this->dyn_cylinders_list = gamma_dist.dyn_cylinders;
 
         //params.cylinders_files.push_back(file);
 
