@@ -87,9 +87,14 @@ bool SimErrno::checkSimulationParameters(Parameters &params)
         checkCylindersListFile(params);
         info("Done...",cout);
     }
-    if(params.cylinders_files.size()>0){
+    if(params.dyn_cylinders_files.size()>0){
+        info("Checking Dynamic Cylinder list format...",cout);
+        checkDynCylindersListFile(params);
+        info("Done...",cout);
+    }
+    if(params.spheres_files.size()>0){
         info("Checking Sphere list format...",cout);
-        checkCylindersListFile(params);
+        checkSphereListFile(params);
         info("Done...",cout);
     }
 
@@ -133,6 +138,39 @@ bool SimErrno::checkSimulationParameters(Parameters &params)
 
         if(params.hex_packing_separation - 2.0*params.hex_packing_radius <= 1e-6){
             warning("Cylinder separation is too close (barrier collision): " + to_string(params.hex_packing_separation) ,cout);
+        }
+
+    }
+    if(params.hex_dyn_cyl_packing == true){
+        if(params.hex_packing_radius<= 0){
+            error( "Dynamic Cylinder radius incoherent: " + to_string(params.hex_packing_radius) ,cout);
+            assert(0);
+            return true;
+        }
+
+        if(params.hex_packing_icvf > 0.90){
+            error( "Max achievable ICVF is 0.9 ",cout);
+            assert(0);
+            return true;
+        }
+
+        if(params.hex_packing_icvf <= 0.0){
+            error( "ICVF must be greater than 0.0 ",cout);
+            assert(0);
+            return true;
+        }else{
+            params.hex_packing_separation = sqrt( (2*M_PI*params.hex_packing_radius*params.hex_packing_radius)/(sqrt(3)*params.hex_packing_icvf));
+        }
+
+
+        if(params.hex_packing_separation - 2.0*params.hex_packing_radius < 0.0){
+            error( "Dynamic Cylinder separation can't be less that twice the radius (or epsilon close): " + to_string(params.hex_packing_separation) ,cout);
+            assert(0);
+            return true;
+        }
+
+        if(params.hex_packing_separation - 2.0*params.hex_packing_radius <= 1e-6){
+            warning("Dynamic Cylinder separation is too close (barrier collision): " + to_string(params.hex_packing_separation) ,cout);
         }
 
     }
@@ -567,12 +605,112 @@ bool SimErrno::checkCylindersListFile(Parameters &params)
 
     return true;
 }
+bool SimErrno::checkDynCylindersListFile(Parameters &params)
+{
+    for(unsigned i = 0; i < params.dyn_cylinders_files.size(); i++){
+        bool z_flag = false;
+        ifstream in(params.dyn_cylinders_files[i]);
+
+        if(!in){
+            error( "Dynamic Cylinder list file cannot be open." ,cout);
+            assert(0);
+            in.close();
+            return true;
+        }
+
+        bool first=true;
+        for( std::string line; getline( in, line ); )
+        {
+            if(first) {
+                std::vector<std::string> jkr = split_(line,' ');
+                if (jkr.size()!= 1){
+                    error( "First line must be only the overall scale factor: ",cout);
+                    in.close();
+                    assert(0);
+                    return true;
+                }
+                first-=1;continue;
+            }
+
+            std::vector<std::string> jkr = split_(line,' ');
+
+            if(jkr.size() != 7 && jkr.size() != 4){
+                error( "Dynamic Cylinder list file is not in the correct format." ,cout);
+                in.close();
+                assert(0);
+                return true;
+            }
+
+            if (jkr.size() != 7){
+                z_flag = true;
+                warning("No dynamic cylinders orientation inlcluded. Dynamic Cylinder orientation was set towards the Z direction by default for all dynamic cylinders.",cout);
+            }
+            break;
+        }
+        in.close();
+
+        in.open(params.dyn_cylinders_files[i]);
+
+        if(!z_flag){
+            double x,y,z,ox,oy,oz,r;
+            double scale;
+            in >> scale;
+            while (in >> x >> y >> z >> ox >> oy >> oz >> r)
+            {
+                if ((x - ox) == 0.0 && (z - oz) == 0.0 && (y - oy) == 0.0){
+                    error( "Dynamic Cylinder list has wrongly defined dynamic cylinders. Invalid orientation: ",cout);
+                    in.close();
+                    assert(0);
+                    return true;
+                }
+            }
+            in.close();
+        }
+    }
+
+    return true;
+}
 
 
 bool SimErrno::checkSphereListFile(Parameters &params)
 {
     for(unsigned i = 0; i < params.spheres_files.size(); i++){
         ifstream in(params.cylinders_files[i]);
+
+        if(!in){
+            error( "Spheres list file cannot be open." ,cout);
+            assert(0);
+            in.close();
+            return true;
+        }
+
+        bool first=true;
+        for( std::string line; getline( in, line ); )
+        {
+            if(first) {
+                std::vector<std::string> jkr = split_(line,' ');
+                if (jkr.size()!= 1){
+                    error( "First line must be only the overall scale factor: ",cout);
+                    in.close();
+                    assert(0);
+                    return true;
+                }
+                first-=1;continue;
+            }
+
+            std::vector<std::string> jkr = split_(line,' ');
+
+            if(jkr.size() != 4){
+                error( "Sphere list file is not in the correct format." ,cout);
+                in.close();
+                assert(0);
+                return true;
+            }
+        }
+        in.close();
+    }
+    for(unsigned i = 0; i < params.spheres_files.size(); i++){
+        ifstream in(params.dyn_cylinders_files[i]);
 
         if(!in){
             error( "Spheres list file cannot be open." ,cout);
@@ -734,6 +872,10 @@ bool SimErrno::checkConfigurationFile(const char* configuration_file)
             count_hexa_obstacle_tag++;
             fixed_configuration = true;
         }
+        else if(Parameters::str_dist(tmp,"<dyn_cylinder_hex_packing>") <= 0){
+            count_hexa_obstacle_tag++;
+            fixed_configuration = true;
+        }
         else if(Parameters::str_dist(tmp,"<sphere_hex_packing>") <= 0){
             count_hexa_obstacle_tag++;
             fixed_configuration = true;
@@ -754,6 +896,9 @@ bool SimErrno::checkConfigurationFile(const char* configuration_file)
             count_tag_phase--;
         }
         else if(Parameters::str_dist(tmp,"</cylinder_hex_packing>") <= 0){
+            count_hexa_obstacle_tag--;
+        }
+        else if(Parameters::str_dist(tmp,"</dyn_cylinder_hex_packing>") <= 0){
             count_hexa_obstacle_tag--;
         }
         else if(Parameters::str_dist(tmp,"</sphere_hex_packing>") <= 0){
@@ -868,6 +1013,16 @@ void SimErrno::printSimulatinInfo(Parameters &params, ostream &out,bool color)
         //infoMenu(" Separation:            ------",  " "+ to_string(params.hex_packing_separation*1e3)+" um",out, color,35);
     }
 
+    answer = (params.dyn_cylinders_files.size() > 0) || params.gamma_dyn_cyl_packing || params.hex_dyn_cyl_packing ?" true":" false";
+    infoMenu("Dynamic Cylinder obstacles:    ------",  answer, out, color,35);
+
+    if(params.hex_dyn_cyl_packing){
+        infoMenu(" Hexagonal Configuration:  ---", "true", out, color,35);
+        infoMenu(" Hex. radius:           ------",  " "+ to_string(params.hex_packing_radius*1e3)+" um",out, color,35);
+        infoMenu(" Hex. ICVF:             ------",  " "+ to_string(params.hex_packing_icvf),out, color,35);
+        //infoMenu(" Separation:            ------",  " "+ to_string(params.hex_packing_separation*1e3)+" um",out, color,35);
+    }
+
     answer = (params.spheres_files.size() > 0) || params.gamma_sph_packing || params.hex_sphere_packing ?" true":" false";
     infoMenu(" Spherical obstacles:    ------",  answer, out, color,34);
 
@@ -879,6 +1034,13 @@ void SimErrno::printSimulatinInfo(Parameters &params, ostream &out,bool color)
     }
 
     if(params.gamma_cyl_packing){
+        infoMenu(" Gamma Configuration:   ------", " true", out, color,35);
+        infoMenu(" Gamma alpha:           ------",  " "+ to_string(params.gamma_packing_alpha)+" um",out, color,35);
+        infoMenu(" Gamma scale:           ------",  " "+ to_string(params.gamma_packing_beta),out, color,35);
+        infoMenu(" Target ICVF:           ------",  " "+ to_string(params.gamma_icvf),out, color,35);
+        infoMenu(" Min. radius:           ------",  " "+ to_string(params.min_obstacle_radii)+" um",out, color,35);
+    }
+    if(params.gamma_dyn_cyl_packing){
         infoMenu(" Gamma Configuration:   ------", " true", out, color,35);
         infoMenu(" Gamma alpha:           ------",  " "+ to_string(params.gamma_packing_alpha)+" um",out, color,35);
         infoMenu(" Gamma scale:           ------",  " "+ to_string(params.gamma_packing_beta),out, color,35);

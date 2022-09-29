@@ -20,6 +20,7 @@
 #include "plyobstacle.h"
 #include "voxel.h"
 #include "cylinder.h"
+#include "dynamic_Cylinder.h"
 #include "sentinel.h"
 #include "propagator.h"
 #include "sphere.h"
@@ -46,8 +47,10 @@ public:
     sentinels::Sentinel sentinela;                  /*!< Sentinel initialization to encoutner error in the simulation               */
     std::vector <PLYObstacle>* plyObstacles_list;   /*!< pointer to a vector with all the instances of PLYObstacles                 */
     std::vector <Cylinder>* cylinders_list;         /*!< pointer to a vector with all the isntances of "Cylider" obstacles          */
+    std::vector <Cylinder>* dyn_cylinders_list;     /*!< pointer to a vector with all the isntances of "Cylider" obstacles          */
     std::vector <Sphere>* spheres_list;           /*!< pointer to a vector with all the isntances of "Spheres" obstacles          */
     std::vector<unsigned>  cylinders_deque;         /*!< deque with the indexes of the cylinders (used for optmization)             */
+    std::vector<unsigned>  dyn_cylinders_deque;     /*!< deque with the indexes of the cylinders (used for optmization)             */
     std::vector<unsigned>  spheres_deque;           /*!< deque with the indexes of the spheres (used for optmization)               */
     std::vector<std::vector<unsigned>> ply_deque;   /*!< deque with the indexes of the triangles of all ply's (used for opt)        */
     std::vector <Voxel> voxels_list;                /*!< vector with all the voxels to be simulated (if any)                        */
@@ -135,7 +138,7 @@ public:
      *         with a defined "inside region" can be considered. Voxel periodicity is not
      *         considered
      */
-    bool isInIntra(Eigen::Vector3d& position, int& cyl_id,  int& ply_id, int& sph_id, double distance_to_be_intra_ply=1e-6);
+    bool isInIntra(Eigen::Vector3d& position, int& cyl_id,  int& ply_id, int& sph_id, double distance_to_be_intra_ply=1e-6, bool dyn_cyl = false);
 
     /*!
      * \brief   Writes to disk the final propagator matrix.
@@ -143,6 +146,8 @@ public:
     void writePropagator(std::string path);
 
     bool isInsideCylinders(Eigen::Vector3d& position,int& cyl_id,double distance_to_be_inside=1e-6);
+
+    bool isInsideDynCylinders(Eigen::Vector3d& position,int& cyl_id,double distance_to_be_inside=1e-6);
 
     bool isInsidePLY(Eigen::Vector3d& position,int& ply_id,double distance_to_be_inside=1e-6);
 

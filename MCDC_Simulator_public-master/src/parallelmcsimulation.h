@@ -31,6 +31,7 @@ public:
     std::vector<std::thread> sim_threads;        /*!< Number of threads (instances and processors) to be used            */
     std::vector <PLYObstacle> plyObstacles_list; /*!< vector with all the instances of PLYObstacles                      */
     std::vector <Cylinder> cylinders_list;       /*!< vector with all the instances of cylinders                         */
+    std::vector <Dynamic_Cylinder> dyn_cylinders_list; /*!< vector with all the instances of dynamic cylinders                         */
     std::vector <Sphere> spheres_list;          /*!< vector with all the instances of cylinders                         */
 
     std::vector<Eigen::Vector3f> total_ini_walker_pos; /*!< Number of threads (instances and processors) to be used      */

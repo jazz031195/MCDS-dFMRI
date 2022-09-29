@@ -18,8 +18,8 @@ class Dynamic_Cylinder : public Cylinder
 {
 public:
 
-   double dyn_radius;          /*!< Dynamic radius of the cylinder                                         */
-
+    static int count;
+    double next_radius;   
     /*!
      *  \brief Default constructor. Does nothing
      */
@@ -28,9 +28,7 @@ public:
     ~Dynamic_Cylinder();
 
 
-    Dynamic_Cylinder(double dyn_rad):dyn_radius(dyn_rad){
-        dyn_radius  = dyn_rad;
-    }
+    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_,double curr_rad, double next_rad);
 
     
     Dynamic_Cylinder(Dynamic_Cylinder const &dyn_cyl);
