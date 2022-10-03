@@ -6,7 +6,7 @@
 using namespace std;
 using namespace Eigen;
 
-DynCylinderGammaDistribution::DynCylinderGammaDistribution(double dyn_perc, double activation_time, unsigned num_obstacles,double alpha, double beta,double icvf,Eigen::Vector3d min_limits,Eigen::Vector3d max_limits,float min_radius) : CylinderGammaDistribution(num_obstacles, alpha, beta, icvf, min_limits, max_limits, min_radius){};
+DynCylinderGammaDistribution::DynCylinderGammaDistribution(double dyn_perc, double activation_time, double volume_inc_perc, unsigned num_obstacles,double alpha, double beta,double icvf,Eigen::Vector3d min_limits,Eigen::Vector3d max_limits,float min_radius) : dyn_perc{dyn_perc}, activation_time{activation_time}, volume_inc_perc{volume_inc_perc}, CylinderGammaDistribution(num_obstacles, alpha, beta, icvf, min_limits, max_limits, min_radius){};
 
 
 void DynCylinderGammaDistribution::computeMinimalSize(std::vector<double> radiis, double icvf_,Eigen::Vector3d& l){
@@ -45,7 +45,7 @@ void DynCylinderGammaDistribution::createGammaSubstrate()
     std::vector<double> radiis(num_obstacles,0);
 
     int number_swelling_cylinders = int(num_obstacles*dyn_perc);
-    std::vector<string> swell_cyl_id(number_swelling_cylinders,0);
+    std::vector<int> swell_cyl_id(number_swelling_cylinders,0);
 
     bool achieved = false;
 
@@ -115,10 +115,15 @@ void DynCylinderGammaDistribution::createGammaSubstrate()
                     double y = (t*max_limits[1] + (1-t)*min_limits[1]);
                     double z = 0;
 
+
                     Vector3d Q = {x,y,z};
                     Vector3d D = {x,y,z+1};
 
                     Dynamic_Cylinder cyl(Q,D,radiis[i],radiis[i]);
+
+                    if (std::find(swell_cyl_id.begin(), swell_cyl_id.end(), i) == swell_cyl_id.end()){
+                        cyl.swell = true;
+                    }
 
                     double min_distance;
 
@@ -169,17 +174,18 @@ void DynCylinderGammaDistribution::createGammaSubstrate()
             + "%,\nICVF achieved: " + to_string(icvf_current*100) + "  ("+ to_string( int((icvf_current/icvf*100))) + "% of the desired icvf)\n";
      SimErrno::info(message,cout);
 
+
 }
 
-void DynCylinderGammaDistribution::printSubstrate(int T, ostream &out)
+
+void DynCylinderGammaDistribution::printSubstrate(ostream &out)
 {
     out << 1e-3 << endl;
     for(unsigned i = 0; i < dyn_cylinders.size(); i++){
-        for (unsigned t = 0; t < T; t++){
-            out << dyn_cylinders[i].P[0]*1e3 << " " << dyn_cylinders[i].P[1]*1e3 << " " << cylinders[i].P[2]*1e3 << " "
+        out << dyn_cylinders[i].P[0]*1e3 << " " << dyn_cylinders[i].P[1]*1e3 << " " << cylinders[i].P[2]*1e3 << " "
                                      << cylinders[i].Q[0]*1e3 << " " << cylinders[i].Q[1]*1e3 << " " << cylinders[i].Q[2]*1e3 << " "
                                      << cylinders[i].radius*1e3 << endl;
-        }
+        
     }
 }
 
@@ -199,7 +205,7 @@ bool DynCylinderGammaDistribution::checkForCollition(Dynamic_Cylinder cyl, Vecto
 
             double distance = (dyn_cylinders[i].P - dyn_cylinders_to_add[j].P).norm();
 
-            if(distance - (dyn_cylinders[i].next_radius + dyn_cylinders_to_add[j].next_radius) < 1e-15){
+            if(distance - (dyn_cylinders[i].radius*std::sqrt(1+volume_inc_perc) + dyn_cylinders[j].radius*std::sqrt(1+volume_inc_perc)) < 1e-15){
                 min_distance = 0;
                 collision = true;
                 break;
@@ -216,7 +222,7 @@ bool DynCylinderGammaDistribution::checkForCollition(Dynamic_Cylinder cyl, Vecto
 
             double distance = (dyn_cylinders_to_add[i].P - dyn_cylinders_to_add[j].P).norm();
 
-            if(distance - (dyn_cylinders_to_add[i].next_radius + dyn_cylinders_to_add[j].next_radius) < 1e-15){
+            if(distance - (dyn_cylinders[i].radius*std::sqrt(1+volume_inc_perc) + dyn_cylinders[j].radius*std::sqrt(1+volume_inc_perc)) < 1e-15){
                 min_distance = 0;
                 collision = true;
                 break;

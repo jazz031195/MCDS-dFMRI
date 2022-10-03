@@ -20,6 +20,7 @@ public:
 
     static int count;
     double next_radius;   
+    bool swell;
     /*!
      *  \brief Default constructor. Does nothing
      */
@@ -28,7 +29,7 @@ public:
     ~Dynamic_Cylinder();
 
 
-    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_,double curr_rad, double next_rad, double scale =1);
+    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_,double curr_rad, double next_rad, bool swell = false, double scale =1);
 
     
     Dynamic_Cylinder(Dynamic_Cylinder const &dyn_cyl);
