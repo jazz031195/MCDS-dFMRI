@@ -25,6 +25,7 @@ public:
 
     double dyn_perc;                                /*!< Percentage of dynamic cylinders that swell                                 */ 
     double activation_time;                         /*!< Time at which the system becomes active and cylinders start to swell       */                                       
+    double volume_inc_perc;                         /*!< Percentage of Volume increase of cylinders that start to swell       */                                       
     std::vector<Dynamic_Cylinder> dyn_cylinders;    /*!< Cylinder vector                                                            */
 
 
@@ -44,18 +45,20 @@ public:
      *  \param scale scale factor for the values passed. Useful when reading a file.
      *  \brief Initialize everything.
      */
-    DynCylinderGammaDistribution(double dyn_perc, double activation_time, unsigned num_obstacles,double alpha, double beta,double icvf,Eigen::Vector3d min_limits,Eigen::Vector3d max_limits, float min_radius = 0.001);
+    DynCylinderGammaDistribution(double dyn_perc, double activation_time,double volume_inc_perc, unsigned num_obstacles,double alpha, double beta,double icvf,Eigen::Vector3d min_limits,Eigen::Vector3d max_limits, float min_radius = 0.001);
 
     /*!
      *  \brief Samples and constructs a Gamma distribution
     */
     void createGammaSubstrate();
 
+    void updateGammaSubstrate(unsigned t);
+
     /*!
      *  \brief Prints the cylinders positions in a file or output stream.
      *  \param out ostream where to write the info.
     */
-    void printSubstrate(int T, std::ostream& out);
+    void printSubstrate(std::ostream& out);
 
 private:
 

@@ -17,7 +17,7 @@ Dynamic_Cylinder::~Dynamic_Cylinder()
     count--;
 }
 
-Dynamic_Cylinder::Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_,double curr_rad, double next_rad, double scale): next_radius(next_rad*scale), Cylinder(P_,Q_, curr_rad, scale) {};
+Dynamic_Cylinder::Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_,double curr_rad, double next_rad, bool swell, double scale): next_radius(next_rad*scale), swell(swell), Cylinder(P_,Q_, curr_rad, scale) {};
 
 Dynamic_Cylinder::Dynamic_Cylinder(const Dynamic_Cylinder &dyn_cyl)
 {

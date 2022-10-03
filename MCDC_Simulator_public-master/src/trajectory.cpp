@@ -146,6 +146,7 @@ void Trajectory::writeTrajectoryHeaderText()
         theaderout << T << std::endl;
 }
 
+
 void Trajectory::reWriteHeaderFile(unsigned num_walkers)
 {
     if(bheaderout)

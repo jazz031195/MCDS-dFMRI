@@ -1042,10 +1042,31 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
             //Generates a random oriented step of size l
             generateStep(step,l);
 
+            // Updates the dynamic cylinders
+            if ((*dyn_cylinders_list).size()> 0){
+                try{
+                    updateDynamicCylinders(t); 
+                    printDynamicCylinderSubstrate();
+                }
+                catch(Sentinel::ErrorCases error){
+
+                    // Possible errors, or numerical un-handed cases should end here.
+                    sentinela.deportationProcess(walker,w,t,back_tracking,params,id);
+
+                    if ( (error == Sentinel::ErrorCases::stuck) || (error == Sentinel::ErrorCases::crossed)){
+                        //w--;
+                        break;
+                    }
+
+                    if ( error == Sentinel::rejected  )
+                        continue;
+                }
+            }
+
             // Moves the particle. Checks collision and handles bouncing.
             try{
                 updateWalkerPosition(step);
-            }
+            } 
             catch(Sentinel::ErrorCases error){
 
                 // Possible errors, or numerical un-handed cases should end here.
@@ -1208,7 +1229,36 @@ void DynamicsSimulation::generateDirectedStep(Vector3d &new_step, Vector3d &dire
     if(rn<0.0)
         new_step*=-1.0;
 }
+void DynamicsSimulation::updateDynamicCylinders(unsigned t_){
+    
+    for (unsigned i=0; i< (*dyn_cylinders_list).size(); ++i) {
+        if (dyn_cylinders_list->at(i).swell){
+            if (t_+1 == params.activation_time){
+                dyn_cylinders_list->at(i).next_radius = dyn_cylinders_list->at(i).radius*std::sqrt(1+params.volume_inc_perc);
+            }
+            if (t_ == params.activation_time){
+                dyn_cylinders_list->at(i).radius = dyn_cylinders_list->at(i).next_radius;
+            }
+        }
+    }
+}
+void DynamicsSimulation::printDynamicCylinderSubstrate(){
+    ofstream myfile;
+    string name = "Documents/MCDS_CODE/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinder.txt";
 
+    myfile.open(name, std::ios_base::app); // append instead of overwrite
+  
+    if (myfile.is_open()== false){
+        myfile.open(name);
+    }
+    myfile << 1e-3 << endl;
+    for(unsigned i = 0; i < (*dyn_cylinders_list).size(); i++){
+        myfile << dyn_cylinders_list->at(i).P[0]*1e3 << " " << dyn_cylinders_list->at(i).P[1]*1e3 << " " << dyn_cylinders_list->at(i).P[2]*1e3 << " "
+                                        << dyn_cylinders_list->at(i).Q[0]*1e3 << " " << dyn_cylinders_list->at(i).Q[1]*1e3 << " " << dyn_cylinders_list->at(i).Q[2]*1e3 << " "
+                                        << dyn_cylinders_list->at(i).radius*1e3 << endl;
+    }
+    myfile.close();
+}
 /**
  * @return True if a bouncing in needed.
  */
@@ -1274,6 +1324,7 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
 
         walker.getVoxelPosition(voxel_pos);
         walker.setVoxelPosition(voxel_pos+ tmax*bounced_step);
+
     }
 
     return false;

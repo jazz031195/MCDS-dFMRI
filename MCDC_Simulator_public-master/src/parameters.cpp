@@ -16,17 +16,22 @@ Parameters::Parameters()
     write_bin           =  true;
 
     hex_cyl_packing    = false;
+    hex_dyn_cyl_packing    = false;
     hex_sphere_packing = false;
     hex_packing_radius      = 0;
     hex_packing_separation  = 0;
 
     gamma_cyl_packing = false;
+    gamma_dyn_cyl_packing = false;
     gamma_sph_packing = false;
     gamma_packing_alpha = 0;
     gamma_packing_beta  = 0;
     gamma_num_obstacles = 0;
     gamma_icvf          = 0;
     min_obstacle_radii  = 0;
+    volume_inc_perc     = 0;
+    activation_time     = 0;
+    dyn_perc            = 0; 
 
     ini_walkers_file = "";
     num_proc    = 0;
@@ -610,7 +615,7 @@ void Parameters::readGammaParams(ifstream &in)
 {
     string tmp="";
 
-    while(str_dist(tmp,"</cylinder_gamma_packing>") > 0 || str_dist(tmp,"</sphere_gamma_packing") > 0 || str_dist(tmp,"</cylinder_gamma_packing>") > 0 )
+    while(str_dist(tmp,"</cylinder_gamma_packing>") > 0 || str_dist(tmp,"</sphere_gamma_packing") > 0 || str_dist(tmp,"</dyn_cylinder_gamma_packing>") > 0 )
     {
         in >> tmp;
         std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
@@ -640,6 +645,12 @@ void Parameters::readGammaParams(ifstream &in)
         }
         else if(str_dist(tmp,"min_radius") <= 1){
             in >> min_obstacle_radii;
+        }
+        else if(str_dist(tmp,"activation_time") <= 1){
+            in >> activation_time;
+        }
+        else if(str_dist(tmp,"percentage_dynamic_cylinders") <= 1){
+            in >> dyn_perc;
         }
         else if(str_dist(tmp,"") == 0){
             in.clear();

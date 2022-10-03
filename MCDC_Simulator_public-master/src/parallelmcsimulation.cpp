@@ -911,7 +911,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
                 + std::to_string(params.gamma_packing_beta) + ").\n";
         SimErrno::info(message,cout);
 
-        DynCylinderGammaDistribution gamma_dist(params.dyn_perc, params.activation_time, params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
+        DynCylinderGammaDistribution gamma_dist(params.dyn_perc, params.activation_time,params.volume_inc_perc, params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
                                              ,params.min_limits, params.max_limits,params.min_obstacle_radii);
 
         gamma_dist.displayGammaDistribution();
@@ -934,7 +934,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
 
         ofstream out(file);
 
-        gamma_dist.printSubstrate(params.num_steps, out);
+        gamma_dist.printSubstrate(out);
 
         this->dyn_cylinders_list = gamma_dist.dyn_cylinders;
 

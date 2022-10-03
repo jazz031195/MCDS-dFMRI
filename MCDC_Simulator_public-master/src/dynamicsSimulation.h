@@ -47,7 +47,7 @@ public:
     sentinels::Sentinel sentinela;                  /*!< Sentinel initialization to encoutner error in the simulation               */
     std::vector <PLYObstacle>* plyObstacles_list;   /*!< pointer to a vector with all the instances of PLYObstacles                 */
     std::vector <Cylinder>* cylinders_list;         /*!< pointer to a vector with all the isntances of "Cylider" obstacles          */
-    std::vector <Cylinder>* dyn_cylinders_list;     /*!< pointer to a vector with all the isntances of "Cylider" obstacles          */
+    std::vector <Dynamic_Cylinder>* dyn_cylinders_list;  /*!< pointer to a vector with all the isntances of "Dynamic Cylider" obstacles          */
     std::vector <Sphere>* spheres_list;           /*!< pointer to a vector with all the isntances of "Spheres" obstacles          */
     std::vector<unsigned>  cylinders_deque;         /*!< deque with the indexes of the cylinders (used for optmization)             */
     std::vector<unsigned>  dyn_cylinders_deque;     /*!< deque with the indexes of the cylinders (used for optmization)             */
@@ -155,12 +155,16 @@ public:
 
 
 private:    
+
+    void updateDynamicCylinders(unsigned t_);
+    
     /*! \fn     generateStep
      *  \param  step stores the computed step.
      *  \param  l step size. Can be used to change diffusivity in the medium.
      *  \brief  Computes a random generated orientation in the sphere with given norm.
      *  \todo   Enable the use of pre-computed steps.
      */
+    void printDynamicCylinderSubstrate();
     inline void generateStep(Eigen::Vector3d& step , double l);
 
     /*! \fn     generateDirectedStep
@@ -189,7 +193,7 @@ private:
      */
     inline bool checkObstacleCollision(Eigen::Vector3d& amended_step, double &tmax, Eigen::Vector3d &end_point, Collision &colision);
 
-    /*! \fn     updateWalkerPositionAndHandleBouncing
+    /*! \fn     updateWalkerPositionAndHandleBouncinupdateDynamicCylindersg
      *  \param  amended_step, step to be "amended", this is corrected against bouncing and voxel limits
      *  \param  tmax maximum step size, this value is updated every time a bouncing is performed.
      *  \param  collision, Collision instance to store the walker collision (if any).
