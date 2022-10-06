@@ -138,7 +138,7 @@ public:
      *         with a defined "inside region" can be considered. Voxel periodicity is not
      *         considered
      */
-    bool isInIntra(Eigen::Vector3d& position, int& cyl_id,  int& ply_id, int& sph_id, double distance_to_be_intra_ply=1e-6, bool dyn_cyl = false);
+    bool isInIntra(Eigen::Vector3d& position, int& cyl_id,  int& ply_id, int& sph_id, double distance_to_be_intra_ply=1e-6);
 
     /*!
      * \brief   Writes to disk the final propagator matrix.
@@ -164,7 +164,7 @@ private:
      *  \brief  Computes a random generated orientation in the sphere with given norm.
      *  \todo   Enable the use of pre-computed steps.
      */
-    void printDynamicCylinderSubstrate();
+    void printDynamicCylinderSubstrate(unsigned t_);
     inline void generateStep(Eigen::Vector3d& step , double l);
 
     /*! \fn     generateDirectedStep

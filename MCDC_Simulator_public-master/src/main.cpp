@@ -26,7 +26,7 @@ void printUsage();
 
 int main(int argn, char* argv[])
 {
-
+    
     string conf = "";
 
     if(argn == 2){
@@ -79,7 +79,7 @@ void printUsage(){
 
     cout << "   <obstacle>                   Obstacle definition tag.\n";
     cout << "   <cylinder_gamma_packing>     Gamma cylinders obstacles tag.\n";
-    cout << "   <dyn_cylinder_gamma_packing>     Gamma dynamic cylinders obstacles tag.\n";
+    cout << "   <dyn_cylinder_gamma_packing> Gamma dynamic cylinders obstacles tag.\n";
     cout << "   <ply_obstacle>               ply-mesh-model obstacle tag.\n";
     cout << "   ini_walkers_pos <string>     Custom initial particles position (intra, extra).\n";
     cout << "   num_process <int>            Number of processors to use.\n";
