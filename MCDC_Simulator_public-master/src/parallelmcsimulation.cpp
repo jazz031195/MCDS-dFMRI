@@ -191,7 +191,6 @@ void ParallelMCSimulation::initializeUnitSimulations()
     params_temp.num_walkers = params.num_walkers - N_per_sim *(params.num_proc-1);
     params_temp.output_base_name+= "_"+std::to_string(params.num_proc-1);
 
-
     MCSimulation* simulation_ = new MCSimulation(params_temp);
     //simulation_->dynamicsEngine->print_expected_time = 0;
     simulation_->plyObstacles_list = &this->plyObstacles_list;
@@ -630,8 +629,8 @@ void ParallelMCSimulation::jointResults()
 
 void ParallelMCSimulation::specialInitializations()
 {
-    addObstacleConfigurations();
-    addObstaclesFromFiles();
+    addObstacleConfigurations(); // adds to cylinder_list for example
+    addObstaclesFromFiles(); // does nothing 
 
     if(params.number_subdivisions>1){
         params.addSubdivisions();
@@ -650,6 +649,7 @@ void ParallelMCSimulation::specialInitializations()
 
 void ParallelMCSimulation::addObstaclesFromFiles()
 {
+
     for(unsigned i = 0; i < params.cylinders_files.size(); i++){
 
         bool z_flag = false;
@@ -807,17 +807,17 @@ void ParallelMCSimulation::addObstacleConfigurations()
         // h = sqrt(3)/2 * sep
         double h =0.8660254037844386*sep;
 
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,0,0),Eigen::Vector3d(0,0,1.0),rad, rad));
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,0,0),Eigen::Vector3d(sep,0,1.0),rad, rad));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,0,0),Eigen::Vector3d(0,0,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,0,0),Eigen::Vector3d(sep,0,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
 
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,2.0*h,0),Eigen::Vector3d(0,2.0*h,1.0),rad, rad));
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,2.0*h,0),Eigen::Vector3d(sep,2.0*h,1.0),rad, rad));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,2.0*h,0),Eigen::Vector3d(0,2.0*h,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,2.0*h,0),Eigen::Vector3d(sep,2.0*h,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
 
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0.5*sep,h,0),Eigen::Vector3d(0.5*sep,h,1.0),rad, rad));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0.5*sep,h,0),Eigen::Vector3d(0.5*sep,h,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
 
         // To avoid problems with the boundaries
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(-0.5*sep,h,0),Eigen::Vector3d(-0.5*sep,h,1.0),rad, rad));
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(1.5*sep,h,0),Eigen::Vector3d(1.5*sep,h,1.0),rad, rad));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(-0.5*sep,h,0),Eigen::Vector3d(-0.5*sep,h,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(1.5*sep,h,0),Eigen::Vector3d(1.5*sep,h,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
 
         if(params.voxels_list.size()>0)
             params.voxels_list.clear();
@@ -911,12 +911,24 @@ void ParallelMCSimulation::addObstacleConfigurations()
                 + std::to_string(params.gamma_packing_beta) + ").\n";
         SimErrno::info(message,cout);
 
+        message = "Activation time : " + std::to_string(params.activation_time) + ", dyn_perc : "
+                + std::to_string(params.dyn_perc) + ", number of dyn_cylinders : "+to_string(params.gamma_num_obstacles)+".\n";
+        SimErrno::info(message,cout);
+
         DynCylinderGammaDistribution gamma_dist(params.dyn_perc, params.activation_time,params.volume_inc_perc, params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
                                              ,params.min_limits, params.max_limits,params.min_obstacle_radii);
+
 
         gamma_dist.displayGammaDistribution();
 
         gamma_dist.createGammaSubstrate();
+
+        //for (unsigned i = 0; i < gamma_dist.dyn_cylinders.size(); i++)
+        //{
+            
+        //    string message = " P : ("+ to_string(gamma_dist.dyn_cylinders[i].P[0])+", "+ to_string(gamma_dist.dyn_cylinders[i].P[1]) + "," + to_string(gamma_dist.dyn_cylinders[i].P[2])+") \n";
+        //    SimErrno::info(message, cout);
+        //}
 
         params.max_limits = gamma_dist.max_limits;
         params.min_limits = gamma_dist.min_limits;

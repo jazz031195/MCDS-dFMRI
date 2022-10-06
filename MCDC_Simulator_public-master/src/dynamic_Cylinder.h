@@ -14,13 +14,19 @@
 #include "cylinder.h"
 
 
-class Dynamic_Cylinder : public Cylinder
+/// @brief 
+class Dynamic_Cylinder : public Obstacle
 {
 public:
 
     static int count;
+    Eigen::Vector3d P,Q;    /*!< Cilinder Axis reference Points, P should be the "center"       */
+    Eigen::Vector3d D;      /*!< Pre-computed and normalized P - Q vector                       */
+    double radius;          /*!< Radius of the cylinder                                         */
     double next_radius;   
     bool swell;
+    double max_radius;
+    double ini_radius;
     /*!
      *  \brief Default constructor. Does nothing
      */
@@ -29,9 +35,11 @@ public:
     ~Dynamic_Cylinder();
 
 
-    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_,double curr_rad, double next_rad, bool swell = false, double scale =1);
-
-    
+    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_, double radius_,double next_radius_, double max_radius_, bool swell_ = false, double scale = 1):P(P_*scale),Q(Q_*scale),radius(radius_*scale), next_radius(next_radius_*scale), max_radius{max_radius_*scale},ini_radius{radius_*scale}, swell(swell_){
+        D  = (Q_-P_).normalized();
+        Q = P+D;
+        id = count++;
+    }
     Dynamic_Cylinder(Dynamic_Cylinder const &dyn_cyl);
 
     /*! \fn  checkCollision

@@ -4,6 +4,8 @@
 #include "pgsesequence.h"
 #include "gradientwaveform.h"
 
+using namespace std;
+
 int MCSimulation::count =0;
 
 MCSimulation::MCSimulation()
@@ -136,6 +138,7 @@ void MCSimulation::iniObstacles()
 
 void MCSimulation::addObstacles()
 {
+
     this->dynamicsEngine->cylinders_list = this->cylinders_list;
     this->dynamicsEngine->dyn_cylinders_list = this->dyn_cylinders_list;
     this->dynamicsEngine->spheres_list   = this->sphere_list;

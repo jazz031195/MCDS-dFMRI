@@ -652,6 +652,9 @@ void Parameters::readGammaParams(ifstream &in)
         else if(str_dist(tmp,"percentage_dynamic_cylinders") <= 1){
             in >> dyn_perc;
         }
+        else if(str_dist(tmp,"percentage_increase_of_volume") <= 1){
+            in >> volume_inc_perc;
+        }
         else if(str_dist(tmp,"") == 0){
             in.clear();
             //in.ignore();

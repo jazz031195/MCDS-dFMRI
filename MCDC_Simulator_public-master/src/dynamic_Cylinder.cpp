@@ -17,12 +17,18 @@ Dynamic_Cylinder::~Dynamic_Cylinder()
     count--;
 }
 
-Dynamic_Cylinder::Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_,double curr_rad, double next_rad, bool swell, double scale): next_radius(next_rad*scale), swell(swell), Cylinder(P_,Q_, curr_rad, scale) {};
-
-Dynamic_Cylinder::Dynamic_Cylinder(const Dynamic_Cylinder &dyn_cyl)
+Dynamic_Cylinder::Dynamic_Cylinder(const Dynamic_Cylinder &cyl)
 {
-    radius = dyn_cyl.radius;
+
+    D = cyl.D;
+    Q = cyl.Q;
+    P = cyl.P;
+    radius = cyl.radius;
+    next_radius = cyl.next_radius;
+    swell = cyl.swell;
     id = count++;
+    ini_radius = cyl.ini_radius;
+    max_radius = cyl.max_radius;
 
 }
 
@@ -35,7 +41,7 @@ bool Dynamic_Cylinder::checkCollision(Walker &walker, Eigen::Vector3d &step, dou
 
     //minimum distance to the cylinder axis.
     double distance_to_cilinder = (D.cross(-m)).norm();
-    double d_ = distance_to_cilinder - next_radius;
+    double d_ = distance_to_cilinder - radius;
 
     //If the minimum distance from the walker to the cylinder is more than
     // the actual step size, we can discard this collision.
@@ -50,7 +56,7 @@ bool Dynamic_Cylinder::checkCollision(Walker &walker, Eigen::Vector3d &step, dou
     double nn = 1.0;
     double mm = m.dot(m);
     double a  = nn - nd*nd;
-    double k  = mm - next_radius*next_radius;
+    double k  = mm - radius*radius;
     double c  = k  - md*md;
 
 
@@ -172,7 +178,7 @@ double Dynamic_Cylinder::minDistance(Walker &w){
     double distance_to_cylinder = (D.cross(-m)).norm();
 
     //Minimum distance to the cylinders wall.
-    double d_ = (distance_to_cylinder - next_radius);
+    double d_ = (distance_to_cylinder - radius);
    // return d_>0.0?d_:0.0;
     return d_;
 }

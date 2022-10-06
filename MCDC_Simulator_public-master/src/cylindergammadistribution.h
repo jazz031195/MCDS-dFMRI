@@ -66,7 +66,7 @@ public:
     */
     void printSubstrate(std::ostream& out);
 
-protected:
+private:
 
     /*!
      *  \brief Checks for collision between inside a voxel (with periodic boundaries)

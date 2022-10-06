@@ -56,7 +56,7 @@ public:
 
     int in_sph_index;                                               /*!< Auxiliar index to save if the walker was inside a sphere               */
 
-    ObstacleCollisionSphere cylinders_collision_sphere;             /*!< Collision sphere for collition against cylidners                       */
+    //ObstacleCollisionSphere cylinders_collision_sphere;             /*!< Collision sphere for collition against cylidners                       */
 
     ObstacleCollisionSphere dyn_cylinders_collision_sphere;         /*!< Collision sphere for collition against dynamic cylidners               */
 
