@@ -60,6 +60,9 @@ public:
      */
     double minDistance(Walker &w);
 
+    bool checkSwallow(Walker &walker);
+
+
 private:
 
     /*! \fn  handleCollition

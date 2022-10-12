@@ -3,8 +3,10 @@
 #include "constants.h"
 #include "Eigen/Dense"
 #include <iostream>
+#include "simerrno.h"
 
 using namespace Eigen;
+using namespace std;
 
 int Dynamic_Cylinder::count = 0;
 Dynamic_Cylinder::Dynamic_Cylinder()
@@ -31,7 +33,25 @@ Dynamic_Cylinder::Dynamic_Cylinder(const Dynamic_Cylinder &cyl)
     max_radius = cyl.max_radius;
 
 }
+bool Dynamic_Cylinder::checkSwallow(Walker &walker)
+{
+    //Origin of the ray
+    Vector3d O;
+    walker.getVoxelPosition(O);
+    Vector3d m = O - P;
 
+    //minimum distance to the cylinder axis.
+    double distance_to_cilinder = (D.cross(-m)).norm();
+    double d_ = distance_to_cilinder - radius;
+    if (d_<= -EPS_VAL){
+
+        return true;
+    }
+    else{
+        return false;
+    }
+
+}
 bool Dynamic_Cylinder::checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision)
 {
     //Origin of the ray
@@ -142,7 +162,7 @@ inline bool Dynamic_Cylinder::handleCollition(Walker& walker, Collision &colisio
         colision.col_location = Collision::unknown;
     }
 
-    colision.rn = c;
+    colision.rn = c;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
 
     colision.colision_point = walker.pos_v + colision.t*step;
 
