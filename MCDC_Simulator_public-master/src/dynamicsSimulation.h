@@ -182,6 +182,9 @@ private:
      */
     bool updateWalkerPosition(Eigen::Vector3d&step);
 
+    std::tuple<bool, unsigned> CheckisSwallowed();
+    void updateAfterSwallow(unsigned id_swall_cyl);
+
     /*! \fn     checkObstacleCollision
      *  \param  amended_step, step to be "amended", this is corrected against bouncing and voxel limits
      *  \param  tmax maximum step size, this value is updated every time a bouncing is performed.

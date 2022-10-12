@@ -1027,6 +1027,8 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
 
         for(unsigned t = 1 ; t <= params.num_steps; t++) //T+1 steps in total (avoid errors)
         {
+
+
             //Get the time step in milliseconds
             getTimeDt(last_time_dt,time_dt,l,dataSynth,t,time_step);
 
@@ -1301,6 +1303,21 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
         // Checks the number of bouncing per step.
         walker.steps_count++;
 
+        bool isswallowed;
+        unsigned id_swall_cyl;
+        //if (t == params.activation_time){
+        tie(isswallowed, id_swall_cyl) = CheckisSwallowed();
+
+        if (isswallowed){
+            //string message = "time :" + std::to_string(t)+ " \n" ;
+            //SimErrno::info(message,cout);
+
+            updateAfterSwallow(id_swall_cyl);
+        }
+        //}
+        
+
+
         // True if there was a collision and the particle needs to be bounced.
         update_walker_status |= checkObstacleCollision(bounced_step, tmax, end_point, colision);
 
@@ -1336,7 +1353,56 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
 
     return false;
 }
+void DynamicsSimulation::updateAfterSwallow(unsigned id_swall_cyl){
 
+    Dynamic_Cylinder cyl;
+    cyl = dyn_cylinders_list-> at(id_swall_cyl);
+
+    Eigen::Vector3d O, real_pos;
+    walker.getRealPosition(real_pos);
+    walker.getVoxelPosition(O);
+    Eigen::Vector3d P = cyl.P;
+    Eigen::Vector3d Q = cyl.Q;
+    Eigen::Vector3d D = cyl.D;
+    Eigen::Vector3d m = O - P;
+
+    // find closest point (S) from walker to line that links P and Q
+    double md = m.dot(D);
+    Eigen::Vector3d S = P+D*md;
+    // vector (v) from S to walker
+    Eigen::Vector3d v = O-S;
+    // distance from walker to border of cylinder
+    double distance_to_cilinder = (D.cross(-m)).norm();
+
+    double dist_to_border =  distance_to_cilinder - cyl.radius;
+    //string message = "distance to border in updateAfterSwallow:" + std::to_string(dist_to_border*10000 ) + ", walker id : "+ std::to_string(walker.index) + " \n" ;
+    //SimErrno::info(message,cout);
+
+    if (dist_to_border <= -EPS_VAL){
+        walker.setRealPosition(real_pos+v.normalized()*(fabs(dist_to_border)+ EPS_VAL));
+        walker.setVoxelPosition(O+v.normalized()*(fabs(dist_to_border)+ EPS_VAL));
+    }
+    else{
+        string message = "different distance to border \n" ;
+        SimErrno::error(message,cout);
+    }
+
+}
+
+std::tuple<bool, unsigned> DynamicsSimulation::CheckisSwallowed(){
+
+    if (params.ini_walker_flag.compare("extra")== 0){
+        for(unsigned int i = 0 ; i < walker.dyn_cylinders_collision_sphere.small_sphere_list_end; i++ )
+        {
+            unsigned index = walker.dyn_cylinders_collision_sphere.collision_list->at(i);
+
+            if (dyn_cylinders_list-> at(index).checkSwallow(walker)){
+                return std::make_tuple(true, index);
+            }
+        }
+    }
+    return std::make_tuple(false, 0);
+}
 bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &tmax, Eigen::Vector3d& end_point,Collision& colision)
 {
 
@@ -1380,7 +1446,7 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
         handleCollisions(colision,colision_tmp,max_collision_distance,index);
     }
 
-    //For each Spehere Obstacle
+    //For each Sphere Obstacle
     for(unsigned int i = 0 ; i < walker.spheres_collision_sphere.small_sphere_list_end; i++ )
     {
         unsigned index = walker.spheres_collision_sphere.collision_list->at(i);

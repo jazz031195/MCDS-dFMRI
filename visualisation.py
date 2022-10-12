@@ -36,7 +36,7 @@ def data_for_cylinder(p0,p1,R):
 
 def get_T_N (cur_path):
     # find configuration file for N and T values
-    conf_file_path = cur_path + "/MCDS-dFMRI/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedCylinders.conf"
+    conf_file_path = cur_path + "/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedCylinders.conf"
     N = 0
     T = 0
     with open(conf_file_path) as f:
@@ -49,7 +49,7 @@ def get_T_N (cur_path):
 
 def get_nbr_cylinders (cur_path):
     # find configuration file for N and T values
-    conf_file_path = cur_path + "/MCDS-dFMRI/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedCylinders.conf"
+    conf_file_path = cur_path + "/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedCylinders.conf"
     nbr_cylinders = 0
     with open(conf_file_path) as f:
         for line in f.readlines():
@@ -60,7 +60,7 @@ def get_nbr_cylinders (cur_path):
 def get_trajectory_list(cur_path):
     # find path with trajectories
     file_name = "dyn_cylinder_gamma_packing_test_0.traj.txt"
-    traj_path = cur_path +"/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/"+ str(file_name)
+    traj_path = cur_path +"/MCDC_Simulator_public-master/instructions/demos/output/"+ str(file_name)
     # create array with trajectory values
     contents = []
     with open(traj_path) as f:
@@ -79,7 +79,7 @@ def get_trajectory_array(T,N, cur_path):
 def get_cylinder_array (cur_path):
     nbr_cylinders = get_nbr_cylinders (cur_path)
     # find configuration file for N and T values
-    conf_file_path = cur_path + "/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_packing_test_gamma_distributed_dyn_cylinder_list.txt"
+    conf_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_packing_test_gamma_distributed_dyn_cylinder_list.txt"
     cylinder_array = np.zeros((nbr_cylinders,7))
     with open(conf_file_path) as f:
         e = 0
@@ -93,7 +93,7 @@ def get_cylinder_array (cur_path):
 def get_dwi_array(cur_path):
     # find path with trajectories
     file_name = "dyn_cylinder_gamma_packing_test_DWI.txt"
-    traj_path = cur_path +"/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/"+ str(file_name)
+    traj_path = cur_path +"/MCDC_Simulator_public-master/instructions/demos/output/"+ str(file_name)
     # create array with trajectory values
     signal = []
     with open(traj_path) as f:
