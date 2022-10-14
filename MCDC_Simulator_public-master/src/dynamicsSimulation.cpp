@@ -1246,14 +1246,31 @@ void DynamicsSimulation::updateDynamicCylinders(unsigned t_){
                 dyn_cylinders_list->at(i).radius = dyn_cylinders_list->at(i).max_radius;
 
             }
+            if (t_+ 1 == params.activation_time+params.activation_period){
+
+                dyn_cylinders_list->at(i).next_radius = dyn_cylinders_list->at(i).ini_radius;
+
+            }
+            if (t_ == params.activation_time+params.activation_period){
+
+                dyn_cylinders_list->at(i).radius = dyn_cylinders_list->at(i).ini_radius;
+
+            }
 
         }
     }
 }
 void DynamicsSimulation::printDynamicCylinderSubstrate(unsigned t_){
-
+    
+    string filename;
     if (t_ == params.activation_time + 1) {
-        string file = params.output_base_name + "_gamma_distributed_dyn_cylinder_swell_list.txt";
+        filename = "_gamma_distributed_dyn_cylinder_swell_list.txt";
+    }
+    else if (t_ == params.activation_time+ params.activation_period + 1) {
+        filename = "_gamma_distributed_dyn_cylinder_after_swell_list.txt";
+    }
+    if ((t_ == params.activation_time + 1) || ((t_ == params.activation_time + params.activation_period + 1))) {
+        string file = params.output_base_name + filename;
         ofstream out(file);
         out << "Time : " << t_ << endl;
         out << 1e-3 << endl;
@@ -1317,7 +1334,6 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
         //}
         
 
-
         // True if there was a collision and the particle needs to be bounced.
         update_walker_status |= checkObstacleCollision(bounced_step, tmax, end_point, colision);
 
@@ -1369,16 +1385,28 @@ void DynamicsSimulation::updateAfterSwallow(unsigned id_swall_cyl){
     // find closest point (S) from walker to line that links P and Q
     double md = m.dot(D);
     Eigen::Vector3d S = P+D*md;
-    // vector (v) from S to walker
-    Eigen::Vector3d v = O-S;
+
     // distance from walker to border of cylinder
     double distance_to_cilinder = (D.cross(-m)).norm();
 
     double dist_to_border =  distance_to_cilinder - cyl.radius;
     //string message = "distance to border in updateAfterSwallow:" + std::to_string(dist_to_border*10000 ) + ", walker id : "+ std::to_string(walker.index) + " \n" ;
     //SimErrno::info(message,cout);
+    // vector (v) from S to walker
+    Eigen::Vector3d v;
+    bool condition;
+    if (params.ini_walker_flag.compare("extra")== 0) {
+        // towards outside of cylinder
+        v = O-S;
+        condition = (dist_to_border< EPS_VAL);
+    }
+    else if (params.ini_walker_flag.compare("intra")== 0) {
+        //towards inside of cylinder
+        v = S-O;
+        condition = (dist_to_border> -EPS_VAL);
+    }
 
-    if (dist_to_border <= -EPS_VAL){
+    if (condition){
         walker.setRealPosition(real_pos+v.normalized()*(fabs(dist_to_border)+ EPS_VAL));
         walker.setVoxelPosition(O+v.normalized()*(fabs(dist_to_border)+ EPS_VAL));
     }
@@ -1391,16 +1419,22 @@ void DynamicsSimulation::updateAfterSwallow(unsigned id_swall_cyl){
 
 std::tuple<bool, unsigned> DynamicsSimulation::CheckisSwallowed(){
 
+    bool walker_is_extra;
     if (params.ini_walker_flag.compare("extra")== 0){
-        for(unsigned int i = 0 ; i < walker.dyn_cylinders_collision_sphere.small_sphere_list_end; i++ )
-        {
-            unsigned index = walker.dyn_cylinders_collision_sphere.collision_list->at(i);
+        walker_is_extra = true;
+    }
+    else if (params.ini_walker_flag.compare("intra")== 0){
+        walker_is_extra = false;
+    }
+    for(unsigned int i = 0 ; i < walker.dyn_cylinders_collision_sphere.small_sphere_list_end; i++ )
+    {
+        unsigned index = walker.dyn_cylinders_collision_sphere.collision_list->at(i);
 
-            if (dyn_cylinders_list-> at(index).checkSwallow(walker)){
-                return std::make_tuple(true, index);
-            }
+        if (dyn_cylinders_list-> at(index).checkSwallow(walker,walker_is_extra)){
+            return std::make_tuple(true, index);
         }
     }
+
     return std::make_tuple(false, 0);
 }
 bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &tmax, Eigen::Vector3d& end_point,Collision& colision)
