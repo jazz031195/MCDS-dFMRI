@@ -29,6 +29,7 @@ public:
     double sim_duration;                            /*!< simulation total time                                                      */
     double dyn_perc;                                /*!< percentage of swelling cylinders                                           */
     double activation_time;                         /*!< time at which cylinders start to swell                                     */
+    double activation_period;                        /*!< time after which cylinders go back to resting state after swelling                                     */
     double volume_inc_perc;  
     bool write_traj;                                /*!< flag, write a traj file or not, binary format only                         */
     bool write_txt;                                 /*!< flag, writes DWI output signals in .txt if True                            */

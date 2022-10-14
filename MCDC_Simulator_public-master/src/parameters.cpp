@@ -649,6 +649,9 @@ void Parameters::readGammaParams(ifstream &in)
         else if(str_dist(tmp,"activation_time") <= 1){
             in >> activation_time;
         }
+        else if(str_dist(tmp,"activation_period") <= 1){
+            in >> activation_period;
+        }
         else if(str_dist(tmp,"percentage_dynamic_cylinders") <= 1){
             in >> dyn_perc;
         }

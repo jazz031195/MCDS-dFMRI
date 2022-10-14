@@ -33,7 +33,7 @@ Dynamic_Cylinder::Dynamic_Cylinder(const Dynamic_Cylinder &cyl)
     max_radius = cyl.max_radius;
 
 }
-bool Dynamic_Cylinder::checkSwallow(Walker &walker)
+bool Dynamic_Cylinder::checkSwallow(Walker &walker, bool walker_is_extra)
 {
     //Origin of the ray
     Vector3d O;
@@ -43,13 +43,24 @@ bool Dynamic_Cylinder::checkSwallow(Walker &walker)
     //minimum distance to the cylinder axis.
     double distance_to_cilinder = (D.cross(-m)).norm();
     double d_ = distance_to_cilinder - radius;
-    if (d_<= -EPS_VAL){
+    // walker should be extra so is swallowed if is inside cylinder
+    // walker should be intra so is swallowed if is outside cylinder
+    bool condition;
+    if (walker_is_extra){
+        condition = (d_< EPS_VAL);
+    }
+    else{
+        condition = (d_> -EPS_VAL);
+    }
+    if (condition){
 
         return true;
     }
     else{
         return false;
     }
+    
+    // walker should be intra so is swallowed if is outside cylinder
 
 }
 bool Dynamic_Cylinder::checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision)
