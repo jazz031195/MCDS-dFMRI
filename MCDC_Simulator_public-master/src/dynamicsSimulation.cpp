@@ -1395,18 +1395,22 @@ void DynamicsSimulation::updateAfterSwallow(unsigned id_swall_cyl){
     // vector (v) from S to walker
     Eigen::Vector3d v;
     bool condition;
+    Walker::RelativeLocation new_location;
+    condition = ((dist_to_border> -EPS_VAL)&&(dist_to_border< EPS_VAL));
     if (params.ini_walker_flag.compare("extra")== 0) {
-        // towards outside of cylinder
-        v = O-S;
-        condition = (dist_to_border< EPS_VAL);
+        // towards inside of cylinder
+        v = S-O;
+        new_location = Walker::intra;
+
     }
     else if (params.ini_walker_flag.compare("intra")== 0) {
-        //towards inside of cylinder
-        v = S-O;
-        condition = (dist_to_border> -EPS_VAL);
+        //towards outside of cylinder
+        v = O-S;
+        new_location = Walker::extra;
     }
 
     if (condition){
+        walker.location = new_location;
         walker.setRealPosition(real_pos+v.normalized()*(fabs(dist_to_border)+ EPS_VAL));
         walker.setVoxelPosition(O+v.normalized()*(fabs(dist_to_border)+ EPS_VAL));
     }
@@ -1419,18 +1423,11 @@ void DynamicsSimulation::updateAfterSwallow(unsigned id_swall_cyl){
 
 std::tuple<bool, unsigned> DynamicsSimulation::CheckisSwallowed(){
 
-    bool walker_is_extra;
-    if (params.ini_walker_flag.compare("extra")== 0){
-        walker_is_extra = true;
-    }
-    else if (params.ini_walker_flag.compare("intra")== 0){
-        walker_is_extra = false;
-    }
     for(unsigned int i = 0 ; i < walker.dyn_cylinders_collision_sphere.small_sphere_list_end; i++ )
     {
         unsigned index = walker.dyn_cylinders_collision_sphere.collision_list->at(i);
 
-        if (dyn_cylinders_list-> at(index).checkSwallow(walker,walker_is_extra)){
+        if (dyn_cylinders_list-> at(index).checkSwallow(walker)){
             return std::make_tuple(true, index);
         }
     }

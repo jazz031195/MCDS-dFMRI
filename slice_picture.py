@@ -8,8 +8,8 @@ from scipy.linalg import norm
 
 cur_path = os.getcwd()
 conf_file_path = cur_path + "/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedCylinders.conf"
-cyl_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_packing_test_gamma_distributed_dyn_cylinder_list.txt"
-cyl_swell_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_packing_test_0_gamma_distributed_dyn_cylinder_swell_list.txt"
+cyl_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_packing_test_rep_00_gamma_distributed_dyn_cylinder_list.txt"
+cyl_swell_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_packing_test_rep_00_0_gamma_distributed_dyn_cylinder_swell_list.txt"
         
 def get_T_N ():
     N = 0
@@ -41,11 +41,11 @@ def get_cylinder_array(swell = False):
         e = 0
         for line in f.readlines():
             if e< nbr_cylinders:
-                print(len(line.split(' ')))
                 if len(line.split(' ')) > 5:
                     
                     cylinder_array[e] = np.array([float(i)*0.001 for i in line.split(' ')])
                     e = e+1
+    print(e)
     return cylinder_array
 
 def draw_cercles(cylinder_array, swell = False):
@@ -57,8 +57,8 @@ def draw_cercles(cylinder_array, swell = False):
         circle1 = plt.Circle((x, y), radius, color='r')
         ax.add_patch(circle1)
         
-    plt.xlim([-0.005,0.02])
-    plt.ylim([-0.005,0.02])
+    plt.xlim([-0.005,0.15])
+    plt.ylim([-0.005,0.15])
     plt.show()
     if not swell:
         name = "slice.png"
