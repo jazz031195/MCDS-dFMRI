@@ -7,7 +7,15 @@ import os
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.animation
 from scipy.linalg import norm
-
+cur_path = os.getcwd()
+file_name = "dyn_cylinder_gamma_packing_test_DWI.txt"
+dwi_path = cur_path +"/MCDC_Simulator_public-master/instructions/demos/output/"+ str(file_name)
+gamma_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_packing_test_gamma_distributed_dyn_cylinder_list.txt"
+file_name = "dyn_cylinder_gamma_packing_test_0.traj.txt"
+gamma_traj_path = cur_path +"/MCDC_Simulator_public-master/instructions/demos/output/"+ str(file_name)
+conf_file_path = cur_path + "/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedCylinders.conf"
+scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_sample_scheme_new.scheme"
+giro = 2.6751525e8 #Gyromagnetic radio given in rad/(ms*T)
 def data_for_cylinder(p0,p1,R):
     #vector in direction of axis
     v = p1 - p0
@@ -35,8 +43,6 @@ def data_for_cylinder(p0,p1,R):
     return X, Y, Z
 
 def get_T_N (cur_path):
-    # find configuration file for N and T values
-    conf_file_path = cur_path + "/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedCylinders.conf"
     N = 0
     T = 0
     with open(conf_file_path) as f:
@@ -48,8 +54,6 @@ def get_T_N (cur_path):
     return T, N
 
 def get_nbr_cylinders (cur_path):
-    # find configuration file for N and T values
-    conf_file_path = cur_path + "/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedCylinders.conf"
     nbr_cylinders = 0
     with open(conf_file_path) as f:
         for line in f.readlines():
@@ -58,12 +62,9 @@ def get_nbr_cylinders (cur_path):
     return nbr_cylinders
 
 def get_trajectory_list(cur_path):
-    # find path with trajectories
-    file_name = "dyn_cylinder_gamma_packing_test_0.traj.txt"
-    traj_path = cur_path +"/MCDC_Simulator_public-master/instructions/demos/output/"+ str(file_name)
     # create array with trajectory values
     contents = []
-    with open(traj_path) as f:
+    with open(gamma_traj_path) as f:
         [contents.append(float(line)) for line in f.readlines()]
     return contents 
 
@@ -78,10 +79,8 @@ def get_trajectory_array(T,N, cur_path):
 
 def get_cylinder_array (cur_path):
     nbr_cylinders = get_nbr_cylinders (cur_path)
-    # find configuration file for N and T values
-    conf_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_packing_test_gamma_distributed_dyn_cylinder_list.txt"
     cylinder_array = np.zeros((nbr_cylinders,7))
-    with open(conf_file_path) as f:
+    with open(gamma_file_path) as f:
         e = 0
         for line in f.readlines():
             if e< nbr_cylinders:
@@ -91,57 +90,95 @@ def get_cylinder_array (cur_path):
     return cylinder_array
 
 def get_dwi_array(cur_path):
-    # find path with trajectories
-    file_name = "dyn_cylinder_gamma_packing_test_DWI.txt"
-    traj_path = cur_path +"/MCDC_Simulator_public-master/instructions/demos/output/"+ str(file_name)
     # create array with trajectory values
     signal = []
-    with open(traj_path) as f:
+    with open(dwi_path) as f:
         [signal.append(float(line)) for line in f.readlines()]
     return np.array(signal)
 
+def get_psge_data():
+    data_dwi = pd.DataFrame(columns = ["x", "y","z","G","Delta","delta","TE"])
+    x, y, z,G,Delta,delta,TE = [],[],[],[],[],[],[]
+    with open(scheme_file) as f:
+        for line in f.readlines():
+            if len(line.split(' ')) > 2:
+                print(line.split(' '))
+                for e, element in enumerate(line.split(' ')):
+                    if e == 0:
+                        x.append(float(element))
+                    elif e == 1:
+                        y.append(float(element))
+                    elif e == 2:
+                        z.append(float(element))
+                    elif e == 3:
+                        G.append(float(element)*1e-3)
+                    elif e == 4:
+                        Delta.append(float(element))
+                    elif e == 5:
+                        delta.append(float(element))
+                    elif e == 6:
+                        TE.append(float(element[:-2]))
+    data_dwi["x"] = x
+    data_dwi["y"] = y
+    data_dwi["z"] = z
+    data_dwi["G"] = G
+    data_dwi["Delta"] = Delta
+    data_dwi["delta"] = delta
+    data_dwi["TE"] = TE
+    data_dwi["b"] = pow(data_dwi["G"]*giro*data_dwi["delta"],2)*(data_dwi["Delta"]-data_dwi["delta"]/3)
 
-def main(Nmax = 5, Cmax= 5, plot_dwi = True):
+    return data_dwi
+
+
+
+
+
+def main(Nmax = 5, Cmax= 5, plot_dwi = True, plot_animation = True):
     # find current path
     cur_path = os.getcwd()
-    # find number of time steps (T) and number of walkers (N)
-    T, N = get_T_N (cur_path)
-    # find trajectory array
-    traj_array = get_trajectory_array(T,N, cur_path)
-    # find cylinder positions 
-    cylinder_array = get_cylinder_array (cur_path)
-    # animation 
-    def update_graph(num):
-        for n in range(Nmax):
-            data = traj_array[num,n,:]
-            graph[n]._offsets3d = (pd.Series(data[0]), pd.Series(data[1]), pd.Series(data[2]))
-        title.set_text('3D Test, time={}'.format(num))
+    if plot_animation :
+        # find number of time steps (T) and number of walkers (N)
+        T, N = get_T_N (cur_path)
+        # find trajectory array
+        traj_array = get_trajectory_array(T,N, cur_path)
+        # find cylinder positions 
+        cylinder_array = get_cylinder_array (cur_path)
+        # animation 
+        def update_graph(num):
+            for n in range(Nmax):
+                data = traj_array[num,n,:]
+                graph[n]._offsets3d = (pd.Series(data[0]), pd.Series(data[1]), pd.Series(data[2]))
+            title.set_text('3D Test, time={}'.format(num))
 
-    fig1 = plt.figure(1)
-    ax = fig1.add_subplot(111, projection='3d')
-    title = ax.set_title('3D Test')
+        fig1 = plt.figure(1)
+        ax = fig1.add_subplot(111, projection='3d')
+        title = ax.set_title('3D Test')
 
-    data=traj_array[0]
-    graph = [ ax.scatter(pd.Series(data[n][0]), pd.Series(data[n][1]), pd.Series(data[n][2])) for n in range(Nmax) ]
+        data=traj_array[0]
+        graph = [ ax.scatter(pd.Series(data[n][0]), pd.Series(data[n][1]), pd.Series(data[n][2])) for n in range(Nmax) ]
 
-    ani = matplotlib.animation.FuncAnimation(fig1, update_graph, T, 
-                                interval=5, blit=False)
-    
-    for c in range(Cmax):
-        cylinder = cylinder_array[c]
-        Xc,Yc,Zc = data_for_cylinder(np.array([cylinder[0],cylinder[1],cylinder[2]]), np.array([cylinder[3],cylinder[4],cylinder[5]*0.1]), R = cylinder[6])
-        ax.plot_surface(Xc, Yc, Zc)
-    
+        ani = matplotlib.animation.FuncAnimation(fig1, update_graph, T, 
+                                    interval=5, blit=False)
+        
+        for c in range(Cmax):
+            cylinder = cylinder_array[c]
+            Xc,Yc,Zc = data_for_cylinder(np.array([cylinder[0],cylinder[1],cylinder[2]]), np.array([cylinder[3],cylinder[4],cylinder[5]*0.1]), R = cylinder[6])
+            ax.plot_surface(Xc, Yc, Zc)
+        
 
     if plot_dwi:
         dwi_signal = get_dwi_array(cur_path)
+        data_psge = get_psge_data()
+        data_psge["DWI"] = list(dwi_signal)
         fig2 = plt.figure(2)
-        x = np.linspace(0,len(dwi_signal)-1, len(dwi_signal))
-        plt.plot(x, dwi_signal)
+        sns.lineplot(x="b", y="DWI",
+             hue="x", style="y",
+             data=data_psge)
         plt.title('DWI Signal')
+        fig2.savefig("ADC.png")
 
     plt.show()
-main(Nmax= 5, Cmax=5)
 
-print("perfect")
+main(plot_dwi = True, plot_animation = False)
+
 

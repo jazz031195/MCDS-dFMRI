@@ -33,7 +33,7 @@ Dynamic_Cylinder::Dynamic_Cylinder(const Dynamic_Cylinder &cyl)
     max_radius = cyl.max_radius;
 
 }
-bool Dynamic_Cylinder::checkSwallow(Walker &walker, bool walker_is_extra)
+bool Dynamic_Cylinder::checkSwallow(Walker &walker)
 {
     //Origin of the ray
     Vector3d O;
@@ -46,12 +46,7 @@ bool Dynamic_Cylinder::checkSwallow(Walker &walker, bool walker_is_extra)
     // walker should be extra so is swallowed if is inside cylinder
     // walker should be intra so is swallowed if is outside cylinder
     bool condition;
-    if (walker_is_extra){
-        condition = (d_< EPS_VAL);
-    }
-    else{
-        condition = (d_> -EPS_VAL);
-    }
+    condition = (( d_> -EPS_VAL)&&( d_< EPS_VAL));
     if (condition){
 
         return true;

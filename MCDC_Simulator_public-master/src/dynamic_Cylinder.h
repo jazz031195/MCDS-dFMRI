@@ -60,7 +60,7 @@ public:
      */
     double minDistance(Walker &w);
 
-    bool checkSwallow(Walker &walker, bool walker_is_extra);
+    bool checkSwallow(Walker &walker);
 
 
 private:
