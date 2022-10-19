@@ -8,7 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.animation
 from scipy.linalg import norm
 cur_path = os.getcwd()
-file_name = "dyn_cylinder_gamma_packing_test_rest_DWI.txt"
+file_name = "dyn_cylinder_gamma_rest_extra_DWI.txt"
 dwi_path = cur_path +"/MCDC_Simulator_public-master/instructions/demos/output/"+ str(file_name)
 gamma_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_packing_test_gamma_distributed_dyn_cylinder_list.txt"
 file_name = "dyn_cylinder_gamma_packing_test_0.traj.txt"

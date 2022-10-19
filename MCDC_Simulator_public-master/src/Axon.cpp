@@ -25,9 +25,10 @@ Axon::Axon(const Axon &ax)
     swell = ax.swell;
     id = count++;
     spheres = ax.spheres; 
-    radii = ax.radii;
+    radius = ax.radius;
     centers = ax.centers; 
-
+    begin = ax.begin;
+    end = ax.end;
 
 }
 

@@ -8,8 +8,8 @@ from scipy.linalg import norm
 
 cur_path = os.getcwd()
 conf_file_path = cur_path + "/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedCylinders.conf"
-cyl_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_packing_test_rep_00_gamma_distributed_dyn_cylinder_list.txt"
-cyl_swell_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_packing_test_rep_00_0_gamma_distributed_dyn_cylinder_swell_list.txt"
+cyl_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_rest_extra_gamma_distributed_dyn_cylinder_list.txt"
+cyl_swell_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_rest_extra_gamma_distributed_dyn_cylinder_swell_list.txt"
         
 def get_T_N ():
     N = 0
@@ -67,9 +67,7 @@ def draw_cercles(cylinder_array, swell = False):
     fig.savefig(name)
 
 def main():
-    swell = True
-    cylinder_array = get_cylinder_array(swell)
-    draw_cercles(cylinder_array, swell)
+
     swell = False
     cylinder_array = get_cylinder_array(swell)
     draw_cercles(cylinder_array, swell)

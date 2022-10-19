@@ -9,7 +9,7 @@
 
 //* Auxiliare method to split words in a line using the spaces*//
 template<typename Out>
-void split_(const std::string &s, char delim, Out result) {
+void _split_(const std::string &s, char delim, Out result) {
     std::stringstream ss;
     ss.str(s);
     std::string item;
@@ -19,9 +19,9 @@ void split_(const std::string &s, char delim, Out result) {
 }
 
 
-std::vector<std::string> split(const std::string &s, char delim) {
+std::vector<std::string> _split_(const std::string &s, char delim) {
     std::vector<std::string> elems;
-    split_(s, delim, std::back_inserter(elems));
+    _split_(s, delim, std::back_inserter(elems));
     return elems;
 }
 
@@ -665,7 +665,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
         {
             if(first) {first-=1;continue;}
 
-            std::vector<std::string> jkr = split(line,' ');
+            std::vector<std::string> jkr = _split_(line,' ');
             if (jkr.size() != 7){
                 z_flag = true;
                 //std::cout << "\033[1;33m[Warning]\033[0m Cylinder orientation was set towards the Z direction by default" << std::endl;
@@ -713,7 +713,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
         {
             if(first) {first-=1;continue;}
 
-            std::vector<std::string> jkr = split(line,' ');
+            std::vector<std::string> jkr = _split_(line,' ');
             if (jkr.size() != 7){
                 z_flag = true;
                 //std::cout << "\033[1;33m[Warning]\033[0m Cylinder orientation was set towards the Z direction by default" << std::endl;
