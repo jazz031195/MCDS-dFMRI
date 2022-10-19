@@ -23,10 +23,11 @@ public:
     Eigen::Vector3d P,Q;    /*!< Cilinder Axis reference Points, P should be the "center"       */
     Eigen::Vector3d D;      /*!< Pre-computed and normalized P - Q vector                       */
     double radius;          /*!< Radius of the cylinder                                         */
-    double next_radius;   
     bool swell;
     double max_radius;
     double ini_radius;
+    double volume_inc_perc;
+    unsigned activation_time;
     /*!
      *  \brief Default constructor. Does nothing
      */
@@ -35,9 +36,10 @@ public:
     ~Dynamic_Cylinder();
 
 
-    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_, double radius_,double next_radius_, double max_radius_, bool swell_ = false, double scale = 1):P(P_*scale),Q(Q_*scale),radius(radius_*scale), next_radius(next_radius_*scale), max_radius{max_radius_*scale},ini_radius{radius_*scale}, swell(swell_){
+    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_, double radius_,double volume_inc_perc_, unsigned activation_time_, bool swell_ = false, double scale = 1):P(P_*scale),Q(Q_*scale),radius(radius_*scale), ini_radius{radius_*scale},volume_inc_perc{volume_inc_perc_}, activation_time{activation_time_},swell(swell_){
         D  = (Q_-P_).normalized();
         Q = P+D;
+        max_radius = radius*std::sqrt(1+volume_inc_perc_)*scale;
         id = count++;
     }
     Dynamic_Cylinder(Dynamic_Cylinder const &dyn_cyl);

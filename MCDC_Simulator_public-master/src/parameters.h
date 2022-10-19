@@ -48,7 +48,7 @@ public:
     Eigen::Vector3d max_limits;                     /*!< voxel max limits (if any)                                                  */
 
     std::vector<std::string> cylinders_files;       /*!< file paths with a list of cilinders obstacles                              */
-    std::vector<std::string> dyn_cylinders_files;       /*!< file paths with a list of cilinders obstacles                              */
+    std::vector<std::string> dyn_cylinders_files;   /*!< file paths with a list of cilinders obstacles                              */
     std::vector<std::string> PLY_files;             /*!< file paths with PLY obstacle files                                         */
     std::vector<std::string> spheres_files;         /*!< file paths with spheres obstacle files                                     */
     std::vector<double> PLY_scales;                 /*!< Auxiliary vector to save PLY file scales                                   */

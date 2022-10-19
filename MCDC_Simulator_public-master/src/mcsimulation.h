@@ -99,7 +99,9 @@ private:
 
     void addVoxels();
 
-   // void addCylindersConfigurations();
+    void addCylindersObstaclesFromFiles();
+
+    //void addCylindersConfigurations();
 
     //void addExtraObstacles();
 

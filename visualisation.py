@@ -8,7 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.animation
 from scipy.linalg import norm
 cur_path = os.getcwd()
-file_name = "no_swell/dyn_cylinder_gamma_packing_test_DWI.txt"
+file_name = "dyn_cylinder_gamma_packing_test_rest_DWI.txt"
 dwi_path = cur_path +"/MCDC_Simulator_public-master/instructions/demos/output/"+ str(file_name)
 gamma_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_packing_test_gamma_distributed_dyn_cylinder_list.txt"
 file_name = "dyn_cylinder_gamma_packing_test_0.traj.txt"
@@ -117,7 +117,7 @@ def get_psge_data():
                     elif e == 5:
                         delta.append(float(element))
                     elif e == 6:
-                        TE.append(float(element[:-2]))
+                        TE.append(float(element[:-1]))
     data_dwi["x"] = x
     data_dwi["y"] = y
     data_dwi["z"] = z
@@ -181,7 +181,6 @@ def plot_adc():
     data_2["signal"] = signal
 
     data = pd.concat([data_1, data_2])
-
     fig2 = plt.figure(2)
     sns.lineplot(x="b", y="signal",
              hue="x", style="y",

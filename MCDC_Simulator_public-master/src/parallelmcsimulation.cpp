@@ -807,17 +807,17 @@ void ParallelMCSimulation::addObstacleConfigurations()
         // h = sqrt(3)/2 * sep
         double h =0.8660254037844386*sep;
 
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,0,0),Eigen::Vector3d(0,0,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,0,0),Eigen::Vector3d(sep,0,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,0,0),Eigen::Vector3d(0,0,1.0),rad, params.volume_inc_perc, params.activation_time));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,0,0),Eigen::Vector3d(sep,0,1.0),rad, params.volume_inc_perc, params.activation_time));
 
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,2.0*h,0),Eigen::Vector3d(0,2.0*h,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,2.0*h,0),Eigen::Vector3d(sep,2.0*h,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,2.0*h,0),Eigen::Vector3d(0,2.0*h,1.0),rad,  params.volume_inc_perc, params.activation_time));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,2.0*h,0),Eigen::Vector3d(sep,2.0*h,1.0),rad, params.volume_inc_perc, params.activation_time));
 
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0.5*sep,h,0),Eigen::Vector3d(0.5*sep,h,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0.5*sep,h,0),Eigen::Vector3d(0.5*sep,h,1.0),rad, params.volume_inc_perc, params.activation_time));
 
         // To avoid problems with the boundaries
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(-0.5*sep,h,0),Eigen::Vector3d(-0.5*sep,h,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(1.5*sep,h,0),Eigen::Vector3d(1.5*sep,h,1.0),rad, rad, rad*std::sqrt(1+params.volume_inc_perc)));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(-0.5*sep,h,0),Eigen::Vector3d(-0.5*sep,h,1.0),rad, params.volume_inc_perc, params.activation_time));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(1.5*sep,h,0),Eigen::Vector3d(1.5*sep,h,1.0),rad, params.volume_inc_perc, params.activation_time));
 
         if(params.voxels_list.size()>0)
             params.voxels_list.clear();

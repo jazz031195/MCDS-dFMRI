@@ -168,7 +168,7 @@ void DynCylinderGammaDistribution::createGammaSubstrate()
                     Vector3d Q = {x, y, z};
                     Vector3d D = {x, y, z + 1};
 
-                    Dynamic_Cylinder cyl(Q, D, radiis[i], radiis[i],radiis[i]*std::sqrt(1+volume_inc_perc), bool_swell_cyl_id[i]);
+                    Dynamic_Cylinder cyl(Q, D, radiis[i], volume_inc_perc, activation_time, bool_swell_cyl_id[i]);
                     
                     //string message = "Cyl "+ to_string(i)+" at position ("+to_string(Q[0])+", "+to_string(Q[1])+ ") with radius "+ to_string(radiis[i])+ "\n";
                     //SimErrno::info(message,cout);
@@ -226,12 +226,15 @@ void DynCylinderGammaDistribution::createGammaSubstrate()
 void DynCylinderGammaDistribution::printSubstrate(ostream &out)
 {
     out << 1e-3 << endl;
+    out << activation_time << endl;
+    out << volume_inc_perc << endl;
+
     for (unsigned i = 0; i < dyn_cylinders.size(); i++)
     {
         
         out <<  dyn_cylinders[i].P[0] * 1e3 << " " << dyn_cylinders[i].P[1] * 1e3 << " " << dyn_cylinders[i].P[2] * 1e3 << " "
             << dyn_cylinders[i].Q[0] * 1e3 << " " << dyn_cylinders[i].Q[1] * 1e3 << " " << dyn_cylinders[i].Q[2] * 1e3 << " "
-            << dyn_cylinders[i].radius * 1e3 << endl;
+            << dyn_cylinders[i].radius * 1e3 << dyn_cylinders[i].swell << endl;
     }
 }
 
