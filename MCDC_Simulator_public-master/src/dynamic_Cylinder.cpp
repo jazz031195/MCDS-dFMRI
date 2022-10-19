@@ -26,11 +26,12 @@ Dynamic_Cylinder::Dynamic_Cylinder(const Dynamic_Cylinder &cyl)
     Q = cyl.Q;
     P = cyl.P;
     radius = cyl.radius;
-    next_radius = cyl.next_radius;
     swell = cyl.swell;
+    volume_inc_perc = cyl.volume_inc_perc; 
     id = count++;
     ini_radius = cyl.ini_radius;
     max_radius = cyl.max_radius;
+    activation_time = cyl.activation_time;
 
 }
 bool Dynamic_Cylinder::checkSwallow(Walker &walker, bool walker_is_extra)

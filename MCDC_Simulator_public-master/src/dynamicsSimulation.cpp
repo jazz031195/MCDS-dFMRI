@@ -1234,12 +1234,10 @@ void DynamicsSimulation::updateDynamicCylinders(unsigned t_){
         if (dyn_cylinders_list->at(i).swell){
             if (t_ == 1){
                 dyn_cylinders_list->at(i).radius = dyn_cylinders_list->at(i).ini_radius;
-                dyn_cylinders_list->at(i).next_radius = dyn_cylinders_list->at(i).ini_radius;
             
             }
             if (t_+1 == params.activation_time){
                 
-                dyn_cylinders_list->at(i).next_radius = dyn_cylinders_list->at(i).max_radius;
                 dyn_cylinders_list->at(i).percolation = 1;
             }
             if (t_ == params.activation_time){
@@ -1253,7 +1251,6 @@ void DynamicsSimulation::updateDynamicCylinders(unsigned t_){
             }
             if (t_+ 1 == params.activation_time+params.activation_period){
 
-                dyn_cylinders_list->at(i).next_radius = dyn_cylinders_list->at(i).ini_radius;
                 dyn_cylinders_list->at(i).percolation = 1;
 
             }
@@ -1266,8 +1263,6 @@ void DynamicsSimulation::updateDynamicCylinders(unsigned t_){
             if (t_-1 == params.activation_time+params.activation_period){
                 dyn_cylinders_list->at(i).percolation = 0;
             }
-
-
         }
     }
 }
@@ -1289,7 +1284,7 @@ void DynamicsSimulation::printDynamicCylinderSubstrate(unsigned t_){
 
             out <<  dyn_cylinders_list->at(i).P[0] * 1e3 << " " << dyn_cylinders_list->at(i).P[1] * 1e3 << " " << dyn_cylinders_list->at(i).P[2] * 1e3 << " "
             << dyn_cylinders_list->at(i).Q[0] * 1e3 << " " << dyn_cylinders_list->at(i).Q[1] * 1e3 << " " << dyn_cylinders_list->at(i).Q[2] * 1e3 << " "
-            << dyn_cylinders_list->at(i).radius * 1e3 << endl;
+            << dyn_cylinders_list->at(i).radius * 1e3 << dyn_cylinders_list->at(i).swell << endl;
             
         }
         out.close();

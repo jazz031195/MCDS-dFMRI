@@ -37,7 +37,6 @@ int main(int argn, char* argv[])
         return -1;
     }
 
-
     ParallelMCSimulation simulation(conf);
 
     simulation.startSimulation();

@@ -3,6 +3,7 @@
 #include "simerrno.h"
 #include "pgsesequence.h"
 #include "gradientwaveform.h"
+#include "dynamic_Cylinder.h"
 
 using namespace std;
 
@@ -125,6 +126,7 @@ double MCSimulation::getExpectedFreeeDecay(unsigned i)
 
 void MCSimulation::iniObstacles()
 {
+
     addObstacles();
 
     addPLYObstacles();
@@ -140,79 +142,91 @@ void MCSimulation::addObstacles()
 {
 
     this->dynamicsEngine->cylinders_list = this->cylinders_list;
-    this->dynamicsEngine->dyn_cylinders_list = this->dyn_cylinders_list;
     this->dynamicsEngine->spheres_list   = this->sphere_list;
+    if (params.dyn_cylinders_files.size() != 0){
+        addCylindersObstaclesFromFiles();
+    }
+    this->dynamicsEngine->dyn_cylinders_list = this->dyn_cylinders_list;
 }
 
 
 ////* Auxiliare method to split words in a line using the spaces*//
-//template<typename Out>
-//void split(const std::string &s, char delim, Out result) {
-//    std::stringstream ss;
-//    ss.str(s);
-//    std::string item;
-//    while (std::getline(ss, item, delim)) {
-//        *(result++) = item;
-//    }
-//}
+template<typename Out>
+void split(const std::string &s, char delim, Out result) {
+    std::stringstream ss;
+    ss.str(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        *(result++) = item;
+    }
+}
 
 
-//std::vector<std::string> split(const std::string &s, char delim) {
-//    std::vector<std::string> elems;
-//    split(s, delim, std::back_inserter(elems));
-//    return elems;
-//}
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    split(s, delim, std::back_inserter(elems));
+    return elems;
+}
 
-//void MCSimulation::addCylindersObstaclesFromFiles()
-//{
-//    for(unsigned i = 0; i < params.cylinders_files.size(); i++){
+void MCSimulation::addCylindersObstaclesFromFiles()
+{
+    for(unsigned i = 0; i < params.dyn_cylinders_files.size(); i++){
 
-//        bool z_flag = false;
-//        std::ifstream in(params.cylinders_files[i]);
+        bool z_flag = false;
+        (*dyn_cylinders_list).clear();
+        std::ifstream in(params.dyn_cylinders_files[i]);
 
-//        if(!in){
-//            //std::cout << "\033[1;37m[INFO]\033[0m Sim: " << count << " " << "[ERROR] Unable to open:" << params.cylinders_files[i] << std::endl;
-//            return;
-//        }
+        if(!in){
+            std::cout << "\033[1;37m[INFO]\033[0m Sim: " << count << " " << "[ERROR] Unable to open:" << params.cylinders_files[i] << std::endl;
+            return;
+        }
 
-//        bool first=true;
-//        for( std::string line; getline( in, line ); )
-//        {
-//            if(first) {first-=1;continue;}
+        bool first=true;
+        for( std::string line; getline( in, line ); )
+        {
+            if(first) {first-=1;continue;}
 
-//            std::vector<std::string> jkr = split(line,' ');
-//            if (jkr.size() != 7){
-//                z_flag = true;
-//                //std::cout << "\033[1;33m[Warning]\033[0m Cylinder orientation was set towards the Z direction by default" << std::endl;
-//            }
-//            break;
-//        }
-//        in.close();
+            std::vector<std::string> jkr = split(line,' ');
+            if (jkr.size() != 7){
+                z_flag = true;
+                std::cout << "\033[1;33m[Warning]\033[0m Cylinder orientation was set towards the Z direction by default" << std::endl;
+            }
+            break;
+        }
+        in.close();
 
-//        in.open(params.cylinders_files[i]);
+        in.open(params.dyn_cylinders_files[i]);
 
-//        if(z_flag){
-//            double x,y,z,r;
-//            double scale;
-//            in >> scale;
-//            while (in >> x >> y >> z >> r)
-//            {
-//                dynamicsEngine->cylinders_list.push_back(Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,scale));
-//            }
-//            in.close();
-//        }
-//        else{
-//            double x,y,z,ox,oy,oz,r;
-//            double scale;
-//            in >> scale;
-//            while (in >> x >> y >> z >> ox >> oy >> oz >> r)
-//            {
-//                dynamicsEngine->cylinders_list.push_back(Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,scale));
-//            }
-//            in.close();
-//        }
-//    }
-//}
+        if(z_flag){
+            double x,y,z,r;
+            double scale;
+            unsigned activation_time;
+            double volume_inc_perc;
+            bool s;
+            in >> scale;
+            in >> activation_time;
+            in >> volume_inc_perc;
+            while (in >> x >> y >> z >> r >> s)
+            {
+                (*dyn_cylinders_list).push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,volume_inc_perc, activation_time,s,scale));
+            }
+            in.close();
+        }
+        else{
+            double x,y,z,ox,oy,oz,r;
+            double scale;
+            unsigned activation_time;
+            double volume_inc_perc;
+            bool s;
+            in >> scale;
+            while (in >> x >> y >> z >> ox >> oy >> oz >> r >> s)
+            {
+                (*dyn_cylinders_list).push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,volume_inc_perc, activation_time,s,scale));
+            }
+            in.close();
+        }
+    }
+}
 
 void MCSimulation::addPLYObstacles()
 {
@@ -285,7 +299,7 @@ bool dyncylinderIsCloseBoundery(Dynamic_Cylinder& cyl, Eigen::Vector3d min_limit
     double gap = 1e-6;
     //3 dimensional vector
     for (int i = 0 ; i < 3; i++)
-        if( (cyl.P[i] - cyl.next_radius - gap < min_limits[i]) || (cyl.P[i] + cyl.next_radius + gap  > max_limits[i]) )
+        if( (cyl.P[i] - cyl.radius - gap < min_limits[i]) || (cyl.P[i] + cyl.radius + gap  > max_limits[i]) )
             return true;
 
     return false;
