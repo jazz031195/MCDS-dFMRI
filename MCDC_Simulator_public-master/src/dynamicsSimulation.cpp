@@ -1061,7 +1061,7 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
 
             // Moves the particle. Checks collision and handles bouncing.
             try{
-                updateWalkerPosition(step);
+                updateWalkerPosition(step, t);
             } 
             catch(Sentinel::ErrorCases error){
 
@@ -1240,22 +1240,33 @@ void DynamicsSimulation::updateDynamicCylinders(unsigned t_){
             if (t_+1 == params.activation_time){
                 
                 dyn_cylinders_list->at(i).next_radius = dyn_cylinders_list->at(i).max_radius;
+                dyn_cylinders_list->at(i).percolation = 1;
             }
             if (t_ == params.activation_time){
 
                 dyn_cylinders_list->at(i).radius = dyn_cylinders_list->at(i).max_radius;
+                dyn_cylinders_list->at(i).percolation = 1;
 
+            }
+            if (t_-1 == params.activation_time){
+                dyn_cylinders_list->at(i).percolation = 0;
             }
             if (t_+ 1 == params.activation_time+params.activation_period){
 
                 dyn_cylinders_list->at(i).next_radius = dyn_cylinders_list->at(i).ini_radius;
+                dyn_cylinders_list->at(i).percolation = 1;
 
             }
             if (t_ == params.activation_time+params.activation_period){
 
                 dyn_cylinders_list->at(i).radius = dyn_cylinders_list->at(i).ini_radius;
+                dyn_cylinders_list->at(i).percolation = 1;
 
             }
+            if (t_-1 == params.activation_time+params.activation_period){
+                dyn_cylinders_list->at(i).percolation = 0;
+            }
+
 
         }
     }
@@ -1288,7 +1299,7 @@ void DynamicsSimulation::printDynamicCylinderSubstrate(unsigned t_){
 /**
  * @return True if a bouncing in needed.
  */
-bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
+bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step, unsigned t) {
 
 
     //new step to take
@@ -1322,16 +1333,16 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
 
         bool isswallowed;
         unsigned id_swall_cyl;
-        //if (t == params.activation_time){
-        tie(isswallowed, id_swall_cyl) = CheckisSwallowed();
+        if (t == params.activation_time){
+            tie(isswallowed, id_swall_cyl) = CheckisSwallowed();
 
-        if (isswallowed){
-            //string message = "time :" + std::to_string(t)+ " \n" ;
-            //SimErrno::info(message,cout);
+            if (isswallowed){
+                //string message = "time :" + std::to_string(t)+ " \n" ;
+                //SimErrno::info(message,cout);
 
-            updateAfterSwallow(id_swall_cyl);
+                updateAfterSwallow(id_swall_cyl);
+            }
         }
-        //}
         
 
         // True if there was a collision and the particle needs to be bounced.
@@ -1396,23 +1407,23 @@ void DynamicsSimulation::updateAfterSwallow(unsigned id_swall_cyl){
     Eigen::Vector3d v;
     bool condition;
     Walker::RelativeLocation new_location;
-    condition = ((dist_to_border> -EPS_VAL)&&(dist_to_border< EPS_VAL));
+    condition = ((dist_to_border> -EPS_VAL)&&(dist_to_border< EPS_VAL ));
     if (params.ini_walker_flag.compare("extra")== 0) {
         // towards inside of cylinder
         v = S-O;
-        new_location = Walker::intra;
+        //new_location = Walker::intra;
 
     }
     else if (params.ini_walker_flag.compare("intra")== 0) {
         //towards outside of cylinder
         v = O-S;
-        new_location = Walker::extra;
+        //new_location = Walker::extra;
     }
 
     if (condition){
-        walker.location = new_location;
-        walker.setRealPosition(real_pos+v.normalized()*(fabs(dist_to_border)+ EPS_VAL));
-        walker.setVoxelPosition(O+v.normalized()*(fabs(dist_to_border)+ EPS_VAL));
+        //walker.location = new_location;
+        walker.setRealPosition(real_pos+v.normalized()*( EPS_VAL));
+        walker.setVoxelPosition(O+v.normalized()*(EPS_VAL));
     }
     else{
         string message = "different distance to border \n" ;
@@ -1423,11 +1434,16 @@ void DynamicsSimulation::updateAfterSwallow(unsigned id_swall_cyl){
 
 std::tuple<bool, unsigned> DynamicsSimulation::CheckisSwallowed(){
 
+
     for(unsigned int i = 0 ; i < walker.dyn_cylinders_collision_sphere.small_sphere_list_end; i++ )
     {
+        bool walker_is_extra = false;
+        if (params.ini_walker_flag.compare("extra")== 0){
+            walker_is_extra = true;
+        }
         unsigned index = walker.dyn_cylinders_collision_sphere.collision_list->at(i);
 
-        if (dyn_cylinders_list-> at(index).checkSwallow(walker)){
+        if (dyn_cylinders_list-> at(index).checkSwallow(walker, walker_is_extra)){
             return std::make_tuple(true, index);
         }
     }

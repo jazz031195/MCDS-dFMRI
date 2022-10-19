@@ -6,7 +6,6 @@ from pathlib import Path
 import os
 
 cur_path = os.getcwd()
-scheme_file_path = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_sample_scheme.scheme"
 delta = 16.5e-3 # ms
 Delta = 50e-3 #ms
 b_values = [0, 200, 500, 1000] # ms/um²
@@ -15,7 +14,7 @@ giro = 2.6751525e8 #Gyromagnetic radio given in rad/(ms*T)
 filename = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_sample_scheme_new.scheme"
 
 def read_scheme(b_value):
-    with open(scheme_file_path) as f:
+    with open(filename) as f:
         all_lines = []
         for line in f.readlines():
             if len(line.split(' ')) > 3:

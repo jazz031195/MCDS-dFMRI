@@ -8,7 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.animation
 from scipy.linalg import norm
 cur_path = os.getcwd()
-file_name = "dyn_cylinder_gamma_packing_test_DWI.txt"
+file_name = "no_swell/dyn_cylinder_gamma_packing_test_DWI.txt"
 dwi_path = cur_path +"/MCDC_Simulator_public-master/instructions/demos/output/"+ str(file_name)
 gamma_file_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dyn_cylinder_gamma_packing_test_gamma_distributed_dyn_cylinder_list.txt"
 file_name = "dyn_cylinder_gamma_packing_test_0.traj.txt"
@@ -133,52 +133,64 @@ def get_psge_data():
 
 
 
-def main(Nmax = 5, Cmax= 5, plot_dwi = True, plot_animation = True):
-    # find current path
-    cur_path = os.getcwd()
-    if plot_animation :
-        # find number of time steps (T) and number of walkers (N)
-        T, N = get_T_N (cur_path)
-        # find trajectory array
-        traj_array = get_trajectory_array(T,N, cur_path)
-        # find cylinder positions 
-        cylinder_array = get_cylinder_array (cur_path)
-        # animation 
-        def update_graph(num):
-            for n in range(Nmax):
-                data = traj_array[num,n,:]
-                graph[n]._offsets3d = (pd.Series(data[0]), pd.Series(data[1]), pd.Series(data[2]))
-            title.set_text('3D Test, time={}'.format(num))
+def animation(Nmax = 5, Cmax= 5):
+    # find number of time steps (T) and number of walkers (N)
+    T, N = get_T_N (cur_path)
+    # find trajectory array
+    traj_array = get_trajectory_array(T,N, cur_path)
+    # find cylinder positions 
+    cylinder_array = get_cylinder_array (cur_path)
+    # animation 
+    def update_graph(num):
+        for n in range(Nmax):
+            data = traj_array[num,n,:]
+            graph[n]._offsets3d = (pd.Series(data[0]), pd.Series(data[1]), pd.Series(data[2]))
+        title.set_text('3D Test, time={}'.format(num))
 
-        fig1 = plt.figure(1)
-        ax = fig1.add_subplot(111, projection='3d')
-        title = ax.set_title('3D Test')
+    fig1 = plt.figure(1)
+    ax = fig1.add_subplot(111, projection='3d')
+    title = ax.set_title('3D Test')
 
-        data=traj_array[0]
-        graph = [ ax.scatter(pd.Series(data[n][0]), pd.Series(data[n][1]), pd.Series(data[n][2])) for n in range(Nmax) ]
+    data=traj_array[0]
+    graph = [ ax.scatter(pd.Series(data[n][0]), pd.Series(data[n][1]), pd.Series(data[n][2])) for n in range(Nmax) ]
 
-        ani = matplotlib.animation.FuncAnimation(fig1, update_graph, T, 
+    ani = matplotlib.animation.FuncAnimation(fig1, update_graph, T, 
                                     interval=5, blit=False)
         
-        for c in range(Cmax):
-            cylinder = cylinder_array[c]
-            Xc,Yc,Zc = data_for_cylinder(np.array([cylinder[0],cylinder[1],cylinder[2]]), np.array([cylinder[3],cylinder[4],cylinder[5]*0.1]), R = cylinder[6])
-            ax.plot_surface(Xc, Yc, Zc)
+    for c in range(Cmax):
+        cylinder = cylinder_array[c]
+        Xc,Yc,Zc = data_for_cylinder(np.array([cylinder[0],cylinder[1],cylinder[2]]), np.array([cylinder[3],cylinder[4],cylinder[5]*0.1]), R = cylinder[6])
+        ax.plot_surface(Xc, Yc, Zc)
         
 
-    if plot_dwi:
-        dwi_signal = get_dwi_array(cur_path)
-        data_psge = get_psge_data()
-        data_psge["DWI"] = list(dwi_signal)
-        fig2 = plt.figure(2)
-        sns.lineplot(x="b", y="DWI",
+def plot_adc():
+
+    dwi_signal = get_dwi_array(cur_path)
+    data_psge = get_psge_data()
+    data_psge["DWI"] = list(dwi_signal)
+
+    x1 = list(data_psge["x"])[0]
+    data_1 = data_psge.loc[data_psge['x'] == x1]
+    data_2 = data_psge.loc[data_psge['x'] != x1]
+
+    Sb0_1 = list(data_1.loc[data_1["b"]== 0]["DWI"])[0]
+    signal = list(map(lambda Sb : np.log(Sb/Sb0_1), list(data_1["DWI"])))
+    data_1["signal"] = signal
+    Sb0_2 = list(data_2.loc[data_2["b"]== 0]["DWI"])[0]
+    signal = list(map(lambda Sb : np.log(Sb/Sb0_2), list(data_2["DWI"])))
+    data_2["signal"] = signal
+
+    data = pd.concat([data_1, data_2])
+
+    fig2 = plt.figure(2)
+    sns.lineplot(x="b", y="signal",
              hue="x", style="y",
-             data=data_psge)
-        plt.title('DWI Signal')
-        fig2.savefig("ADC.png")
+             data=data)
+    plt.title('DWI Signal [mm²/s]')
+    fig2.savefig("ADC.png")
 
     plt.show()
 
-main(plot_dwi = True, plot_animation = False)
+plot_adc()
 
 

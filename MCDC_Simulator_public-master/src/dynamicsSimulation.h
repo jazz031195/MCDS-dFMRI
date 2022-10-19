@@ -180,7 +180,7 @@ private:
      *          stored obstacles and voxels and updates the walker position(s)
      *  \return returns false if the was any problem.
      */
-    bool updateWalkerPosition(Eigen::Vector3d&step);
+    bool updateWalkerPosition(Eigen::Vector3d&step, unsigned t);
 
     std::tuple<bool, unsigned> CheckisSwallowed();
     void updateAfterSwallow(unsigned id_swall_cyl);

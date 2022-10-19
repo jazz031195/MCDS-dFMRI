@@ -33,7 +33,7 @@ Dynamic_Cylinder::Dynamic_Cylinder(const Dynamic_Cylinder &cyl)
     max_radius = cyl.max_radius;
 
 }
-bool Dynamic_Cylinder::checkSwallow(Walker &walker)
+bool Dynamic_Cylinder::checkSwallow(Walker &walker, bool walker_is_extra)
 {
     //Origin of the ray
     Vector3d O;
@@ -46,14 +46,8 @@ bool Dynamic_Cylinder::checkSwallow(Walker &walker)
     // walker should be extra so is swallowed if is inside cylinder
     // walker should be intra so is swallowed if is outside cylinder
     bool condition;
-    condition = (( d_> -EPS_VAL)&&( d_< EPS_VAL));
-    if (condition){
-
-        return true;
-    }
-    else{
-        return false;
-    }
+    condition = ((d_> -EPS_VAL)&&(d_< EPS_VAL ));
+    return condition;
     
     // walker should be intra so is swallowed if is outside cylinder
 
@@ -125,7 +119,8 @@ inline bool Dynamic_Cylinder::handleCollition(Walker& walker, Collision &colisio
     //WARNING: Cuidar este patch
     // Implementa Percolacion
     if(percolation>0.0){
-        double _percolation_ ((double)rand()/RAND_MAX);
+        //double _percolation_ ((double)rand()/RAND_MAX);
+        double _percolation_ = (rand() % 100)/100;
 
         if( percolation - _percolation_ > EPS_VAL ){
             count_perc_crossings++;
