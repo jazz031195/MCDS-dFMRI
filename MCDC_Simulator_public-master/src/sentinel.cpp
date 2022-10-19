@@ -65,13 +65,13 @@ bool Sentinel::checkErrors(Walker &walker, const Parameters &params, bool noPLY,
         throw(this->error);
     }
 
-    if( (walker.location != Walker::unknown) && (params.obstacle_permeability <= 0.0) && deport_illegals == true ){
-        if(walker.initial_location != walker.location){
-            setCrossingError(uint(walker.in_obj_index));
-            illegal_count++;
-            throw(this->error);
-        }
-    }
+    //if( (walker.location != Walker::unknown) && (params.obstacle_permeability <= 0.0) && deport_illegals == true ){
+    //    if(walker.initial_location != walker.location){
+    //        setCrossingError(uint(walker.in_obj_index));
+    //        illegal_count++;
+    //        throw(this->error);
+    //    }
+    //}
 
     if(this->rejected_step == true){
         rejected_step = false;
