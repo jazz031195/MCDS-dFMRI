@@ -136,10 +136,10 @@ double Sphere::minDistance(Walker &w){
     w.getVoxelPosition(O);
     Vector3d m = O - this->center;
     // minimum distance to the cylinder axis.
-    double distance_to_cylinder = m.norm();
+    double distance_to_sphere = m.norm();
 
     //Minimum distance to the cylinders wall.
-    double d_ = (distance_to_cylinder - radius);
+    double d_ = (distance_to_sphere - radius);
    // return d_>0.0?d_:0.0;
     return d_;
 }

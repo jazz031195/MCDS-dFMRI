@@ -57,6 +57,7 @@ ParallelMCSimulation::ParallelMCSimulation(Parameters &params)
     initializeUnitSimulations();
     SimErrno::printSimulatinInfo(params,std::cout);
     icvf=0;
+      
 }
 
 ParallelMCSimulation::~ParallelMCSimulation()
@@ -68,6 +69,7 @@ ParallelMCSimulation::~ParallelMCSimulation()
 
 void ParallelMCSimulation::startSimulation()
 {
+
     cout<<setfill('-');
     cout << SH_FG_PURPLE << "/********************   MC/DC Simulation START:  *************************/" << SH_DEFAULT << "\n";
 
@@ -198,6 +200,7 @@ void ParallelMCSimulation::initializeUnitSimulations()
     simulation_->dyn_cylinders_list = &this->dyn_cylinders_list;
     simulation_->sphere_list    = &this->spheres_list;
     simulations.push_back(simulation_);
+
 
     if(params.verbatim)
         SimErrno::info( " Sim: " + to_string(simulation_->dynamicsEngine->id) + " Initialized",cout);
@@ -704,19 +707,29 @@ void ParallelMCSimulation::addObstaclesFromFiles()
         std::ifstream in(params.dyn_cylinders_files[i]);
 
         if(!in){
-            //std::cout << "\033[1;37m[INFO]\033[0m Sim: " << count << " " << "[ERROR] Unable to open:" << params.cylinders_files[i] << std::endl;
+            std::cout <<  "[ERROR] Unable to open:" << params.cylinders_files[i] << std::endl;
             return;
         }
+        unsigned enum_ = 1;
 
         bool first=true;
+
         for( std::string line; getline( in, line ); )
         {
-            if(first) {first-=1;continue;}
+            if(first) {
+                first-=1;
+                enum_ += 1;
+                continue;
+                }
+            if (enum_ == 2 || enum_ == 3 || enum_ == 4){
+                enum_ += 1;
+                continue;
+            }
 
             std::vector<std::string> jkr = _split_(line,' ');
-            if (jkr.size() != 7){
+            if (jkr.size() != 8){
                 z_flag = true;
-                //std::cout << "\033[1;33m[Warning]\033[0m Cylinder orientation was set towards the Z direction by default" << std::endl;
+                std::cout << "\033[1;33m[Warning]\033[0m Cylinder orientation was set towards the Z direction by default" << std::endl;
             }
             break;
         }
@@ -726,22 +739,42 @@ void ParallelMCSimulation::addObstaclesFromFiles()
 
         if(z_flag){
             double x,y,z,r;
+            bool s;
             double scale;
+            unsigned activation_time, activation_period;
+            double vol_inc_per;
             in >> scale;
-            while (in >> x >> y >> z >> r)
+            in >> activation_time;
+            in >> vol_inc_per;
+            in >> activation_period;
+            while (in >> x >> y >> z >> r >> s)
             {
-                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,r,scale));
+                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,vol_inc_per,activation_time, s, scale));
             }
+            params.activation_time = activation_time;
+            params.volume_inc_perc = vol_inc_per;
+            params.activation_period = activation_period;
+
             in.close();
         }
         else{
             double x,y,z,ox,oy,oz,r;
             double scale;
+            bool s;
+            unsigned activation_time, activation_period;
+            double vol_inc_per;
             in >> scale;
-            while (in >> x >> y >> z >> ox >> oy >> oz >> r)
+            in >> activation_time;
+            in >> vol_inc_per;
+            in >> activation_period;
+            while (in >> x >> y >> z >> ox >> oy >> oz >> r >> s)
             {
-                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,r,scale));
+                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,vol_inc_per,activation_time, s, scale));
             }
+            params.activation_time = activation_time;
+            params.volume_inc_perc = vol_inc_per;
+            params.activation_period = activation_period;
+
             in.close();
         }
     }
@@ -915,7 +948,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
                 + std::to_string(params.dyn_perc) + ", number of dyn_cylinders : "+to_string(params.gamma_num_obstacles)+".\n";
         SimErrno::info(message,cout);
 
-        DynCylinderGammaDistribution gamma_dist(params.dyn_perc, params.activation_time,params.volume_inc_perc, params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
+        DynCylinderGammaDistribution gamma_dist(params.dyn_perc, params.activation_time,params.volume_inc_perc, params.activation_period, params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
                                              ,params.min_limits, params.max_limits,params.min_obstacle_radii);
 
 

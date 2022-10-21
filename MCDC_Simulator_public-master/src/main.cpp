@@ -38,7 +38,7 @@ int main(int argn, char* argv[])
     }
 
     ParallelMCSimulation simulation(conf);
-
+   
     simulation.startSimulation();
 
     #ifdef __linux__

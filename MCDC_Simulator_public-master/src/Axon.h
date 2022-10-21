@@ -26,6 +26,8 @@ public:
     bool swell;
     Eigen::Vector3d begin;
     Eigen::Vector3d end;
+    double volume_inc_perc;
+    double activation_time;
     /*!
      *  \brief Default constructor. Does nothing
      */
@@ -34,7 +36,7 @@ public:
     ~Axon();
 
 
-    Axon(double radius_, std::vector<Eigen::Vector3d> centers_,Eigen::Vector3d begin_,Eigen::Vector3d end_, bool swell_ = false):radius(radius_),centers(centers_),begin(begin_),end(end_),swell(swell_){
+    Axon(double radius_, std::vector<Eigen::Vector3d> centers_,Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,double activation_time_,bool swell_ = false):radius(radius_),centers(centers_),begin(begin_),end(end_),volume_inc_perc(volume_inc_perc_),activation_time(activation_time_), swell(swell_){
 
 
         Eigen::Vector3d squeletton = (end-begin).normalized();
@@ -47,12 +49,22 @@ public:
         }
 
         for (unsigned i=0; i< centers.size(); ++i){
-            Dynamic_Sphere sphere(centers_[i], radius);  
+            Dynamic_Sphere sphere(centers_[i], radius,volume_inc_perc_,activation_time_, swell_);  
             spheres[i] = sphere;
         }
         id = count++;
     }
     Axon(Axon const &ax);
+
+    std::tuple<bool, Dynamic_Sphere> IsInside(Walker &w);
+
+    Dynamic_Sphere closestSphere(Walker &w);
+
+    bool checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision);
+
+    Dynamic_Sphere closestSphere(Eigen::Vector3d pos);
+
+    std::tuple<bool, Dynamic_Sphere> IsInside(Eigen::Vector3d pos);
 
 };
 
