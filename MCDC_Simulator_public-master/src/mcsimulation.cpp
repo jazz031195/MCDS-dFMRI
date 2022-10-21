@@ -143,9 +143,9 @@ void MCSimulation::addObstacles()
 
     this->dynamicsEngine->cylinders_list = this->cylinders_list;
     this->dynamicsEngine->spheres_list   = this->sphere_list;
-    if (params.dyn_cylinders_files.size() != 0){
-        addCylindersObstaclesFromFiles();
-    }
+    //if (params.dyn_cylinders_files.size() != 0){
+    //    addCylindersObstaclesFromFiles();
+    //}
     this->dynamicsEngine->dyn_cylinders_list = this->dyn_cylinders_list;
 }
 
@@ -182,12 +182,20 @@ void MCSimulation::addCylindersObstaclesFromFiles()
         }
 
         bool first=true;
+        unsigned enum_ = 1;
         for( std::string line; getline( in, line ); )
         {
-            if(first) {first-=1;continue;}
+            if(first) {
+                first-=1;
+                enum_ += 1;
+                continue;
+                }
+            if (enum_ == 2 || enum_ == 3){
+                enum_ += 1;
+            }
 
             std::vector<std::string> jkr = split(line,' ');
-            if (jkr.size() != 7){
+            if (jkr.size() != 8){
                 z_flag = true;
                 std::cout << "\033[1;33m[Warning]\033[0m Cylinder orientation was set towards the Z direction by default" << std::endl;
             }

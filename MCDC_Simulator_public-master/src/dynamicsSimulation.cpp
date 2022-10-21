@@ -479,6 +479,7 @@ void DynamicsSimulation::iniWalkerPosition()
                 Vector3d(double(params.ini_delta_pos[0]),double(params.ini_delta_pos[1]),double(params.ini_delta_pos[2])));
     }
     else if(params.ini_walker_flag.compare("intra")== 0){
+
         Vector3d intra_pos;
         getAnIntraCellularPosition(intra_pos,walker.in_obj_index,walker.in_ply_index,walker.in_sph_index);
         walker.setInitialPosition(intra_pos);
@@ -1011,6 +1012,7 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
 
         walker.setIndex(w);
 
+
         // Initialize the walker initial position
         iniWalkerPosition();
 
@@ -1284,7 +1286,7 @@ void DynamicsSimulation::printDynamicCylinderSubstrate(unsigned t_){
 
             out <<  dyn_cylinders_list->at(i).P[0] * 1e3 << " " << dyn_cylinders_list->at(i).P[1] * 1e3 << " " << dyn_cylinders_list->at(i).P[2] * 1e3 << " "
             << dyn_cylinders_list->at(i).Q[0] * 1e3 << " " << dyn_cylinders_list->at(i).Q[1] * 1e3 << " " << dyn_cylinders_list->at(i).Q[2] * 1e3 << " "
-            << dyn_cylinders_list->at(i).radius * 1e3 << dyn_cylinders_list->at(i).swell << endl;
+            << dyn_cylinders_list->at(i).radius * 1e3 << " " << dyn_cylinders_list->at(i).swell << endl;
             
         }
         out.close();

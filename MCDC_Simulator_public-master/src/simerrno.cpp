@@ -619,6 +619,7 @@ bool SimErrno::checkDynCylindersListFile(Parameters &params)
         }
 
         bool first=true;
+        unsigned enum_ = 1;
         for( std::string line; getline( in, line ); )
         {
             if(first) {
@@ -629,19 +630,34 @@ bool SimErrno::checkDynCylindersListFile(Parameters &params)
                     assert(0);
                     return true;
                 }
+                enum_ += 1;
                 first-=1;continue;
+
+            }
+
+            if (enum_ == 2 || enum_ == 3 || enum_ == 4){
+                std::vector<std::string> jkr = split_(line,' ');
+                if (jkr.size()!= 1){
+                    error( "line must be only the activation time: ",cout);
+                    in.close();
+                    assert(0);
+                    return true;
+                }
+                enum_ += 1;
+                continue;
+
             }
 
             std::vector<std::string> jkr = split_(line,' ');
 
-            if(jkr.size() != 7 && jkr.size() != 4){
+            if(jkr.size() != 8 && jkr.size() != 5){
                 error( "Dynamic Cylinder list file is not in the correct format." ,cout);
                 in.close();
                 assert(0);
                 return true;
             }
 
-            if (jkr.size() != 7){
+            if (jkr.size() != 8){
                 z_flag = true;
                 warning("No dynamic cylinders orientation inlcluded. Dynamic Cylinder orientation was set towards the Z direction by default for all dynamic cylinders.",cout);
             }
@@ -653,9 +669,15 @@ bool SimErrno::checkDynCylindersListFile(Parameters &params)
 
         if(!z_flag){
             double x,y,z,ox,oy,oz,r;
+            bool s;
             double scale;
+            unsigned activation_time, activation_period;
+            double vol_inc_per;
             in >> scale;
-            while (in >> x >> y >> z >> ox >> oy >> oz >> r)
+            in >> activation_time;
+            in >> vol_inc_per;
+            in >> activation_period;
+            while (in >> x >> y >> z >> ox >> oy >> oz >> r >> s)
             {
                 if ((x - ox) == 0.0 && (z - oz) == 0.0 && (y - oy) == 0.0){
                     error( "Dynamic Cylinder list has wrongly defined dynamic cylinders. Invalid orientation: ",cout);

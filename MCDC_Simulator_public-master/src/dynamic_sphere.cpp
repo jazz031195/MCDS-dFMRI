@@ -14,6 +14,8 @@ Dynamic_Sphere::Dynamic_Sphere(const Dynamic_Sphere &sph)
     ini_radius = sph.ini_radius;
     max_radius = sph.max_radius;
     swell = sph.swell;
+    volume_inc_perc = sph.volume_inc_perc; 
+    activation_time = sph.activation_time;
     id = count++;
 }
 
@@ -139,10 +141,25 @@ double Dynamic_Sphere::minDistance(Walker &w){
     w.getVoxelPosition(O);
     Vector3d m = O - this->center;
     // minimum distance to the cylinder axis.
-    double distance_to_cylinder = m.norm();
+    double distance_to_sphere = m.norm();
 
-    //Minimum distance to the cylinders wall.
-    double d_ = (distance_to_cylinder - radius);
+    //Minimum distance to the shpere wall.
+    double d_ = (distance_to_sphere - radius);
    // return d_>0.0?d_:0.0;
     return d_;
+}
+
+bool Dynamic_Sphere::isInside(Walker &w){
+
+    //Minimum distance to the sphere wall.
+    double d_ = minDistance(w);
+   // return d_>0.0?d_:0.0;
+    return d_ <= 0;
+}
+
+bool Dynamic_Sphere::isInside(Eigen::Vector3d pos){
+    double d_ = (pos - this->center).norm();
+    d_ = d_-this->radius;
+   // return d_>0.0?d_:0.0;
+    return d_ <= 0;
 }

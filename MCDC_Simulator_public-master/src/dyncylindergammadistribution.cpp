@@ -6,10 +6,11 @@
 using namespace std;
 using namespace Eigen;
 
-DynCylinderGammaDistribution::DynCylinderGammaDistribution(double dyn_perc_, double activation_time_, double volume_inc_perc_, unsigned num_cyl, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, float min_radius)
+DynCylinderGammaDistribution::DynCylinderGammaDistribution(double dyn_perc_, double activation_time_, double volume_inc_perc_, unsigned activation_period_, unsigned num_cyl, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, float min_radius)
 {
     dyn_perc = dyn_perc_;
     activation_time = activation_time_;
+    activation_period = activation_period_;
     volume_inc_perc = volume_inc_perc_;
     num_obstacles = num_cyl;
     alpha = a;
@@ -228,13 +229,14 @@ void DynCylinderGammaDistribution::printSubstrate(ostream &out)
     out << 1e-3 << endl;
     out << activation_time << endl;
     out << volume_inc_perc << endl;
+    out << activation_period << endl;
 
     for (unsigned i = 0; i < dyn_cylinders.size(); i++)
     {
         
         out <<  dyn_cylinders[i].P[0] * 1e3 << " " << dyn_cylinders[i].P[1] * 1e3 << " " << dyn_cylinders[i].P[2] * 1e3 << " "
             << dyn_cylinders[i].Q[0] * 1e3 << " " << dyn_cylinders[i].Q[1] * 1e3 << " " << dyn_cylinders[i].Q[2] * 1e3 << " "
-            << dyn_cylinders[i].radius * 1e3 << dyn_cylinders[i].swell << endl;
+            << dyn_cylinders[i].radius * 1e3 << " " << dyn_cylinders[i].swell << endl;
     }
 }
 
