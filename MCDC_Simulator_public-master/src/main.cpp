@@ -14,6 +14,8 @@
 #include "voxel.h"
 #include "cylinder.h"
 #include "dynamic_Cylinder.h"
+#include "Axon.h"
+#include "dynamic_sphere.h"
 #include <thread>
 #include "simerrno.h"
 

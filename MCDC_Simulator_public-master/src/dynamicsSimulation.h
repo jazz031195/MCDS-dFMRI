@@ -21,6 +21,8 @@
 #include "voxel.h"
 #include "cylinder.h"
 #include "dynamic_Cylinder.h"
+#include "dynamic_sphere.h"
+#include "Axon.h"
 #include "sentinel.h"
 #include "propagator.h"
 #include "sphere.h"
@@ -49,9 +51,13 @@ public:
     std::vector <Cylinder>* cylinders_list;         /*!< pointer to a vector with all the isntances of "Cylider" obstacles          */
     std::vector <Dynamic_Cylinder>* dyn_cylinders_list;  /*!< pointer to a vector with all the isntances of "Dynamic Cylider" obstacles          */
     std::vector <Sphere>* spheres_list;           /*!< pointer to a vector with all the isntances of "Spheres" obstacles          */
+    std::vector <Dynamic_Sphere>* dyn_spheres_list;  /*!< pointer to a vector with all the isntances of "Dynamic Sphere" obstacles          */
+    std::vector <Axon>* axons_list;                 /*!< pointer to a vector with all the isntances of "Axon" obstacles          */
     std::vector<unsigned>  cylinders_deque;         /*!< deque with the indexes of the cylinders (used for optmization)             */
     std::vector<unsigned>  dyn_cylinders_deque;     /*!< deque with the indexes of the cylinders (used for optmization)             */
     std::vector<unsigned>  spheres_deque;           /*!< deque with the indexes of the spheres (used for optmization)               */
+    std::vector<unsigned>  dyn_spheres_deque;       /*!< deque with the indexes of the dynamic spheres (used for optmization)               */
+    std::vector<unsigned>  axons_deque;           /*!< deque with the indexes of the axons (used for optmization)               */
     std::vector<std::vector<unsigned>> ply_deque;   /*!< deque with the indexes of the triangles of all ply's (used for opt)        */
     std::vector <Voxel> voxels_list;                /*!< vector with all the voxels to be simulated (if any)                        */
     Propagator propagator;                          /*!< Propagator object to compute and save the particles MSD                    */
@@ -153,6 +159,9 @@ public:
 
     bool isInsideSpheres(Eigen::Vector3d &position, int& sph_id,double distance_to_be_inside);
 
+    bool isInsideDynSpheres(Eigen::Vector3d &position, int& sph_id,double distance_to_be_inside);
+
+    bool isInsideAxons(Eigen::Vector3d &position, int& ax_id,double distance_to_be_inside);
 
 private:    
 

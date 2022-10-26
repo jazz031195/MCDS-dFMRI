@@ -15,8 +15,10 @@ MCSimulation::MCSimulation()
     dynamicsEngine = nullptr;
     dataSynth = nullptr;
     sphere_list = nullptr;
-    cylinders_list = nullptr;
-    dyn_cylinders_list = nullptr;
+    cylinder_list = nullptr;
+    dyn_cylinder_list = nullptr;
+    dyn_sphere_list = nullptr;
+    axon_list = nullptr;
     id = count;
     count++;
 }
@@ -28,8 +30,10 @@ MCSimulation::MCSimulation(std::string config_file)
     dynamicsEngine = nullptr;
     dataSynth      = nullptr;
     sphere_list    = nullptr;
-    cylinders_list = nullptr;
-    dyn_cylinders_list = nullptr;
+    cylinder_list = nullptr;
+    dyn_cylinder_list = nullptr;
+    dyn_sphere_list = nullptr;
+    axon_list = nullptr;
 
     params.readSchemeFile(config_file);
     dynamicsEngine = new DynamicsSimulation(params);
@@ -63,8 +67,10 @@ MCSimulation::MCSimulation(Parameters& params_)
     dynamicsEngine = nullptr;
     dataSynth      = nullptr;
     sphere_list    = nullptr;
-    cylinders_list = nullptr;
-    dyn_cylinders_list = nullptr;
+    cylinder_list = nullptr;
+    dyn_cylinder_list = nullptr;
+    dyn_sphere_list = nullptr;
+    axon_list = nullptr;
 
 
     params = params_;
@@ -141,12 +147,14 @@ void MCSimulation::iniObstacles()
 void MCSimulation::addObstacles()
 {
 
-    this->dynamicsEngine->cylinders_list = this->cylinders_list;
+    this->dynamicsEngine->cylinders_list = this->cylinder_list;
     this->dynamicsEngine->spheres_list   = this->sphere_list;
     //if (params.dyn_cylinders_files.size() != 0){
     //    addCylindersObstaclesFromFiles();
     //}
-    this->dynamicsEngine->dyn_cylinders_list = this->dyn_cylinders_list;
+    this->dynamicsEngine->dyn_cylinders_list = this->dyn_cylinder_list;
+    this->dynamicsEngine->dyn_spheres_list = this->dyn_sphere_list;
+    this->dynamicsEngine->axons_list = this->axon_list;
 }
 
 
@@ -173,7 +181,7 @@ void MCSimulation::addCylindersObstaclesFromFiles()
     for(unsigned i = 0; i < params.dyn_cylinders_files.size(); i++){
 
         bool z_flag = false;
-        (*dyn_cylinders_list).clear();
+        (*dyn_cylinder_list).clear();
         std::ifstream in(params.dyn_cylinders_files[i]);
 
         if(!in){
@@ -216,7 +224,7 @@ void MCSimulation::addCylindersObstaclesFromFiles()
             in >> volume_inc_perc;
             while (in >> x >> y >> z >> r >> s)
             {
-                (*dyn_cylinders_list).push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,volume_inc_perc, activation_time,s,scale));
+                (*dyn_cylinder_list).push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,volume_inc_perc, activation_time,s,scale));
             }
             in.close();
         }
@@ -229,7 +237,7 @@ void MCSimulation::addCylindersObstaclesFromFiles()
             in >> scale;
             while (in >> x >> y >> z >> ox >> oy >> oz >> r >> s)
             {
-                (*dyn_cylinders_list).push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,volume_inc_perc, activation_time,s,scale));
+                (*dyn_cylinder_list).push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,volume_inc_perc, activation_time,s,scale));
             }
             in.close();
         }
