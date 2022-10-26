@@ -48,7 +48,9 @@ public:
     Eigen::Vector3d max_limits;                     /*!< voxel max limits (if any)                                                  */
 
     std::vector<std::string> cylinders_files;       /*!< file paths with a list of cilinders obstacles                              */
-    std::vector<std::string> dyn_cylinders_files;   /*!< file paths with a list of cilinders obstacles                              */
+    std::vector<std::string> dyn_cylinders_files;   /*!< file paths with a list of dynamic cilinders obstacles                              */
+    std::vector<std::string> dyn_spheres_files;     /*!< file paths with a list of dynamic spheres obstacles                              */
+    std::vector<std::string> axons_files;           /*!< file paths with a list of axons obstacles                              */
     std::vector<std::string> PLY_files;             /*!< file paths with PLY obstacle files                                         */
     std::vector<std::string> spheres_files;         /*!< file paths with spheres obstacle files                                     */
     std::vector<double> PLY_scales;                 /*!< Auxiliary vector to save PLY file scales                                   */
@@ -76,6 +78,7 @@ public:
     bool        gamma_cyl_packing;                  /*!< flag, true if a gamma distribution of cylinders will be initialized        */
     bool        gamma_dyn_cyl_packing;                  /*!< flag, true if a gamma distribution of cylinders will be initialized        */
     bool        gamma_sph_packing;                  /*!< flag, true if a gamma distribution of  SPHERES will be initialized         */
+    bool        gamma_ax_packing;                  /*!< flag, true if a gamma distribution of  axons will be initialized         */
     bool        gamma_output_conf;
     double      gamma_packing_alpha;
     double      gamma_packing_beta;
@@ -97,7 +100,8 @@ public:
     bool log_opp         = false;                   /*!< flag, true to save one per process output                                  */
     bool discard_stucks  = true;                    /*!< flag, true to discard posible stuck particles (max bouncing reached)       */
     bool discard_illegals = true;                   /*!< flag, true to discard possible illegal  crossings, Trump by default.       */
-
+    int intra = 0;                                  /*!< number of intracellular walkers at end of simulation */
+    int extra = 0;                                  /*!< number of extracellular walkers at end of simulation */
     bool log_propagator = false;                    /*!< flag, true saves the propagator for a given set of directions and times    */
 
     Eigen::Vector3d min_sampling_area;              /*!< Min defining point to delimiter the uniform sampling of walkers            */

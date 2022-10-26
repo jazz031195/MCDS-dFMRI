@@ -157,9 +157,9 @@ bool Dynamic_Sphere::isInside(Walker &w){
     return d_ <= 0;
 }
 
-bool Dynamic_Sphere::isInside(Eigen::Vector3d pos){
+bool Dynamic_Sphere::isInside(Eigen::Vector3d pos, double distance_to_be_inside){
     double d_ = (pos - this->center).norm();
     d_ = d_-this->radius;
    // return d_>0.0?d_:0.0;
-    return d_ <= 0;
+    return d_ <= distance_to_be_inside;
 }

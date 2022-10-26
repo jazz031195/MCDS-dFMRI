@@ -22,6 +22,7 @@ public:
     static int count;
     std::vector<Dynamic_Sphere> spheres; 
     double radius;
+    double max_radius;
     std::vector<Eigen::Vector3d> centers; 
     bool swell;
     Eigen::Vector3d begin;
@@ -36,7 +37,7 @@ public:
     ~Axon();
 
 
-    Axon(double radius_, std::vector<Eigen::Vector3d> centers_,Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,double activation_time_,bool swell_ = false):radius(radius_),centers(centers_),begin(begin_),end(end_),volume_inc_perc(volume_inc_perc_),activation_time(activation_time_), swell(swell_){
+    Axon(double radius_, Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,double activation_time_,bool swell_ = false):radius(radius_),begin(begin_),end(end_),volume_inc_perc(volume_inc_perc_),activation_time(activation_time_), swell(swell_){
 
 
         Eigen::Vector3d squeletton = (end-begin).normalized();
@@ -49,14 +50,16 @@ public:
         }
 
         for (unsigned i=0; i< centers.size(); ++i){
-            Dynamic_Sphere sphere(centers_[i], radius,volume_inc_perc_,activation_time_, swell_);  
+            Dynamic_Sphere sphere(centers[i], radius,volume_inc_perc,activation_time, swell);  
             spheres[i] = sphere;
         }
         id = count++;
+
+        max_radius = sqrt(1+volume_inc_perc)*radius;
     }
     Axon(Axon const &ax);
 
-    std::tuple<bool, Dynamic_Sphere> IsInside(Walker &w);
+    std::tuple<bool, Dynamic_Sphere> IsInside(Walker &w, double distance_to_be_inside);
 
     Dynamic_Sphere closestSphere(Walker &w);
 
@@ -64,7 +67,7 @@ public:
 
     Dynamic_Sphere closestSphere(Eigen::Vector3d pos);
 
-    std::tuple<bool, Dynamic_Sphere> IsInside(Eigen::Vector3d pos);
+    std::tuple<bool, Dynamic_Sphere> IsInside(Eigen::Vector3d pos, double distance_to_be_inside);
 
 };
 

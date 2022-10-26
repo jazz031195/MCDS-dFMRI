@@ -68,7 +68,7 @@ public:
      */
     double minDistance(Walker &w);
     bool isInside(Walker &w);
-    bool isInside(Eigen::Vector3d pos);
+    bool isInside(Eigen::Vector3d pos, double distance_to_be_inside);
 
 private:
 

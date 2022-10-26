@@ -44,11 +44,15 @@ public:
 
     std::vector <PLYObstacle>* plyObstacles_list;    /*!< pointer to a vector with all the instances of PLYObstacles */
 
-    std::vector <Cylinder>* cylinders_list;   /*!< pointer to a vector with all the instances of Cylinders */
+    std::vector <Cylinder>* cylinder_list;   /*!< pointer to a vector with all the instances of Cylinders */
 
-    std::vector <Dynamic_Cylinder>* dyn_cylinders_list;   /*!< pointer to a vector with all the instances of Dynamic Cylinders */
+    std::vector <Dynamic_Cylinder>* dyn_cylinder_list;   /*!< pointer to a vector with all the instances of Dynamic Cylinders */
 
     std::vector <Sphere>* sphere_list;        /*!< pointer to a vector with all the instances of Spheres   */
+
+    std::vector <Dynamic_Sphere>* dyn_sphere_list;        /*!< pointer to a vector with all the instances of Dynamic Spheres   */
+
+    std::vector <Axon>* axon_list;        /*!< pointer to a vector with all the instances of Axons   */
 
 
 

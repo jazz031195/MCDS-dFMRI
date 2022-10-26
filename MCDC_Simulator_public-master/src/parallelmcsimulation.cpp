@@ -6,6 +6,7 @@
 #include "cylindergammadistribution.h"
 #include "dyncylindergammadistribution.h"
 #include "spheregammadistribution.h"
+#include "axongammadistribution.h"
 
 //* Auxiliare method to split words in a line using the spaces*//
 template<typename Out>
@@ -102,6 +103,8 @@ void ParallelMCSimulation::startSimulation()
                    + " in average",out,false);
     SimErrno::info("Number of particles labeled as stuck: "        + to_string(stuck_count)  ,out,false);
     SimErrno::info("Number of particles eliminated due crossings: "+ to_string(illegal_count),out,false);
+    SimErrno::info("Number of intracellular particles : "+ to_string(params.intra),out,false);
+    SimErrno::info("Number of extracellular particles : "+ to_string(params.extra),out,false);
 
     if(params.max_simulation_time > 0){
         SimErrno::info("Number of simulated particles: "+ to_string(total_sim_particles),out,false);
@@ -176,9 +179,11 @@ void ParallelMCSimulation::initializeUnitSimulations()
 
         MCSimulation* simulation_ = new MCSimulation(params_temp);
         simulation_->plyObstacles_list = &this->plyObstacles_list;
-        simulation_->cylinders_list = &this->cylinders_list;
-        simulation_->dyn_cylinders_list = &this->dyn_cylinders_list;
+        simulation_->cylinder_list = &this->cylinders_list;
+        simulation_->dyn_cylinder_list = &this->dyn_cylinders_list;
         simulation_->sphere_list = &this->spheres_list;
+        simulation_->dyn_sphere_list = &this->dyn_spheres_list;
+        simulation_->axon_list = &this->axons_list;
         simulation_->dynamicsEngine->print_expected_time = 0;
         simulations.push_back(simulation_);
 
@@ -196,9 +201,11 @@ void ParallelMCSimulation::initializeUnitSimulations()
     MCSimulation* simulation_ = new MCSimulation(params_temp);
     //simulation_->dynamicsEngine->print_expected_time = 0;
     simulation_->plyObstacles_list = &this->plyObstacles_list;
-    simulation_->cylinders_list = &this->cylinders_list;
-    simulation_->dyn_cylinders_list = &this->dyn_cylinders_list;
+    simulation_->cylinder_list = &this->cylinders_list;
+    simulation_->dyn_cylinder_list = &this->dyn_cylinders_list;
     simulation_->sphere_list    = &this->spheres_list;
+    simulation_->dyn_sphere_list    = &this->dyn_spheres_list;
+    simulation_->axon_list    = &this->axons_list;
     simulations.push_back(simulation_);
 
 
@@ -982,6 +989,58 @@ void ParallelMCSimulation::addObstacleConfigurations()
         gamma_dist.printSubstrate(out);
 
         this->dyn_cylinders_list = gamma_dist.dyn_cylinders;
+
+        //params.cylinders_files.push_back(file);
+
+        out.close();
+
+        SimErrno::info("Done.\n",cout);
+    }
+
+    if(params.gamma_ax_packing == true){
+
+        string message = "Initialializing Gamma distribution (" + std::to_string(params.gamma_packing_alpha) + ","
+                + std::to_string(params.gamma_packing_beta) + ").\n";
+        SimErrno::info(message,cout);
+
+        message = "Activation time : " + std::to_string(params.activation_time) + ", dyn_perc : "
+                + std::to_string(params.dyn_perc) + ", number of dyn_cylinders : "+to_string(params.gamma_num_obstacles)+".\n";
+        SimErrno::info(message,cout);
+
+        AxonGammaDistribution gamma_dist(params.dyn_perc, params.activation_time,params.volume_inc_perc, params.activation_period, params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
+                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii);
+
+
+        gamma_dist.displayGammaDistribution();
+
+        gamma_dist.createGammaSubstrate();
+
+        //for (unsigned i = 0; i < gamma_dist.dyn_cylinders.size(); i++)
+        //{
+            
+        //    string message = " P : ("+ to_string(gamma_dist.dyn_cylinders[i].P[0])+", "+ to_string(gamma_dist.dyn_cylinders[i].P[1]) + "," + to_string(gamma_dist.dyn_cylinders[i].P[2])+") \n";
+        //    SimErrno::info(message, cout);
+        //}
+
+        params.max_limits = gamma_dist.max_limits;
+        params.min_limits = gamma_dist.min_limits;
+
+        if(params.voxels_list.size()<=0){
+            pair<Eigen::Vector3d,Eigen::Vector3d> voxel_(params.min_limits,params.max_limits);
+            params.voxels_list.push_back(voxel_);
+        }
+        else{
+            params.voxels_list[0].first =  params.min_limits;
+            params.voxels_list[0].second = params.max_limits;
+        }
+
+        string file = params.output_base_name + "_gamma_distributed_axon_list.txt";
+
+        ofstream out(file);
+
+        gamma_dist.printSubstrate(out);
+
+        this->axons_list = gamma_dist.axons;
 
         //params.cylinders_files.push_back(file);
 

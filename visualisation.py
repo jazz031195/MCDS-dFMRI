@@ -90,7 +90,7 @@ def get_cylinder_array (cur_path):
     return cylinder_array
 
 def get_dwi_array(cur_path):
-    # create array with trajectory values
+    # create array with dwi values
     signal = []
     with open(dwi_path) as f:
         [signal.append(float(line)) for line in f.readlines()]

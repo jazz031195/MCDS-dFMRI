@@ -29,39 +29,40 @@ Axon::Axon(const Axon &ax)
     centers = ax.centers; 
     begin = ax.begin;
     end = ax.end;
+    max_radius = ax.max_radius;
 
 }
 
-std::tuple<bool, Dynamic_Sphere> Axon::IsInside(Eigen::Vector3d pos){
+std::tuple<bool, Dynamic_Sphere> Axon::IsInside(Eigen::Vector3d pos, double distance_to_be_inside){
 
     for (unsigned i=0; i< spheres.size(); ++i){
         Vector3d m = pos - spheres[i].center;
         double distance_to_sphere = m.norm() - spheres[i].radius;
-        if (distance_to_sphere <= 0){
+        if (distance_to_sphere <= distance_to_be_inside){
             return std::make_tuple(true, spheres[i]);
             break;
         }
         
     }
     Dynamic_Sphere s;
-    return std::make_tuple(true, s);
+    return std::make_tuple(false, s);
 }
 
-std::tuple<bool, Dynamic_Sphere> Axon::IsInside(Walker &w){
+std::tuple<bool, Dynamic_Sphere> Axon::IsInside(Walker &w, double distance_to_be_inside){
 
     Vector3d O;
     w.getVoxelPosition(O);
     for (unsigned i=0; i< spheres.size(); ++i){
         Vector3d m = O - spheres[i].center;
         double distance_to_sphere = m.norm() - spheres[i].radius;
-        if (distance_to_sphere <= 0){
+        if (distance_to_sphere <= distance_to_be_inside){
             return std::make_tuple(true, spheres[i]);
             break;
         }
         
     }
     Dynamic_Sphere s;
-    return std::make_tuple(true, s);
+    return std::make_tuple(false, s);
 }
 
 
@@ -100,14 +101,14 @@ bool Axon::checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_le
 {
     bool isinside;
     Dynamic_Sphere sphere;
-    tie(isinside, sphere) =IsInside(walker);
+    tie(isinside, sphere) =IsInside(walker, EPS_VAL);
     if (isinside){
         Vector3d O;
         walker.getVoxelPosition(O);
         Eigen::Vector3d next_pos = O + step;
         bool isinside_;
         Dynamic_Sphere sphere_;
-        tie(isinside_, sphere_) =IsInside(next_pos);
+        tie(isinside_, sphere_) =IsInside(next_pos, EPS_VAL);
         if (isinside_){
             return false;
         }
@@ -118,17 +119,13 @@ bool Axon::checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_le
 
     }
     else {
-        Dynamic_Sphere closest_sphere = closestSphere(walker);
-        if (closest_sphere.checkCollision(walker, step, step_lenght, colision)){
-            return true;
-        }
-        else {
-            for (unsigned i=0; i< spheres.size(); ++i){
-                if (spheres[i].checkCollision(walker, step, step_lenght, colision)){
-                    return true;
-                    break;
-                }
+
+        for (unsigned i=0; i< spheres.size(); ++i){
+            if (spheres[i].checkCollision(walker, step, step_lenght, colision)){
+                return true;
+                break;
             }
+            
         }
     }
     return false;
