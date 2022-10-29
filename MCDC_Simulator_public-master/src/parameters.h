@@ -22,7 +22,8 @@
 class Parameters
 {
 public:
-
+    bool active_state;
+    unsigned concentration;
     unsigned num_walkers;                           /*!< N, number of walkers                                                       */
     unsigned num_steps;                             /*!< T, number of steps                                                         */
     double diffusivity;                             /*!< D, diffusivity constant                                                    */

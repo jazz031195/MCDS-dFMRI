@@ -205,7 +205,7 @@ def combine_active_rest_adc(folder_name):
     fig1.savefig(name)
 
 
-loc = "extra"
-path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/rest/"+str(loc)+"/N_10_5/dyn_cylinder_gamma_rest_"+str(loc)+"_DWI.txt"
+
+path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/cylinder_distribution_DWI.txt"
 data = create_data(path)
 plot_DWI(data, path)

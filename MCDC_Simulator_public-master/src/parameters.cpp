@@ -33,6 +33,8 @@ Parameters::Parameters()
     volume_inc_perc     = 0;
     activation_time     = 0;
     dyn_perc            = 0; 
+    concentration = 0;
+    active_state = false;
 
     ini_walkers_file = "";
     num_proc    = 0;
@@ -70,6 +72,9 @@ void Parameters::readSchemeFile(std::string conf_file_path)
         if(str_dist(tmp,"n") == 0){
             in >> num_walkers;
         }
+        else if(str_dist(tmp,"c") == 0){
+            in >> concentration;
+        }
         else if(str_dist(tmp,"t") == 0){
             in >> num_steps;
         }
@@ -81,6 +86,16 @@ void Parameters::readSchemeFile(std::string conf_file_path)
         }
         else if(str_dist(tmp,"diffusivity") <= 1){
             in >> diffusivity;
+        }
+        else if(str_dist(tmp,"active_state") <= 2){
+            string active_state_str;
+            in >> active_state_str;
+            if(active_state_str.compare("false")== 0){
+                active_state = false;
+            }
+            else if (active_state_str.compare("true")== 0){
+                active_state = true;
+            }
         }
         else if( (str_dist(tmp,"out_traj_file_index") <= 2) or (str_dist(tmp,"exp_prefix") <= 2)) {
             in >> traj_file;
@@ -104,6 +119,7 @@ void Parameters::readSchemeFile(std::string conf_file_path)
         else if(str_dist(tmp,"seed") <= 1){
             in >> seed;
         }
+
         else if(str_dist(tmp,"<obstacle>") == 0){
             readObstacles(in);
         }
@@ -138,6 +154,19 @@ void Parameters::readSchemeFile(std::string conf_file_path)
         else if(str_dist(tmp,"ini_walkers_pos") <= 2)
         {
             in >> ini_walker_flag;
+            if (ini_walker_flag.compare("intra")== 0){
+
+                num_walkers = gamma_icvf*concentration;
+
+            }
+            else if (ini_walker_flag.compare("extra")== 0){
+
+                num_walkers = (1-gamma_icvf)*concentration;
+                
+            }
+            else {
+                num_walkers = concentration;
+            }
             std::transform(ini_walker_flag.begin(), ini_walker_flag.end(), ini_walker_flag.begin(), ::tolower);
 
             if(str_dist(ini_walker_flag,"intra") > 1 && str_dist(ini_walker_flag,"extra") > 1 && str_dist(ini_walker_flag,"delta") > 1){
@@ -661,9 +690,6 @@ void Parameters::readGammaParams(ifstream &in)
         else if(str_dist(tmp,"num_spheres") <= 1){
             in >> gamma_num_obstacles;
         }
-        else if(str_dist(tmp,"icvf") <= 1){
-            in >> gamma_icvf;
-        }
         else if(str_dist(tmp,"min_radius") <= 1){
             in >> min_obstacle_radii;
         }
@@ -679,6 +705,15 @@ void Parameters::readGammaParams(ifstream &in)
         else if(str_dist(tmp,"percentage_increase_of_volume") <= 1){
             in >> volume_inc_perc;
         }
+
+        else if(str_dist(tmp,"icvf") <= 1){
+            in >> gamma_icvf;
+            if (active_state){
+                gamma_icvf = gamma_icvf*(1+volume_inc_perc*dyn_perc);
+            }
+
+        }
+
         else if(str_dist(tmp,"") == 0){
             in.clear();
             //in.ignore();

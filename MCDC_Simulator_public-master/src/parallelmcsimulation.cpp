@@ -754,8 +754,12 @@ void ParallelMCSimulation::addObstaclesFromFiles()
             in >> activation_time;
             in >> vol_inc_per;
             in >> activation_period;
+
             while (in >> x >> y >> z >> r >> s)
             {
+                if (params.active_state && s){
+                    r *= sqrt(1+vol_inc_per);
+                }
                 dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,vol_inc_per,activation_time, s, scale));
             }
             params.activation_time = activation_time;
@@ -956,7 +960,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
         SimErrno::info(message,cout);
 
         DynCylinderGammaDistribution gamma_dist(params.dyn_perc, params.activation_time,params.volume_inc_perc, params.activation_period, params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
-                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii);
+                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii, params.active_state);
 
 
         gamma_dist.displayGammaDistribution();
