@@ -81,6 +81,17 @@ void Parameters::readSchemeFile(std::string conf_file_path)
         else if(str_dist(tmp,"duration") <= 1){
             in >> sim_duration;
         }
+
+        else if(str_dist(tmp,"percentage_increase_of_volume") <= 1){
+            in >> volume_inc_perc;
+        } 
+        else if(str_dist(tmp,"percentage_dynamic_cylinders") <= 1){
+            in >> dyn_perc;
+        }
+        else if(str_dist(tmp,"icvf") <= 1){
+            in >> gamma_icvf;
+            
+        }
         else if(str_dist(tmp,"scheme_file") <= 1){
             in >> scheme_file;
         }
@@ -95,6 +106,7 @@ void Parameters::readSchemeFile(std::string conf_file_path)
             }
             else if (active_state_str.compare("true")== 0){
                 active_state = true;
+                gamma_icvf *= (1+volume_inc_perc*dyn_perc);
             }
         }
         else if( (str_dist(tmp,"out_traj_file_index") <= 2) or (str_dist(tmp,"exp_prefix") <= 2)) {
@@ -156,6 +168,7 @@ void Parameters::readSchemeFile(std::string conf_file_path)
             in >> ini_walker_flag;
             if (ini_walker_flag.compare("intra")== 0){
 
+                
                 num_walkers = gamma_icvf*concentration;
 
             }

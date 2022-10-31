@@ -171,14 +171,14 @@ void DynCylinderGammaDistribution::createGammaSubstrate()
                     Vector3d Q = {x, y, z};
                     Vector3d D = {x, y, z + 1};
 
-                    if (active_state && bool_swell_cyl_id[i]){
-
-                        radiis[i] = radiis[i]*sqrt(1+volume_inc_perc);
-                    }
                     Dynamic_Cylinder cyl(Q, D, radiis[i], volume_inc_perc, activation_time, bool_swell_cyl_id[i]);
                     
-                    //string message = "Cyl "+ to_string(i)+" at position ("+to_string(Q[0])+", "+to_string(Q[1])+ ") with radius "+ to_string(radiis[i])+ "\n";
-                    //SimErrno::info(message,cout);
+                    if (active_state && bool_swell_cyl_id[i]){
+                        radiis[i]*= sqrt(1+volume_inc_perc);
+                        cyl.radius *= sqrt(1+volume_inc_perc);
+                        cyl.volume_inc_perc = 0.0;
+                    }
+
 
                     double min_distance;
                     // creates dyn_cylinders_to_add
@@ -191,6 +191,7 @@ void DynCylinderGammaDistribution::createGammaSubstrate()
                         }
                         break;
                     }
+
                 }
 
                 int dummy;
@@ -202,6 +203,8 @@ void DynCylinderGammaDistribution::createGammaSubstrate()
                     best_cylinders = dyn_cylinders;
                     best_max_limits = max_limits;
                 }
+                //string message = "Cyl with radius "+ to_string(cyl.radius)+ "\n";
+                //SimErrno::info(message,cout);
             } // end for cylinders
 
             if (this->icvf - best_icvf < 0.0005)
@@ -234,7 +237,6 @@ void DynCylinderGammaDistribution::printSubstrate(ostream &out)
 {
     out << 1e-3 << endl;
     out << activation_time << endl;
-    out << volume_inc_perc << endl;
     out << activation_period << endl;
 
     for (unsigned i = 0; i < dyn_cylinders.size(); i++)
@@ -352,7 +354,7 @@ void DynCylinderGammaDistribution::checkBoundaryConditions(Dynamic_Cylinder cyl,
     for (int i = 0; i < 2; i++)
     {
 
-        double rad = cyl.radius;
+        double rad = cyl.max_radius;
 
         if (cyl.P[i] + rad >= max_limits[i])
         {
@@ -380,7 +382,7 @@ void DynCylinderGammaDistribution::checkBoundaryConditions(Dynamic_Cylinder cyl,
             Dynamic_Cylinder jkr(to_add[j]);
             for (int i = 0; i < 2; i++)
             {
-                double rad = cyl.radius;
+                double rad = cyl.max_radius;
 
                 if (jkr.P[i] + rad >= max_limits[i])
                 {

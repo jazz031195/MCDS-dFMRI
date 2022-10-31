@@ -728,7 +728,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 enum_ += 1;
                 continue;
                 }
-            if (enum_ == 2 || enum_ == 3 || enum_ == 4){
+            if (enum_ == 2 || enum_ == 3){
                 enum_ += 1;
                 continue;
             }
@@ -749,21 +749,18 @@ void ParallelMCSimulation::addObstaclesFromFiles()
             bool s;
             double scale;
             unsigned activation_time, activation_period;
-            double vol_inc_per;
             in >> scale;
             in >> activation_time;
-            in >> vol_inc_per;
             in >> activation_period;
 
             while (in >> x >> y >> z >> r >> s)
             {
                 if (params.active_state && s){
-                    r *= sqrt(1+vol_inc_per);
+                    r *= sqrt(1+params.volume_inc_perc);
                 }
-                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,vol_inc_per,activation_time, s, scale));
+                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,params.volume_inc_perc,activation_time, s, scale));
             }
             params.activation_time = activation_time;
-            params.volume_inc_perc = vol_inc_per;
             params.activation_period = activation_period;
 
             in.close();
@@ -773,17 +770,17 @@ void ParallelMCSimulation::addObstaclesFromFiles()
             double scale;
             bool s;
             unsigned activation_time, activation_period;
-            double vol_inc_per;
             in >> scale;
             in >> activation_time;
-            in >> vol_inc_per;
             in >> activation_period;
             while (in >> x >> y >> z >> ox >> oy >> oz >> r >> s)
             {
-                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,vol_inc_per,activation_time, s, scale));
+                if (params.active_state && s){
+                    r *= sqrt(1+params.volume_inc_perc);
+                }
+                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,params.volume_inc_perc,activation_time, s, scale));
             }
             params.activation_time = activation_time;
-            params.volume_inc_perc = vol_inc_per;
             params.activation_period = activation_period;
 
             in.close();
