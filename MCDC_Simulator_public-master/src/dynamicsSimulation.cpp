@@ -1188,28 +1188,28 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
             generateStep(step,l);
 
             // Updates the dynamic cylinders
-            if ((*dyn_cylinders_list).size()> 0){
+            //if ((*dyn_cylinders_list).size()> 0){
 
-                try{
+                //try{
  
-                    updateDynamicCylinders(t); 
+                    //updateDynamicCylinders(t); 
 
-                    printDynamicCylinderSubstrate(t);
-                }
-                catch(Sentinel::ErrorCases error){
+                    //printDynamicCylinderSubstrate(t);
+                //}
+                //catch(Sentinel::ErrorCases error){
 
                     // Possible errors, or numerical un-handed cases should end here.
-                    sentinela.deportationProcess(walker,w,t,back_tracking,params,id);
+                    //sentinela.deportationProcess(walker,w,t,back_tracking,params,id);
 
-                    if ( (error == Sentinel::ErrorCases::stuck) || (error == Sentinel::ErrorCases::crossed)){
+                    //if ( (error == Sentinel::ErrorCases::stuck) || (error == Sentinel::ErrorCases::crossed)){
                         //w--;
-                        break;
-                    }
+                        //break;
+                    //}
 
-                    if ( error == Sentinel::rejected  )
-                        continue;
-                }
-            }
+                    //if ( error == Sentinel::rejected  )
+                        //continue;
+                //}
+            //}
 
             // Moves the particle. Checks collision and handles bouncing.
             try{
@@ -1389,37 +1389,20 @@ void DynamicsSimulation::updateDynamicCylinders(unsigned t_){
         //string message = " P : ("+ to_string(dyn_cylinders_list->at(i).P[0])+", "+ to_string(dyn_cylinders_list->at(i).P[1]) + "," + to_string(dyn_cylinders_list->at(i).P[2])+") \n";
         //SimErrno::info(message, cout);
         if (dyn_cylinders_list->at(i).swell){
-            if (t_ == 1){
-                dyn_cylinders_list->at(i).radius = dyn_cylinders_list->at(i).ini_radius;
-            
-            }
-            if (t_+1 == params.activation_time){
-                
-                dyn_cylinders_list->at(i).percolation = 1;
-            }
+
             if (t_ == params.activation_time){
 
                 dyn_cylinders_list->at(i).radius = dyn_cylinders_list->at(i).max_radius;
-                dyn_cylinders_list->at(i).percolation = 1;
 
             }
-            if (t_-1 == params.activation_time){
-                dyn_cylinders_list->at(i).percolation = 0;
-            }
-            if (t_+ 1 == params.activation_time+params.activation_period){
 
-                dyn_cylinders_list->at(i).percolation = 1;
-
-            }
             if (t_ == params.activation_time+params.activation_period){
 
                 dyn_cylinders_list->at(i).radius = dyn_cylinders_list->at(i).ini_radius;
-                dyn_cylinders_list->at(i).percolation = 1;
+   
 
             }
-            if (t_-1 == params.activation_time+params.activation_period){
-                dyn_cylinders_list->at(i).percolation = 0;
-            }
+
         }
     }
 }
@@ -1483,18 +1466,18 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step, unsigned t)
         // Checks the number of bouncing per step.
         walker.steps_count++;
 
-        bool isswallowed;
-        unsigned id_swall_cyl;
-        if (t == params.activation_time){
-            tie(isswallowed, id_swall_cyl) = CheckisSwallowed();
+        //bool isswallowed;
+        //unsigned id_swall_cyl;
+        //if (t == params.activation_time){
+        //    tie(isswallowed, id_swall_cyl) = CheckisSwallowed();
 
-            if (isswallowed){
+        //    if (isswallowed){
                 //string message = "time :" + std::to_string(t)+ " \n" ;
                 //SimErrno::info(message,cout);
 
-                updateAfterSwallow(id_swall_cyl);
-            }
-        }
+                //updateAfterSwallow(id_swall_cyl);
+            //}
+        //}
         
 
         // True if there was a collision and the particle needs to be bounced.
