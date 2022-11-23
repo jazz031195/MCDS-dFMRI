@@ -14,6 +14,7 @@ Parameters::Parameters()
     write_traj          = false;
     write_txt           = false;
     write_bin           =  true;
+    verbatim    = false;
 
     hex_cyl_packing    = false;
     hex_dyn_cyl_packing    = false;
@@ -31,8 +32,8 @@ Parameters::Parameters()
     gamma_icvf          = 0;
     min_obstacle_radii  = 0;
     volume_inc_perc     = 0;
-    activation_time     = 0;
     dyn_perc            = 0; 
+    active_state = false;
 
     ini_walkers_file = "";
     num_proc    = 0;
@@ -61,7 +62,7 @@ void Parameters::readSchemeFile(std::string conf_file_path)
         cout << "[ERROR] Configuration file" << endl;
         return;
     }
-
+    bool walkers_ini = false;
     string tmp="";
     while((in >> tmp) && (str_dist(tmp,"<END>") >= 2) ){
 
@@ -69,7 +70,9 @@ void Parameters::readSchemeFile(std::string conf_file_path)
 
         if(str_dist(tmp,"n") == 0){
             in >> num_walkers;
+            walkers_ini = true;
         }
+
         else if(str_dist(tmp,"t") == 0){
             in >> num_steps;
         }
@@ -81,6 +84,16 @@ void Parameters::readSchemeFile(std::string conf_file_path)
         }
         else if(str_dist(tmp,"diffusivity") <= 1){
             in >> diffusivity;
+        }
+        else if(str_dist(tmp,"active_state") <= 2){
+            string active_state_str;
+            in >> active_state_str;
+            if(active_state_str.compare("false")== 0){
+                active_state = false;
+            }
+            else if (active_state_str.compare("true")== 0){
+                active_state = true;
+            }
         }
         else if( (str_dist(tmp,"out_traj_file_index") <= 2) or (str_dist(tmp,"exp_prefix") <= 2)) {
             in >> traj_file;
@@ -104,6 +117,7 @@ void Parameters::readSchemeFile(std::string conf_file_path)
         else if(str_dist(tmp,"seed") <= 1){
             in >> seed;
         }
+
         else if(str_dist(tmp,"<obstacle>") == 0){
             readObstacles(in);
         }
@@ -138,6 +152,7 @@ void Parameters::readSchemeFile(std::string conf_file_path)
         else if(str_dist(tmp,"ini_walkers_pos") <= 2)
         {
             in >> ini_walker_flag;
+
             std::transform(ini_walker_flag.begin(), ini_walker_flag.end(), ini_walker_flag.begin(), ::tolower);
 
             if(str_dist(ini_walker_flag,"intra") > 1 && str_dist(ini_walker_flag,"extra") > 1 && str_dist(ini_walker_flag,"delta") > 1){
@@ -661,17 +676,8 @@ void Parameters::readGammaParams(ifstream &in)
         else if(str_dist(tmp,"num_spheres") <= 1){
             in >> gamma_num_obstacles;
         }
-        else if(str_dist(tmp,"icvf") <= 1){
-            in >> gamma_icvf;
-        }
         else if(str_dist(tmp,"min_radius") <= 1){
             in >> min_obstacle_radii;
-        }
-        else if(str_dist(tmp,"activation_time") <= 1){
-            in >> activation_time;
-        }
-        else if(str_dist(tmp,"activation_period") <= 1){
-            in >> activation_period;
         }
         else if(str_dist(tmp,"percentage_dynamic_cylinders") <= 1){
             in >> dyn_perc;
@@ -679,6 +685,11 @@ void Parameters::readGammaParams(ifstream &in)
         else if(str_dist(tmp,"percentage_increase_of_volume") <= 1){
             in >> volume_inc_perc;
         }
+        else if(str_dist(tmp,"icvf") <= 1){
+            in >> gamma_icvf;
+
+        }
+
         else if(str_dist(tmp,"") == 0){
             in.clear();
             //in.ignore();

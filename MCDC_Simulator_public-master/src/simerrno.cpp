@@ -635,7 +635,7 @@ bool SimErrno::checkDynCylindersListFile(Parameters &params)
 
             }
 
-            if (enum_ == 2 || enum_ == 3 || enum_ == 4){
+            if (enum_ == 2 || enum_ == 3){
                 std::vector<std::string> jkr = split_(line,' ');
                 if (jkr.size()!= 1){
                     error( "line must be only the activation time: ",cout);
@@ -672,10 +672,8 @@ bool SimErrno::checkDynCylindersListFile(Parameters &params)
             bool s;
             double scale;
             unsigned activation_time, activation_period;
-            double vol_inc_per;
             in >> scale;
             in >> activation_time;
-            in >> vol_inc_per;
             in >> activation_period;
             while (in >> x >> y >> z >> ox >> oy >> oz >> r >> s)
             {

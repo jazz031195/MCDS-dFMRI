@@ -6,11 +6,9 @@
 using namespace std;
 using namespace Eigen;
 
-AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_, double activation_time_, double volume_inc_perc_, unsigned activation_period_, unsigned num_ax, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, float min_radius)
+AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc_perc_, unsigned num_ax, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, float min_radius)
 {
     dyn_perc = dyn_perc_;
-    activation_time = activation_time_;
-    activation_period = activation_period_;
     volume_inc_perc = volume_inc_perc_;
     num_obstacles = num_ax;
     alpha = a;
@@ -169,7 +167,7 @@ void AxonGammaDistribution::createGammaSubstrate()
                     Vector3d Q = {x, y, z};
                     Vector3d D = {x, y, z + 1};
 
-                    Axon ax(radiis[i], Q, D, volume_inc_perc, activation_time, bool_swell_ax_id[i]);
+                    Axon ax(radiis[i], Q, D, volume_inc_perc, bool_swell_ax_id[i]);
                     
                     //string message = "Cyl "+ to_string(i)+" at position ("+to_string(Q[0])+", "+to_string(Q[1])+ ") with radius "+ to_string(radiis[i])+ "\n";
                     //SimErrno::info(message,cout);
@@ -227,9 +225,9 @@ void AxonGammaDistribution::createGammaSubstrate()
 void AxonGammaDistribution::printSubstrate(ostream &out)
 {
     out << 1e-3 << endl;
-    out << activation_time << endl;
     out << volume_inc_perc << endl;
-    out << activation_period << endl;
+    out << dyn_perc << endl;
+    out << icvf << endl;
 
     for (unsigned i = 0; i < axons.size(); i++)
     {

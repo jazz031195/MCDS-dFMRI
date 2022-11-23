@@ -24,16 +24,14 @@ class DynCylinderGammaDistribution
 public:
 
     double dyn_perc;                                /*!< Percentage of dynamic cylinders that swell                                 */ 
-    double activation_time;                         /*!< Time at which the system becomes active and cylinders start to swell       */                                       
     double volume_inc_perc;                         /*!< Percentage of Volume increase of cylinders that start to swell       */                                       
     std::vector<Dynamic_Cylinder> dyn_cylinders;    /*!< Cylinder vector                                                            */
-    unsigned activation_period;
     unsigned num_obstacles;                         /*!< number of cylnders fit inside the substrate                                */
     double alpha;                                   /*!< alpha coefficient of the Gamma distribution                                */
     double beta;                                    /*!< beta coefficient of the gamma distribution                                 */
     double icvf;                                    /*!< Achieved intra-celular volum fraction in the substrate                     */
     float min_radius;                                /*!< Minimum radius to be sampled from the gamma distribution                  */
-
+    bool active_state;                              /*!< If the cylinders are initially swollen                                     */
     Eigen::Vector3d min_limits;                     /*!< voxel min limits (if any) (bottom left corner)                             */
     Eigen::Vector3d max_limits;                     /*!< voxel max limits (if any)                                                  */
     
@@ -54,7 +52,7 @@ public:
      *  \param scale scale factor for the values passed. Useful when reading a file.
      *  \brief Initialize everything.
      */
-    DynCylinderGammaDistribution(double, double ,double, unsigned,unsigned, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius = 0.001);
+    DynCylinderGammaDistribution(double, double , unsigned,double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius = 0.001, bool active_state = false);
      
      /*!
      *  \brief Shows a small histogram of the gamma distribution
