@@ -18,7 +18,7 @@ for conf in "${confs[@]}"
     rm "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/dyn_cylinder_DWI.txt"
     rm "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/dyn_cylinder_simulation_info.txt"
     # renames the cylinder list txt
-    mv "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/dyn_cylinder_gamma_distributed_dyn_cylinder_list.txt" "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/${conf}_0.txt" 
+    mv "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/dyn_cylinder_gamma_distributed_dyn_cylinder_list.txt" "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/${conf}.txt" 
     cd ..
     cd ..
     echo "configuration : $conf is done !"
