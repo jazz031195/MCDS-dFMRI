@@ -14,7 +14,6 @@ Parameters::Parameters()
     write_traj          = false;
     write_txt           = false;
     write_bin           =  true;
-    verbatim    = false;
 
     hex_cyl_packing    = false;
     hex_dyn_cyl_packing    = false;
