@@ -5,6 +5,13 @@ import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import seaborn as sns
+from pathlib import Path
+from sklearn import datasets, linear_model
+from sklearn.linear_model import LinearRegression
+import statsmodels.api as sm
+from scipy import stats
+import warnings
+warnings.filterwarnings("ignore")
 
 cur_path = os.getcwd()
 giro = 2.6751525e8 #Gyromagnetic radio given in rad/(ms*T)
@@ -70,9 +77,13 @@ def create_data(dwi_path):
     return data_dwi
     
 def plot_DWI(data, path):
+    data["orientation"] =  list(data["x"]).copy()
+    data["orientation"] = list(map(lambda x,y : "x" if x == 1 else y,list(data["x"]), list(data["orientation"])))
+    data["orientation"] = list(map(lambda x,y : "y" if x == 1 else y,list(data["y"]), list(data["orientation"])))
+    data["orientation"] = list(map(lambda x,y : "z" if x == 1 else y,list(data["z"]), list(data["orientation"])))
     fig1 = plt.figure(1)
     sns.lineplot(x="b", y="log(Sb/So)",
-             hue="x", style="y",size = "z",
+             hue="orientation",
              data=data)
     plt.title('DWI Signal (log(Sb/So))')
     path_ = path.split("/")
@@ -102,7 +113,12 @@ def get_ADC_value(data_dwi, orientation = "all"):
         signalb1000 = list(data_dwi0.loc[data_dwi0.b == b_1000]["log(Sb/So)"])[0]
         adcs.append((signalb200-signalb1000)/(b_1000-b_200))
     if orientation == "all":
-        return np.sum(adcs)/3
+        return np.mean([adcs[0],adcs[1],2.5e-3])
+        #return ((adcs[0]+adcs[1])/2)
+    if orientation == "radial":
+        return ((adcs[0]+adcs[1])/2)
+    if orientation == "z":
+        return (adcs[2])
     if orientation == "separate":
         return adcs[0], adcs[1], adcs[2]
 
@@ -145,17 +161,20 @@ def plot_adc_sanity_check(state, loc):
         paths = [N_10_4_file,N_5_10_4_file, N_10_5_file, N_5_10_5_file, N_10_6_file]
     
         for e, path in enumerate(paths):
-            data_dwi = create_data(path)
-            x_adc,y_adc,z_adc = get_ADC_value(data_dwi, orientation="separate")
-            adcs.append(x_adc)
-            orientations.append("x")
-            adcs.append(y_adc)
-            orientations.append("y")
-            adcs.append(z_adc)
-            orientations.append("z")
-            for i in range(3):
-                confs_.append(conf)
-                Ns_.append(Ns[e])
+            
+            if Path(path).exists():
+
+                data_dwi = create_data(path)
+                x_adc,y_adc,z_adc = get_ADC_value(data_dwi, orientation="separate")
+                adcs.append(x_adc)
+                orientations.append("x")
+                adcs.append(y_adc)
+                orientations.append("y")
+                adcs.append(z_adc)
+                orientations.append("z")
+                for i in range(3):
+                    confs_.append(conf)
+                    Ns_.append(Ns[e])
     data_adc["ADC"] = adcs
     data_adc["conf"] = confs_
     data_adc["N"] = Ns_
@@ -163,7 +182,8 @@ def plot_adc_sanity_check(state, loc):
 
     fig2 = plt.figure(2)
     ax = sns.lineplot(x="N", y="ADC", hue = "orientation", 
-             data=data_adc.loc[data_adc.orientation != "z"] )
+             data=data_adc.loc[data_adc.orientation == "z"] )
+    
 
     path_ = path.split("/")
     path_ = path_[:-3]
@@ -199,63 +219,251 @@ def combine_intra_extra_adc(folder_name, rest = True):
     plt.legend()
     fig1.savefig(name)
 
-def combine_active_rest_adc(loc, folders=["N_10_5","N_5_10_5","N_10_6"] , Ns=[1e5, 5e5, 1e6], confs =["conf1", "conf2" , "conf3"] ):
+
+
+def combine_active_rest_adc(folders=["N_10_5","N_5_10_5","N_10_6"] , Ns=[1e5, 5e5, 1e6], confs =["conf1", "conf2" , "conf3"] ):
 
     data_rets_active = pd.DataFrame()
-    fs =[] 
-    adcs =[] 
+    fs =[]
+    adcs =[]
     orientations =[] 
     confs_ =[] 
-    for e,folder in enumerate(folders): 
-        for conf in confs :
-            state = "rest"
-            path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI.txt"
-            data_dwi = create_data(path)
-            x_adc_rest,y_adc_rest,z_adc_rest = get_ADC_value(data_dwi, orientation = "separate")
+    locs_ = []
+    locs = ["extra", "intra"]
+    for loc in locs:
+        for e,folder in enumerate(folders): 
+            for conf in confs :
+                state = "rest"
+                path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI.txt"
+                if Path(path).exists():
+                    data_dwi = create_data(path)
+                    x_adc_rest,y_adc_rest,z_adc_rest = get_ADC_value(data_dwi, orientation = "separate")
 
-            state = "active"
-            path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI.txt"
-            data_dwi = create_data(path)
-            x_adc_act,y_adc_act,z_adc_act = get_ADC_value(data_dwi, orientation = "separate")
-            
-            adcs.append((x_adc_act-x_adc_rest)*100/x_adc_rest)
-            orientations.append("x")
-            adcs.append((y_adc_act-y_adc_rest)*100/y_adc_rest)
-            orientations.append("y")
-            adcs.append((z_adc_act-z_adc_rest)*100/z_adc_rest)
-            orientations.append("z")
+                    state = "active"
+                    path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI.txt"
+                    if Path(path).exists():
+                        data_dwi = create_data(path)
+                        x_adc_act,y_adc_act,z_adc_act = get_ADC_value(data_dwi, orientation = "separate")
+                        
+                        adcs.append((x_adc_act-x_adc_rest)*100/x_adc_rest)
+                        orientations.append("x")
+                        adcs.append((y_adc_act-y_adc_rest)*100/y_adc_rest)
+                        orientations.append("y")
+                        adcs.append((z_adc_act-z_adc_rest)*100/z_adc_rest)
+                        orientations.append("z")
 
-            for i in range(3):
-                fs.append(Ns[e])
-                confs_.append(conf)
-
+                        for i in range(3):
+                            fs.append(Ns[e])
+                            confs_.append(conf)
+                            locs_.append(loc)
 
     data_rets_active["orientation"] = orientations
-    data_rets_active["ADC"] = adcs
+    data_rets_active["% ADC change from rest to active"] = adcs
     data_rets_active["N"] = fs
     data_rets_active["conf"] = confs_
+    data_rets_active["location"] = locs_
     print(data_rets_active)
 
-    sns.boxplot(data = data_rets_active.loc[data_rets_active.orientation != "z"] , x = "ADC",  y = "orientation", hue = "N")
+    sns.stripplot(data = data_rets_active , x = "% ADC change from rest to active",  y = "orientation", hue = "conf")
     plt.show()
 
-state = "rest"
-loc = "intra"
-#combine_active_rest_adc(loc,folders=["N_10_4"] , Ns=[1e4])
-folder = "N_10_4"
-conf = "conf1"
-path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI.txt"
+def final_plot_adc():
+    folder = "N_10_6"
+    conf = "conf2"
+    states = ["active", "rest"]
+    locs =["intra", "extra"] 
+    df = pd.DataFrame()
+    adcs =[]
+    locs_ = []
+    states_ = []
+    orientations =[] 
+    trials_ = []
+    for loc in locs :
+        for state in states:
+            for i in range(8):
+                path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
+                data = create_data(path)
+                x_adc_act,y_adc_act,z_adc_act = get_ADC_value(data, orientation = "separate")
+                adcs.append((x_adc_act+y_adc_act)/2)
+                orientations.append("radial")
+                adcs.append(z_adc_act)
+                orientations.append("z")
+
+                for ii in range(2):
+                    locs_.append(loc)
+                    states_.append(state)
+                    trials_.append(i)
+    df["orientation"] = orientations
+    df["ADC [mm²/s]"] = adcs
+    df["location"] = locs_
+    df["state"] = states_
+    df = df.loc[df.orientation == "radial"]
+    print(df)
+    plt.figure(figsize=(10,8))
+    #g = sns.FacetGrid(df.loc[df.orientation == "radial"], y= "ADC [mm²/s]", row = "orientation", hue="state",sharex=False, hue_order= [ "rest", "active"])
+    #g.map(sns.catplot, "ADC [mm²/s]", x= "location", alpha=.7)
+    #g.set_xticklabels(fontsize=5)
+    #g.add_legend()
+    g = sns.catplot(data = df, y= "ADC [mm²/s]", x= "state",  hue = "state", col = "location", hue_order=["rest","active"], sharey=False)
+    #plt.show()
+    for axs in g.axes:
+        for ax in axs:
+            ax.set_yticklabels(ax.get_yticklabels(),fontsize= 12)
+            ax.set_xticklabels(ax.get_xticklabels(),fontsize= 12)
+
+    plt.savefig("adc_compare.png")
+
+def stats():
+    folder = "N_10_6"
+    conf = "conf2"
+    states = ["active", "rest"]
+    df = pd.DataFrame()
+    rs =[]
+    zs = []
+    states_ = []
+
+    for state in states :
+        for i in range(5):
+            loc = "intra"
+            path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
+            data = create_data(path)
+            x_adc_intra,y_adc_intra,z_adc_intra = get_ADC_value(data, orientation = "separate")
+
+            loc = "extra"
+            path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
+            data = create_data(path)
+            x_adc_extra,y_adc_extra,z_adc_extra = get_ADC_value(data, orientation = "separate")
+            icvf = 0.7
+            if state == "active":
+                icvf *= (1+0.01*0.3)
+            x_adc = (1-icvf)*x_adc_extra+ icvf*x_adc_intra
+            y_adc = (1-icvf)*y_adc_extra+ icvf*y_adc_intra
+            z_adc = (1-icvf)*z_adc_extra+ icvf*z_adc_intra
+
+            rs.append((x_adc+y_adc)/2)
+            zs.append(z_adc)
+
+            states_.append(state)
             
-data = create_data(path)
-plot_DWI(data, path)
-x,y,z = get_ADC_value(data, orientation = "separate")
-mess1 = "Rest: x : "+ str(x) +", y : "+ str(y)
-state = "active"
-path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI.txt"
-data = create_data(path)
-plot_DWI(data, path)
-x,y,z = get_ADC_value(data, orientation = "separate")
-mess2 = "Active : x : "+ str(x) +", y : "+ str(y)
-print(mess1)
-print(mess2)
-combine_active_rest_adc(loc, folders=["N_10_4"] , Ns=[1e4], confs =["conf1", "conf2", "conf3"] )
+    df["rADC"] = rs
+    df["zADC"] = zs
+    df["state"] = [1 if s == "active" else 0 for s in states_]
+
+    
+    y = df.state
+    X = df[["rADC","zADC"]]
+
+    X2 = sm.add_constant(X)
+    est = sm.OLS(y, X2)
+    est2 = est.fit()
+    print(est2.summary())
+
+
+
+
+
+def get_adc_diff_rest_active(folder, conf):
+
+    adcs = []
+    df_adc = pd.DataFrame()
+    states = []
+    trial = []
+    adcs_r = []
+    rests = []
+    directions = []
+
+    plot_types = ["all","radial"]
+    
+    for i in range(8):
+        icvf = 0.7
+        state = "rest"
+        loc = "intra"
+        path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
+        data = create_data(path)
+        adc_intra = get_ADC_value(data, orientation = plot_types[0])
+        loc = "extra"
+        path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
+        data = create_data(path)
+        adc_extra = get_ADC_value(data, orientation = plot_types[0])
+        adc_rest = (1-icvf)*adc_extra + icvf * adc_intra
+        adcs.append(adc_rest)
+        rests.append(adc_rest)
+        directions.append("all directions")
+
+        loc = "intra"
+        path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
+        data = create_data(path)
+        adc_intra = get_ADC_value(data, orientation = plot_types[1])
+        loc = "extra"
+        path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
+        data = create_data(path)
+        adc_extra = get_ADC_value(data, orientation = plot_types[1])
+        adc_rest = (1-icvf)*adc_extra + icvf * adc_intra
+        adcs.append(adc_rest)
+        directions.append("radial")
+
+        for ii in range(2):
+            states.append("rest")
+            trial.append(i)
+
+        icvf *= (1+ 0.3*0.01) 
+        state = "active"
+        loc = "intra"
+        path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
+        data = create_data(path)
+        adc_intra = get_ADC_value(data, orientation = plot_types[0])
+        loc = "extra"
+        path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
+        data = create_data(path)
+        adc_extra = get_ADC_value(data, orientation = plot_types[0])
+        adc_active= (1-icvf)*adc_extra + icvf * adc_intra
+        adcs.append(adc_active)
+        rests.append(adc_active)
+        directions.append("all directions")
+
+        loc = "intra"
+        path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
+        data = create_data(path)
+        adc_intra = get_ADC_value(data, orientation = plot_types[1])
+        loc = "extra"
+        path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
+        data = create_data(path)
+        adc_extra = get_ADC_value(data, orientation = plot_types[1])
+        adc_active= (1-icvf)*adc_extra + icvf * adc_intra
+        adcs.append(adc_active)
+        directions.append("radial")
+
+        for ii in range(2):
+            states.append("task")
+            trial.append(i)
+
+
+    df_adc["state"] = states
+    df_adc["ADC [mm²/s]"] = adcs
+    df_adc["direction"] = directions
+    df_adc["Relative adc"] = (df_adc["ADC [mm²/s]"]/np.mean(rests))
+    df_adc["trial"] = trial
+
+
+    g = sns.catplot(data = df_adc, x = "state", y = "ADC [mm²/s]", col = "direction", sharey=False)
+
+    for axs in g.axes:
+        for ax in axs:
+            ax.set_yticklabels(ax.get_yticklabels(),fontsize= 15)
+            ax.set_xticklabels(ax.get_xticklabels(),fontsize= 15)
+
+
+    plt.savefig("ADC_tot.png")
+
+    df = df_adc.groupby(by = ["state"]).mean()
+    active = list(df["Relative adc"])[0]
+    rest = list(df["Relative adc"])[1]
+    print("% Change in ADC from rest to active : ", (active-rest)*100/rest)
+    print("Change in ADC from rest to active : ", (active-rest))
+
+
+
+folder = "N_10_6"
+conf = "conf2"
+
+final_plot_adc()

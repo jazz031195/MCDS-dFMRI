@@ -24,10 +24,8 @@ class AxonGammaDistribution
 public:
 
     double dyn_perc;                                /*!< Percentage of dynamic cylinders that swell                                 */ 
-    double activation_time;                         /*!< Time at which the system becomes active and cylinders start to swell       */                                       
     double volume_inc_perc;                         /*!< Percentage of Volume increase of cylinders that start to swell       */                                       
     std::vector<Axon> axons;    /*!< Cylinder vector                                                            */
-    unsigned activation_period;
     unsigned num_obstacles;                         /*!< number of cylnders fit inside the substrate                                */
     double alpha;                                   /*!< alpha coefficient of the Gamma distribution                                */
     double beta;                                    /*!< beta coefficient of the gamma distribution                                 */
@@ -54,7 +52,7 @@ public:
      *  \param scale scale factor for the values passed. Useful when reading a file.
      *  \brief Initialize everything.
      */
-    AxonGammaDistribution(double, double ,double, unsigned,unsigned, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius = 0.001);
+    AxonGammaDistribution(double, double, unsigned, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius = 0.001);
      
      /*!
      *  \brief Shows a small histogram of the gamma distribution

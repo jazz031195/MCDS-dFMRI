@@ -6,11 +6,9 @@
 using namespace std;
 using namespace Eigen;
 
-DynCylinderGammaDistribution::DynCylinderGammaDistribution(double dyn_perc_, double activation_time_, double volume_inc_perc_, unsigned activation_period_, unsigned num_cyl, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, float min_radius, bool active_state_)
+DynCylinderGammaDistribution::DynCylinderGammaDistribution(double dyn_perc_, double volume_inc_perc_, unsigned num_cyl, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, float min_radius, bool active_state_)
 {
     dyn_perc = dyn_perc_;
-    activation_time = activation_time_;
-    activation_period = activation_period_;
     volume_inc_perc = volume_inc_perc_;
     num_obstacles = num_cyl;
     alpha = a;
@@ -171,7 +169,7 @@ void DynCylinderGammaDistribution::createGammaSubstrate()
                     Vector3d Q = {x, y, z};
                     Vector3d D = {x, y, z + 1};
 
-                    Dynamic_Cylinder cyl(Q, D, radiis[i], volume_inc_perc, activation_time, bool_swell_cyl_id[i]);
+                    Dynamic_Cylinder cyl(Q, D, radiis[i], volume_inc_perc, bool_swell_cyl_id[i]);
                     
                     if (active_state && bool_swell_cyl_id[i]){
                         radiis[i]*= sqrt(1+volume_inc_perc);
@@ -236,8 +234,9 @@ void DynCylinderGammaDistribution::createGammaSubstrate()
 void DynCylinderGammaDistribution::printSubstrate(ostream &out)
 {
     out << 1e-3 << endl;
-    out << activation_time << endl;
-    out << activation_period << endl;
+    out << volume_inc_perc << endl;
+    out << dyn_perc << endl;
+    out << icvf << endl;
 
     for (unsigned i = 0; i < dyn_cylinders.size(); i++)
     {

@@ -41,6 +41,7 @@ public:
     */
     static bool checkSimulationParameters(Parameters& params);
 
+
     //! \fn checks if the given scheme files exist and make sense
     /*! \param parameter instance
      *  \brief Return false if any of the parameters are inconsistent or bugged. In may assert the

@@ -165,15 +165,6 @@ public:
 
 private:    
 
-    void updateDynamicCylinders(unsigned t_);
-    
-    /*! \fn     generateStep
-     *  \param  step stores the computed step.
-     *  \param  l step size. Can be used to change diffusivity in the medium.
-     *  \brief  Computes a random generated orientation in the sphere with given norm.
-     *  \todo   Enable the use of pre-computed steps.
-     */
-    void printDynamicCylinderSubstrate(unsigned t_);
     inline void generateStep(Eigen::Vector3d& step , double l);
 
     /*! \fn     generateDirectedStep
@@ -189,10 +180,7 @@ private:
      *          stored obstacles and voxels and updates the walker position(s)
      *  \return returns false if the was any problem.
      */
-    bool updateWalkerPosition(Eigen::Vector3d&step, unsigned t);
-
-    std::tuple<bool, unsigned> CheckisSwallowed();
-    void updateAfterSwallow(unsigned id_swall_cyl);
+    bool updateWalkerPosition(Eigen::Vector3d&step);
 
     /*! \fn     checkObstacleCollision
      *  \param  amended_step, step to be "amended", this is corrected against bouncing and voxel limits

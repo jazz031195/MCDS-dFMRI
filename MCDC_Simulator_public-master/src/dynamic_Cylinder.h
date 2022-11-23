@@ -27,7 +27,6 @@ public:
     double max_radius;
     double ini_radius;
     double volume_inc_perc;
-    unsigned activation_time;
     /*!
      *  \brief Default constructor. Does nothing
      */
@@ -36,7 +35,7 @@ public:
     ~Dynamic_Cylinder();
 
 
-    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_, double radius_,double volume_inc_perc_, unsigned activation_time_, bool swell_ = false, double scale = 1):P(P_*scale),Q(Q_*scale),radius(radius_*scale), ini_radius{radius_*scale},volume_inc_perc{volume_inc_perc_}, activation_time{activation_time_},swell(swell_){
+    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_, double radius_,double volume_inc_perc_, bool swell_ = false, double scale = 1):P(P_*scale),Q(Q_*scale),radius(radius_*scale), ini_radius{radius_*scale},volume_inc_perc{volume_inc_perc_}, swell{swell_}{
         D  = (Q_-P_).normalized();
         Q = P+D;
         max_radius = radius*std::sqrt(1+volume_inc_perc_);

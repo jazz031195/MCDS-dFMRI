@@ -31,7 +31,6 @@ Dynamic_Cylinder::Dynamic_Cylinder(const Dynamic_Cylinder &cyl)
     id = count++;
     ini_radius = cyl.ini_radius;
     max_radius = cyl.max_radius;
-    activation_time = cyl.activation_time;
 
 }
 bool Dynamic_Cylinder::checkSwallow(Walker &walker, bool walker_is_extra)
@@ -120,8 +119,7 @@ inline bool Dynamic_Cylinder::handleCollition(Walker& walker, Collision &colisio
     //WARNING: Cuidar este patch
     // Implementa Percolacion
     if(percolation>0.0){
-        //double _percolation_ ((double)rand()/RAND_MAX);
-        double _percolation_ = (rand() % 100)/100;
+        double _percolation_ ((double)rand()/RAND_MAX);
 
         if( percolation - _percolation_ > EPS_VAL ){
             count_perc_crossings++;
@@ -164,7 +162,7 @@ inline bool Dynamic_Cylinder::handleCollition(Walker& walker, Collision &colisio
         colision.col_location = Collision::unknown;
     }
 
-    colision.rn = c;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+    colision.rn = c;
 
     colision.colision_point = walker.pos_v + colision.t*step;
 

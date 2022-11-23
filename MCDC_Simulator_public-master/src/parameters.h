@@ -23,14 +23,11 @@ class Parameters
 {
 public:
     bool active_state;
-    unsigned concentration;
     unsigned num_walkers;                           /*!< N, number of walkers                                                       */
     unsigned num_steps;                             /*!< T, number of steps                                                         */
     double diffusivity;                             /*!< D, diffusivity constant                                                    */
     double sim_duration;                            /*!< simulation total time                                                      */
     double dyn_perc;                                /*!< percentage of swelling cylinders                                           */
-    double activation_time;                         /*!< time at which cylinders start to swell                                     */
-    double activation_period;                        /*!< time after which cylinders go back to resting state after swelling                                     */
     double volume_inc_perc;  
     bool write_traj;                                /*!< flag, write a traj file or not, binary format only                         */
     bool write_txt;                                 /*!< flag, writes DWI output signals in .txt if True                            */
@@ -101,8 +98,6 @@ public:
     bool log_opp         = false;                   /*!< flag, true to save one per process output                                  */
     bool discard_stucks  = true;                    /*!< flag, true to discard posible stuck particles (max bouncing reached)       */
     bool discard_illegals = true;                   /*!< flag, true to discard possible illegal  crossings, Trump by default.       */
-    int intra = 0;                                  /*!< number of intracellular walkers at end of simulation */
-    int extra = 0;                                  /*!< number of extracellular walkers at end of simulation */
     bool log_propagator = false;                    /*!< flag, true saves the propagator for a given set of directions and times    */
 
     Eigen::Vector3d min_sampling_area;              /*!< Min defining point to delimiter the uniform sampling of walkers            */

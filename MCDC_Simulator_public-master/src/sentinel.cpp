@@ -22,6 +22,8 @@ Sentinel::Sentinel()
     deport_illegals = true; //Trump mode on.
     discard_stucks = true;
 
+
+
     rejected_step = false;
 }
 
@@ -70,6 +72,7 @@ bool Sentinel::checkErrors(Walker &walker, const Parameters &params, bool noPLY,
             setCrossingError(uint(walker.in_obj_index));
             illegal_count++;
             throw(this->error);
+            cout <<  "illegal_count++" << endl;
         }
     }
 

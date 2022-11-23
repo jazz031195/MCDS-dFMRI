@@ -149,9 +149,7 @@ void MCSimulation::addObstacles()
 
     this->dynamicsEngine->cylinders_list = this->cylinder_list;
     this->dynamicsEngine->spheres_list   = this->sphere_list;
-    //if (params.dyn_cylinders_files.size() != 0){
-    //    addCylindersObstaclesFromFiles();
-    //}
+
     this->dynamicsEngine->dyn_cylinders_list = this->dyn_cylinder_list;
     this->dynamicsEngine->dyn_spheres_list = this->dyn_sphere_list;
     this->dynamicsEngine->axons_list = this->axon_list;
@@ -216,28 +214,30 @@ void MCSimulation::addCylindersObstaclesFromFiles()
         if(z_flag){
             double x,y,z,r;
             double scale;
-            unsigned activation_time;
-            double volume_inc_perc;
+            double volume_inc_perc, icvf, dyn_perc;
             bool s;
             in >> scale;
-            in >> activation_time;
             in >> volume_inc_perc;
+            in >> dyn_perc;
+            in >> icvf;
             while (in >> x >> y >> z >> r >> s)
             {
-                (*dyn_cylinder_list).push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,volume_inc_perc, activation_time,s,scale));
+                (*dyn_cylinder_list).push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,volume_inc_perc, s,scale));
             }
             in.close();
         }
         else{
             double x,y,z,ox,oy,oz,r;
             double scale;
-            unsigned activation_time;
-            double volume_inc_perc;
+            double volume_inc_perc, icvf, dyn_perc;
             bool s;
             in >> scale;
+            in >> volume_inc_perc;
+            in >> dyn_perc;
+            in >> icvf;
             while (in >> x >> y >> z >> ox >> oy >> oz >> r >> s)
             {
-                (*dyn_cylinder_list).push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,volume_inc_perc, activation_time,s,scale));
+                (*dyn_cylinder_list).push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,volume_inc_perc, s,scale));
             }
             in.close();
         }
