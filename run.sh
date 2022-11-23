@@ -1,11 +1,14 @@
 #!/bin/bash -l
-declare -a locs=("extra");
-declare -a states=("active");
-#declare -a folders=("N_10_4" "N_5_10_4" "N_10_5" "N_5_10_5" "N_10_6");
-#declare -a C=(10000 50000 100000 500000 1000000);
+
+# location : "extra" or "intra"
+declare -a locs=("extra" "intra"); 
+#state : "active" or "rest"
+declare -a states=("active" "rest");
+# name of folder to save data to
 declare -a folders=("N_10_6");
+# number of molecules (later adjusted to location)
 declare -a N=(1000000);
-#declare -a confs=("conf1" "conf2" "conf3");
+#name of configuration file
 declare -a confs=("conf2");
 
 icvf=0.7;
