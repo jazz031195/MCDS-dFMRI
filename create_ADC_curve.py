@@ -464,6 +464,12 @@ def get_adc_diff_rest_active(folder, conf):
 
 
 folder = "N_10_6"
-conf = "conf2"
-
-final_plot_adc()
+conf = "conf1"
+loc="extra"
+state="rest"
+path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI.txt"
+        
+data_dwi = create_data(path)
+print(data_dwi)
+z = get_ADC_value(data_dwi, orientation = "all")
+print(z)
