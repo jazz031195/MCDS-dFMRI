@@ -727,7 +727,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 enum_ += 1;
                 continue;
                 }
-            if (enum_ == 2 || enum_ == 3){
+            if (enum_ == 2 || enum_ == 3 || enum_ == 4){
                 enum_ += 1;
                 continue;
             }
@@ -747,12 +747,11 @@ void ParallelMCSimulation::addObstaclesFromFiles()
             double x,y,z,r;
             bool s;
             double scale;
-            double volume_inc_perc, dyn_perc;
+            double volume_inc_perc, dyn_perc, icvf;
             in >> scale;
             in >> volume_inc_perc;
             in >> dyn_perc;
             in >> icvf;
-
 
             while (in >> x >> y >> z >> r >> s)
             {
@@ -772,7 +771,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
             double x,y,z,ox,oy,oz,r;
             double scale;
             bool s;
-            double volume_inc_perc, dyn_perc;
+            double volume_inc_perc, dyn_perc, icvf;
 
             in >> scale;
             in >> volume_inc_perc;
