@@ -33,36 +33,38 @@ Axon::Axon(const Axon &ax)
 
 }
 
-std::tuple<bool, Dynamic_Sphere> Axon::IsInside(Eigen::Vector3d pos, double distance_to_be_inside){
+std::tuple<bool, std::vector<Dynamic_Sphere>> Axon::IsInside(Eigen::Vector3d pos, double distance_to_be_inside){
 
+    std::vector<Dynamic_Sphere> spheres_to_add;
+    bool isinside = false;
     for (unsigned i=0; i< spheres.size(); ++i){
         Vector3d m = pos - spheres[i].center;
         double distance_to_sphere = m.norm() - spheres[i].radius;
         if (distance_to_sphere <= distance_to_be_inside){
-            return std::make_tuple(true, spheres[i]);
-            break;
+            spheres_to_add.push_back(spheres[i]);
+            isinside = true;
+
         }
-        
     }
-    Dynamic_Sphere s;
-    return std::make_tuple(false, s);
+    return std::make_tuple(isinside, spheres_to_add);
 }
 
-std::tuple<bool, Dynamic_Sphere> Axon::IsInside(Walker &w, double distance_to_be_inside){
+std::tuple<bool, std::vector<Dynamic_Sphere>> Axon::IsInside(Walker &w, double distance_to_be_inside){
 
     Vector3d O;
     w.getVoxelPosition(O);
+    std::vector<Dynamic_Sphere> spheres_to_add;
+    bool isinside = false;
     for (unsigned i=0; i< spheres.size(); ++i){
         Vector3d m = O - spheres[i].center;
         double distance_to_sphere = m.norm() - spheres[i].radius;
         if (distance_to_sphere <= distance_to_be_inside){
-            return std::make_tuple(true, spheres[i]);
-            break;
+            spheres_to_add.push_back(spheres[i]);
+            isinside = true;
         }
-        
     }
-    Dynamic_Sphere s;
-    return std::make_tuple(false, s);
+
+    return std::make_tuple(isinside, spheres_to_add);
 }
 
 
@@ -100,21 +102,22 @@ Dynamic_Sphere Axon::closestSphere(Walker &w){
 bool Axon::checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision)
 {
     bool isinside;
-    Dynamic_Sphere sphere;
-    tie(isinside, sphere) =IsInside(walker, EPS_VAL);
+    std::vector<Dynamic_Sphere> spheres_;
+    tie(isinside, spheres_) =IsInside(walker, EPS_VAL);
     if (isinside){
         Vector3d O;
         walker.getVoxelPosition(O);
         Eigen::Vector3d next_pos = O + step;
         bool isinside_;
-        Dynamic_Sphere sphere_;
-        tie(isinside_, sphere_) =IsInside(next_pos, EPS_VAL);
+        std::vector<Dynamic_Sphere> new_spheres_;
+        tie(isinside_, new_spheres_) =IsInside(next_pos, EPS_VAL);
         if (isinside_){
             return false;
         }
         else{
-            Dynamic_Sphere outer_sphere = sphere;
-            return outer_sphere.checkCollision(walker, step, step_lenght, colision);
+            Dynamic_Sphere closest_sphere;
+            closest_sphere = closestSphere(walker);
+            return closest_sphere.checkCollision(walker, step, step_lenght, colision);
         }
 
     }

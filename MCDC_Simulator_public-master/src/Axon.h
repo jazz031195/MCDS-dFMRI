@@ -64,7 +64,7 @@ public:
     }
     Axon(Axon const &ax);
 
-    std::tuple<bool, Dynamic_Sphere> IsInside(Walker &w, double distance_to_be_inside);
+    std::tuple<bool, std::vector<Dynamic_Sphere>> IsInside(Walker &w, double distance_to_be_inside);
 
     Dynamic_Sphere closestSphere(Walker &w);
 
@@ -72,7 +72,7 @@ public:
 
     Dynamic_Sphere closestSphere(Eigen::Vector3d pos);
 
-    std::tuple<bool, Dynamic_Sphere> IsInside(Eigen::Vector3d pos, double distance_to_be_inside);
+    std::tuple<bool, std::vector<Dynamic_Sphere>> IsInside(Eigen::Vector3d pos, double distance_to_be_inside);
 
 };
 
