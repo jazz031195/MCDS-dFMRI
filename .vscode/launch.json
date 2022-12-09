@@ -7,7 +7,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/src/main",
-            "args": ["/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedCylinders.conf"],
+            "args": ["/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedAxons.conf"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

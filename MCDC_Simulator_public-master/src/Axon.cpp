@@ -26,10 +26,10 @@ Axon::Axon(const Axon &ax)
     id = count++;
     spheres = ax.spheres; 
     radius = ax.radius;
-    centers = ax.centers; 
     begin = ax.begin;
     end = ax.end;
     max_radius = ax.max_radius;
+
 
 }
 

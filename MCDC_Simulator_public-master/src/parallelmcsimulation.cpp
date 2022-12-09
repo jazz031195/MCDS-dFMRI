@@ -793,6 +793,93 @@ void ParallelMCSimulation::addObstaclesFromFiles()
             in.close();
         }
     }
+
+    for(unsigned i = 0; i < params.axons_files.size(); i++){
+
+        bool z_flag = false;
+        std::ifstream in(params.axons_files[i]);
+
+        if(!in){
+            std::cout <<  "[ERROR] Unable to open:" << params.axons_files[i] << std::endl;
+            return;
+        }
+        unsigned enum_ = 1;
+
+        bool first=true;
+
+        for( std::string line; getline( in, line ); )
+        {
+            if(first) {
+                first-=1;
+                enum_ += 1;
+                continue;
+                }
+            if (enum_ == 2 || enum_ == 3 || enum_ == 4){
+                enum_ += 1;
+                continue;
+            }
+
+            std::vector<std::string> jkr = _split_(line,' ');
+            if (jkr.size() != 8){
+                z_flag = true;
+                std::cout << "\033[1;33m[Warning]\033[0m Cylinder orientation was set towards the Z direction by default" << std::endl;
+            }
+            break;
+        }
+        in.close();
+
+        in.open(params.dyn_cylinders_files[i]);
+
+        if(z_flag){
+            double x,y,z,r;
+            bool s;
+            double scale;
+            double volume_inc_perc, dyn_perc, icvf;
+            in >> scale;
+            in >> volume_inc_perc;
+            in >> dyn_perc;
+            in >> icvf;
+
+            while (in >> x >> y >> z >> r >> s)
+            {
+                if (params.active_state && s){
+                    r *= sqrt(1+volume_inc_perc);
+                }
+                axons_list.push_back(Axon(r,Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),volume_inc_perc,s, scale));
+            }
+            params.volume_inc_perc = volume_inc_perc;
+            params.gamma_icvf = icvf;
+            params.dyn_perc = dyn_perc;
+
+
+            in.close();
+        }
+        else{
+            double x,y,z,ox,oy,oz,r;
+            double scale;
+            bool s;
+            double volume_inc_perc, dyn_perc, icvf;
+
+            in >> scale;
+            in >> volume_inc_perc;
+            in >> dyn_perc;
+            in >> icvf;
+
+            while (in >> x >> y >> z >> ox >> oy >> oz >> r >> s)
+            {
+                if (params.active_state && s){
+                    r *= sqrt(1+volume_inc_perc);
+                }
+                axons_list.push_back(Axon(r, Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),volume_inc_perc, s, scale));
+            }
+            params.volume_inc_perc = volume_inc_perc;
+            params.gamma_icvf = icvf;
+            params.dyn_perc = dyn_perc;
+
+
+            in.close();
+        }
+    }
     for(unsigned i = 0; i < params.spheres_files.size(); i++){
         std::ifstream in(params.spheres_files[i]);
         if(!in){
@@ -1005,7 +1092,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
         SimErrno::info(message,cout);
 
         message = "Dyn_perc : "
-                + std::to_string(params.dyn_perc) + ", number of dyn_cylinders : "+to_string(params.gamma_num_obstacles)+".\n";
+                + std::to_string(params.dyn_perc) + ", number of dyn_axons : "+to_string(params.gamma_num_obstacles)+".\n";
         SimErrno::info(message,cout);
 
         AxonGammaDistribution gamma_dist(params.dyn_perc, params.volume_inc_perc,  params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
@@ -1015,6 +1102,9 @@ void ParallelMCSimulation::addObstacleConfigurations()
         gamma_dist.displayGammaDistribution();
 
         gamma_dist.createGammaSubstrate();
+
+        message = "Substrate created ! \n";
+        SimErrno::info(message, cout);
 
         //for (unsigned i = 0; i < gamma_dist.dyn_cylinders.size(); i++)
         //{

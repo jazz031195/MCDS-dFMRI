@@ -15,7 +15,6 @@ Dynamic_Sphere::Dynamic_Sphere(const Dynamic_Sphere &sph)
     max_radius = sph.max_radius;
     swell = sph.swell;
     volume_inc_perc = sph.volume_inc_perc; 
-    activation_time = sph.activation_time;
     id = count++;
 }
 
