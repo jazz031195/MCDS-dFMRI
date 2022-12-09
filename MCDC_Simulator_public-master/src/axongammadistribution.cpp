@@ -137,6 +137,8 @@ void AxonGammaDistribution::createGammaSubstrate()
     uint adjustments = 0;
     // We increease 1% the total area. (Is prefered to fit all the cylinders than achieve a perfect ICVF.)
     double adj_increase = icvf * 0.01;
+
+
     while (!achieved)
     {
 
@@ -169,7 +171,7 @@ void AxonGammaDistribution::createGammaSubstrate()
 
                     Axon ax(radiis[i], Q, D, volume_inc_perc, bool_swell_ax_id[i]);
                     
-                    //string message = "Cyl "+ to_string(i)+" at position ("+to_string(Q[0])+", "+to_string(Q[1])+ ") with radius "+ to_string(radiis[i])+ "\n";
+                    //message = "Axon  "+ to_string(i)+" at position ("+to_string(Q[0])+", "+to_string(Q[1])+ ") with radius "+ to_string(radiis[i])+ "\n";
                     //SimErrno::info(message,cout);
 
                     double min_distance;
@@ -218,7 +220,7 @@ void AxonGammaDistribution::createGammaSubstrate()
     int perc_;
     double icvf_current = computeICVF(axons, min_limits, max_limits, perc_);
 
-    string message = "Percentage of cylinders selected: " + to_string(double(perc_) / radiis.size() * 100.0) + "%,\nICVF achieved: " + to_string(icvf_current * 100) + "  (" + to_string(int((icvf_current / icvf * 100))) + "% of the desired icvf)\n";
+    string message = "Percentage of axons selected: " + to_string(double(perc_) / radiis.size() * 100.0) + "%,\nICVF achieved: " + to_string(icvf_current * 100) + "  (" + to_string(int((icvf_current / icvf * 100))) + "% of the desired icvf)\n";
     SimErrno::info(message, cout);
 }
 
@@ -231,9 +233,9 @@ void AxonGammaDistribution::printSubstrate(ostream &out)
 
     for (unsigned i = 0; i < axons.size(); i++)
     {
-        out << " " << axons[i].begin[0] << " " << axons[i].begin[1] << " " 
-        << axons[i].begin[2] << " " << axons[i].end[0] << " " 
-        << axons[i].end[1] <<" "<< axons[i].end[2] <<" " 
+        out << " " << axons[i].begin[0] * 1e3  << " " << axons[i].begin[1] * 1e3  << " " 
+        << axons[i].begin[2] * 1e3  << " " << axons[i].end[0] * 1e3  << " " 
+        << axons[i].end[1] * 1e3  <<" "<< axons[i].end[2] * 1e3  <<" " 
         << axons[i].radius* 1e3 << " " << axons[i].swell 
         << endl;
 

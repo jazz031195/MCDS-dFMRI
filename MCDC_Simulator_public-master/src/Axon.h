@@ -12,7 +12,8 @@
 #define AXON_H
 
 #include "dynamic_sphere.h"
-
+#include "simerrno.h"
+using namespace std;
 
 /// @brief 
 class Axon : public Obstacle
@@ -23,12 +24,11 @@ public:
     std::vector<Dynamic_Sphere> spheres; 
     double radius;
     double max_radius;
-    std::vector<Eigen::Vector3d> centers; 
     bool swell;
     Eigen::Vector3d begin;
     Eigen::Vector3d end;
     double volume_inc_perc;
-    double activation_time;
+
     /*!
      *  \brief Default constructor. Does nothing
      */
@@ -37,21 +37,26 @@ public:
     ~Axon();
 
 
-    Axon(double radius_, Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,double activation_time_,bool swell_ = false):radius(radius_),begin(begin_),end(end_),volume_inc_perc(volume_inc_perc_),activation_time(activation_time_), swell(swell_){
+    Axon(double radius_, Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_, bool swell_ = false, double scale = 1):radius(radius_*scale),begin(begin_*scale),end(end_*scale),volume_inc_perc(volume_inc_perc_), swell(swell_){
 
-
+        std::vector<Eigen::Vector3d> centers; 
         Eigen::Vector3d squeletton = (end-begin).normalized();
         Eigen::Vector3d pos = begin;
-        centers.clear();
-        while (pos != end){
+        spheres.clear();
+
+
+        while ((pos[0] != end[0]) && (pos[1] != end[1])&& (pos[2] != end[2]) ){
             double dist_ = radius/2;
-            pos = pos + squeletton*dist_;
+            pos[0] = pos[0] + squeletton[0]*dist_;
+            pos[1] = pos[1] + squeletton[1]*dist_;
+            pos[2] = pos[2] + squeletton[2]*dist_;
             centers.push_back(pos);
         }
 
+
         for (unsigned i=0; i< centers.size(); ++i){
-            Dynamic_Sphere sphere(centers[i], radius,volume_inc_perc,activation_time, swell);  
-            spheres[i] = sphere;
+            Dynamic_Sphere sphere(centers[i], radius,volume_inc_perc, swell);  
+            spheres.push_back(sphere);
         }
         id = count++;
 
