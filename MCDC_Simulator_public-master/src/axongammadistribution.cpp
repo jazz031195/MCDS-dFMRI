@@ -6,7 +6,7 @@
 using namespace std;
 using namespace Eigen;
 
-AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc_perc_, unsigned num_ax, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, float min_radius)
+AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc_perc_, unsigned num_ax, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, float min_radius, bool active_state_)
 {
     dyn_perc = dyn_perc_;
     volume_inc_perc = volume_inc_perc_;
@@ -18,6 +18,7 @@ AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc
     max_limits = max_l;
     axons.clear();
     this->min_radius = min_radius;
+    active_state = active_state_;
 }
 void AxonGammaDistribution::computeMinimalSize(std::vector<double> radiis, double icvf_, Eigen::Vector3d &l)
 {
@@ -93,6 +94,8 @@ void AxonGammaDistribution::createGammaSubstrate()
 
     int tried = 0;
 
+    string message;
+
 
     // create list of ids that correspond to dynamic axons based on percentage input
     for (unsigned i = 0; i < number_swelling_axons; ++i)
@@ -108,12 +111,14 @@ void AxonGammaDistribution::createGammaSubstrate()
         bool_swell_ax_id[random_id] = true;
     }
 
+
     for (unsigned i = 0; i < num_obstacles; ++i)
     {
 
+
         if (tried > 10000)
         {
-            string message = " Radii distribution cannot be sampled [Min. radius Error]\n";
+            message = " Radii distribution cannot be sampled [Min. radius Error]\n";
             SimErrno::error(message, cout);
             assert(0);
         }
@@ -166,18 +171,17 @@ void AxonGammaDistribution::createGammaSubstrate()
                     double y = (t * max_limits[1] + (1 - t) * min_limits[1]);
                     double z = 0;
 
-                    Vector3d Q = {x, y, z};
-                    Vector3d D = {x, y, z + 1};
+                    Vector3d Q = {x, y, z + min_limits[2]};
+                    Vector3d D = {x, y, z + max_limits[2]};
 
-                    Axon ax(radiis[i], Q, D, volume_inc_perc, bool_swell_ax_id[i]);
-                    
-                    //message = "Axon  "+ to_string(i)+" at position ("+to_string(Q[0])+", "+to_string(Q[1])+ ") with radius "+ to_string(radiis[i])+ "\n";
-                    //SimErrno::info(message,cout);
+
+                    Axon ax(radiis[i], Q, D, volume_inc_perc, bool_swell_ax_id[i], active_state);
+                
 
                     double min_distance;
                     // creates dyn_cylinders_to_add
                     bool collision = checkForCollition(ax, min_limits, max_limits, axons_to_add, min_distance);
-
+                    
                     if (!collision)
                     {
                         for (unsigned j = 0; j < axons_to_add.size(); j++){
@@ -196,6 +200,8 @@ void AxonGammaDistribution::createGammaSubstrate()
                     best_axons = axons;
                     best_max_limits = max_limits;
                 }
+
+
             } // end for axons
 
             if (this->icvf - best_icvf < 0.0005)
@@ -220,8 +226,11 @@ void AxonGammaDistribution::createGammaSubstrate()
     int perc_;
     double icvf_current = computeICVF(axons, min_limits, max_limits, perc_);
 
-    string message = "Percentage of axons selected: " + to_string(double(perc_) / radiis.size() * 100.0) + "%,\nICVF achieved: " + to_string(icvf_current * 100) + "  (" + to_string(int((icvf_current / icvf * 100))) + "% of the desired icvf)\n";
+    message = "Percentage of axons selected: " + to_string(double(perc_) / radiis.size() * 100.0) + "%,\nICVF achieved: " + to_string(icvf_current * 100) + "  (" + to_string(int((icvf_current / icvf * 100))) + "% of the desired icvf)\n";
     SimErrno::info(message, cout);
+    message = "number of axons :  " + to_string(axons.size()) +"\n";
+    SimErrno::info(message, cout);
+
 }
 
 void AxonGammaDistribution::printSubstrate(ostream &out)
@@ -252,6 +261,7 @@ bool AxonGammaDistribution::checkForCollition(Axon ax, Vector3d min_limits, Vect
 
     bool collision = false;
 
+
     for (unsigned i = 0; i < axons.size(); i++)
     {
         for (unsigned j = 0; j < axons_to_add.size(); j++)
@@ -259,9 +269,8 @@ bool AxonGammaDistribution::checkForCollition(Axon ax, Vector3d min_limits, Vect
 
             double distance = (axons[i].begin - axons_to_add[j].begin).norm();
             // give enough space so that each cylinder can potentially swell
-            if (distance - (axons[i].max_radius + axons_to_add[j].max_radius) < 1e-15)
+            if (distance - (axons[i].radius + axons_to_add[j].radius) < 1e-15)
             {
-
                 min_distance = 0;
                 collision = true;
                 break;
@@ -273,15 +282,16 @@ bool AxonGammaDistribution::checkForCollition(Axon ax, Vector3d min_limits, Vect
 
 
     // we need to check that the cylinders to add don't interse4ct each other (very small voxel sizes)
-
     for (unsigned i = 0; i < axons_to_add.size() - 1; i++)
     {
+
         for (unsigned j = i + 1; j < axons_to_add.size(); j++)
         {
 
-            double distance = (axons[i].begin  - axons[j].begin ).norm();
+            double distance = (axons_to_add[i].begin  - axons_to_add[j].begin ).norm();
             // give enough space so that each cylinder can potentially swell
-            if (distance - (axons[i].max_radius + axons[j].max_radius) < 1e-15)
+
+            if (distance - (axons_to_add[i].radius + axons_to_add[j].radius) < 1e-15)
             {
                 min_distance = 0;
                 collision = true;
@@ -350,49 +360,66 @@ void AxonGammaDistribution::checkBoundaryConditions(Axon ax, std::vector<Axon> &
 
         double rad = ax.radius;
 
+        Vector3d P = ax.begin;
+        Vector3d Q = ax.end;
+
+
         if (ax.begin[i] + rad >= max_limits[i])
         {
-
-            Axon tmp = ax;
-            tmp.begin[i] += min_limits[i] - max_limits[i];
-            tmp.end[i] += min_limits[i] - max_limits[i];
+            
+            P[i]  = ax.begin[i] + min_limits[i] - max_limits[i];
+            Q[i]=  ax.end[i] + min_limits[i] - max_limits[i];
+            Axon tmp (ax.radius, P, Q, ax.volume_inc_perc, ax.active_state);
             to_add.push_back(tmp);
 
-
         }
+
 
         if (ax.begin[i] - rad <= min_limits[i])
         {
-            Axon tmp = ax;
-            tmp.begin[i] += max_limits[i] - min_limits[i];
-            tmp.end[i] += max_limits[i] - min_limits[i];
+            P[i]  = ax.begin[i] - min_limits[i] + max_limits[i];
+            Q[i]=  ax.end[i] - min_limits[i] + max_limits[i];
+            Axon tmp (ax.radius, P, Q, ax.volume_inc_perc, ax.active_state);
             to_add.push_back(tmp);
+
         }
     }
 
+
+
     if (to_add.size() == 3)
+
         for (unsigned j = 1; j < 3; j++)
         {
             Axon jkr(to_add[j]);
+
+
             for (int i = 0; i < 2; i++)
             {
-                double rad = ax.radius;
+                double rad = jkr.radius;
+
+                Vector3d P = jkr.begin;
+                Vector3d Q = jkr.end;
 
                 if (jkr.begin[i] + rad >= max_limits[i])
                 {
-                    Axon tmp(jkr);
-                    tmp.begin[i] += min_limits[i] - max_limits[i];
-                    tmp.end[i] += min_limits[i] - max_limits[i];
+
+                    P[i]  = jkr.begin[i] + min_limits[i] - max_limits[i];
+                    Q[i]=  jkr.end[i] + min_limits[i] - max_limits[i];
+                    Axon tmp (jkr.radius, P, Q, jkr.volume_inc_perc, jkr.active_state);
                     to_add.push_back(tmp);
+
 
                 }
 
                 if (jkr.begin[i] - rad <= min_limits[i])
                 {
-                    Axon tmp(jkr);
-                    tmp.begin[i] += max_limits[i] - min_limits[i];
-                    tmp.end[i] += max_limits[i] - min_limits[i];
+
+                    P[i]  = jkr.begin[i] - min_limits[i] + max_limits[i];
+                    Q[i]=  jkr.end[i] - min_limits[i] + max_limits[i];
+                    Axon tmp (jkr.radius, P, Q, jkr.volume_inc_perc, jkr.active_state);
                     to_add.push_back(tmp);
+
 
                 }
             }

@@ -20,10 +20,9 @@ public:
 
     Eigen::Vector3d center;    /*!< Cilinder Axis reference Points, P should be the "center"      */
     double radius;             /*!< Radius of the Sphere                                          */
-    double max_radius;
-    double ini_radius;
     bool swell;
     double volume_inc_perc;
+    int ax_id;
 
     /*!
      *  \brief Default constructor. Does nothing
@@ -40,10 +39,9 @@ public:
      *  \param scale  overall scale for when reading files.
      *  \brief Initialize everything.
      */
-    Dynamic_Sphere(Eigen::Vector3d center_, double radius_, double volume_inc_perc_, bool swell_,double scale =1):center(center_*scale),radius(radius_*scale), volume_inc_perc(volume_inc_perc_), swell(swell_){
+    Dynamic_Sphere(Eigen::Vector3d center_, double radius_, double volume_inc_perc_, bool swell_, int ax_id_,double scale =1):center(center_*scale),radius(radius_*scale), volume_inc_perc(volume_inc_perc_), ax_id(ax_id_),swell(swell_){
         id = count++;
-        ini_radius = radius;
-        max_radius = radius*std::sqrt(1+volume_inc_perc_)*scale;
+    
     }
 
     /*!
@@ -59,7 +57,7 @@ public:
      *  \return true only if there was a Collision::hit status. \see Collision.
      *  \brief Basic collision function. Returns the if there was any collision on against the obstacle.
      */
-    bool checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision);
+    bool checkCollision_(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision, bool &isintra);
 
     /*! \fn  minDistance
      *  \param walker, Walker instance in the simulation.
@@ -78,7 +76,7 @@ private:
      *  \param step, step vector where to move.
      *  \brief Returns true if it was any analytical collision to the infinite plane
      */
-    inline bool handleCollition(Walker& walker, Collision &colision, Eigen::Vector3d& step,double& a,double& b, double& c,double& discr,double& step_length);
+    inline bool handleCollition(Walker& walker, Collision &colision, Eigen::Vector3d& step,double& a,double& b, double& c,double& discr,double& step_length, bool& isintra);
 
     
 };  

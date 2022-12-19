@@ -36,7 +36,7 @@ Parameters::Parameters()
 
     ini_walkers_file = "";
     num_proc    = 0;
-    verbatim    = false;
+    verbatim    = true;
 
     record_phase_times.clear();
     record_pos_times.clear();

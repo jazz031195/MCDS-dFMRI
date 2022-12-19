@@ -313,7 +313,7 @@ void CylinderGammaDistribution::checkBoundaryConditions(Cylinder cyl, std::vecto
         for(unsigned j = 1 ; j < 3; j++){
             Cylinder jkr(to_add[j]);
             for(int i = 0 ; i < 2; i++){
-                double rad = cyl.radius;
+                double rad = jkr.radius;
 
                 if(jkr.P[i]+rad >= max_limits[i]){
                     Cylinder tmp(jkr);

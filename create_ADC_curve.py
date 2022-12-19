@@ -68,9 +68,12 @@ def create_data(dwi_path):
     #data_1 = data_psge.loc[data_psge['x'] != x1]
     datas = [data_x,data_y,data_z]
     for i in range(len(datas)):
-        Sb0 = list(datas[i].loc[datas[i]["b"]== 0]["DWI"])[0]
+        b0 = list(datas[i]["b"])[0]
+        Sb0 = list(datas[i].loc[datas[i]["b"]== b0]["DWI"])[0]
         signal = list(map(lambda Sb : np.log(Sb/Sb0), list(datas[i]["DWI"])))
+        adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(datas[i]["b"]),list(datas[i]["DWI"])))
         datas[i]["log(Sb/So)"] = signal
+        datas[i]["adc"] = adc
 
     data_dwi = pd.concat(datas)
 
@@ -467,7 +470,7 @@ folder = "N_10_6"
 conf = "conf1"
 loc="extra"
 state="rest"
-path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI.txt"
+path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/active_extra1_DWI.txt"
         
 data_dwi = create_data(path)
 print(data_dwi)
