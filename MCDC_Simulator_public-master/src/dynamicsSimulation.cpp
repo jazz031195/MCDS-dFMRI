@@ -264,6 +264,7 @@ bool DynamicsSimulation::finalPositionCheck()
 {
     int cyl_id,ply_id,sph_id, ax_id;
 
+
     if( ((*plyObstacles_list).size()>0) and sentinela.deport_illegals and params.obstacle_permeability <=0){
 
         bool isIntra = isInIntra(this->walker.pos_v,cyl_id,ply_id,sph_id,ax_id,0);
@@ -500,6 +501,7 @@ void DynamicsSimulation::iniWalkerPosition()
     else if(params.ini_walker_flag.compare("intra")== 0){
 
         Vector3d intra_pos;
+
         getAnIntraCellularPosition(intra_pos,walker.in_obj_index,walker.in_ply_index,walker.in_sph_index, walker.in_ax_index);
         walker.setInitialPosition(intra_pos);
         walker.intra_extra_consensus--;
@@ -666,12 +668,13 @@ void DynamicsSimulation::updateCollitionSphere(unsigned t)
 
 void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos,int &cyl_ind, int& ply_ind, int& sph_ind, int& ax_ind)
 {
-
+    string message;
+    bool isintra = false;
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> udist(0,1);
 
-    if(cylinders_list->size() <=0 and dyn_cylinders_list->size() <=0 and dyn_spheres_list->size() <=0 and axons_list->size() <=0 and plyObstacles_list->size() <= 0 and spheres_list->size() <=0){
+    if(cylinders_list->size() <=0 and dyn_cylinders_list->size() <=0  and axons_list->size() <=0 and plyObstacles_list->size() <= 0 and spheres_list->size() <=0){
         SimErrno::error("Cannot initialize intra-axonal walkers within the given substrate.",cout);
         SimErrno::error("There's no defined intra-axonal compartment (missing obstacles?)",cout);
         assert(0);
@@ -702,7 +705,12 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos,int &cyl
        // cout << initialization_gap[2] << endl;
         Vector3d pos_temp = {x,y,z};
 
-        if(checkIfPosInsideVoxel(pos_temp) && (isInIntra(pos_temp,cyl_ind,ply_ind, sph_ind,ax_ind, -0.1))){
+
+        isintra = isInIntra(pos_temp,cyl_ind,ply_ind, sph_ind,ax_ind, -0.1);
+        if(checkIfPosInsideVoxel(pos_temp) && (isintra)){
+            
+            //message = "is inside : "+std::to_string(isintra)+" \n";
+            //SimErrno::info(message,cout);
             intra_pos = pos_temp;
             return;
         }
@@ -962,21 +970,21 @@ bool DynamicsSimulation::isInsideDynCylinders(Vector3d &position, int& cyl_id,do
 
 bool DynamicsSimulation::isInsideAxons(Vector3d &position, int& ax_id,double distance_to_be_inside)
 {
-    Walker tmp;
-    tmp.setInitialPosition(position);
+    //Walker tmp;
+    //tmp.setInitialPosition(position);
+    bool isinside;
 
     //track the number of positions checks for intra/extra positions
 
     for(unsigned i = 0 ; i < axons_list->size(); i++){
-        double dis = (*axons_list)[i].minDistance(tmp);
+        isinside = (*axons_list)[i].isInside(position, distance_to_be_inside);
 
-        if(dis <= distance_to_be_inside){
+        if(isinside){
             intra_tries++;
             ax_id = i;
             return true;
         }
     }
-    ax_id = -1;
 
     return false;
 }
@@ -1039,7 +1047,7 @@ bool DynamicsSimulation::isInsidePLY(Vector3d &position, int &ply_id,double dist
 }
 
 
-bool DynamicsSimulation::isInIntra(Vector3d &position, int& cyl_id,  int& ply_id, int& sph_id,int& ax_id, double distance_to_be_intra_ply)
+bool DynamicsSimulation::isInIntra(Vector3d &position, int& cyl_id,  int& ply_id, int& sph_id, int& ax_id, double distance_to_be_intra_ply)
 {
     bool isIntra = false;
     total_tries++;
@@ -1083,6 +1091,7 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
     /*                                                     */
     /*********************   WARNING  **********************/
     unsigned w=0;
+    int ax_id_;
     for (w = 0 ; w < params.num_walkers; w++)
     {
         //flag in case there was any error with the particle.
@@ -1107,8 +1116,6 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
 
         for(unsigned t = 1 ; t <= params.num_steps; t++) //T+1 steps in total (avoid errors)
         {
-
-
             //Get the time step in milliseconds
             getTimeDt(last_time_dt,time_dt,l,dataSynth,t,time_step);
 
@@ -1132,6 +1139,7 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
                 if ( error == Sentinel::rejected  )
                     continue;
             }
+            
 
             // Saves the final particle position after bouncing in the time t.
             walker.setRealPosLog(walker.pos_r,t);
@@ -1144,7 +1152,11 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
             walker.rejection_count = 0;
 
         }// end for t
-
+        if (axons_list->size() >0 && isInsideAxons(walker.pos_v, ax_id_, 0)== false && walker.initial_location == Walker::intra){
+            back_tracking = true;
+            sentinela.illegal_count++;
+            w--;
+        }
         if(!back_tracking)
             if(finalPositionCheck()){
                 back_tracking=true;

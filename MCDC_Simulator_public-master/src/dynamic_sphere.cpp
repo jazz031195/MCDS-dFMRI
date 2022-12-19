@@ -128,18 +128,23 @@ inline bool Dynamic_Sphere::handleCollition(Walker& walker, Collision &colision,
     colision.type = Collision::hit;
     colision.obstacle_ind = -1;
 
-    if(c<-1e-10){
-        colision.col_location = Collision::inside;
+    if (isintra == false){
 
-        //string message = "Inside ! : axon id :"+to_string(ax_id)+", pos of sphere (" +std::to_string(center[0])+", "+std::to_string(center[1])+", "+std::to_string(center[2])+") \n";
-        //SimErrno::error(message,cout);
-        walker.in_obj_index = -1;
-    }
-    else if(c>1e-10){
-        colision.col_location = Collision::outside;
-    }
-    else{
-        colision.col_location = Collision::unknown;
+        if(c<-1e-10){
+            colision.col_location = Collision::inside;
+
+            //string message = "Inside ! : axon id :"+to_string(ax_id)+", pos of sphere (" +std::to_string(center[0])+", "+std::to_string(center[1])+", "+std::to_string(center[2])+") \n";
+            //SimErrno::error(message,cout);
+            walker.in_obj_index = -1;
+        }
+        else if(c>1e-10){
+
+            colision.col_location = Collision::outside;
+            
+        }
+        else{
+            colision.col_location = Collision::unknown;
+        }
     }
 
     colision.rn = c;
