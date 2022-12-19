@@ -7,7 +7,7 @@ import os
 from scipy.linalg import norm
 
 cur_path = os.getcwd()
-conf_file_path = cur_path + "/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedCylinders.conf"
+conf_file_path = cur_path + "/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedAxons.conf"
 
 def get_T_N ():
     N = 0
@@ -24,12 +24,12 @@ def get_nbr_cylinders ():
     nbr_cylinders = 0
     with open(conf_file_path) as f:
         for line in f.readlines():
-            if line.split(' ')[0] == "num_dyn_cylinders":
+            if line.split(' ')[0] == "num_axons":
                 nbr_cylinders = int(line.split(' ')[1][:-1])
     return nbr_cylinders
 
 def get_cylinder_array(file):
-    nbr_cylinders = 6000
+    nbr_cylinders = get_nbr_cylinders ()
     cylinder_array = np.zeros((nbr_cylinders,8))
 
     with open(file) as f:
@@ -39,7 +39,7 @@ def get_cylinder_array(file):
             if e< nbr_cylinders:
                 if len(line.split(' ')) > 5:
                     
-                    cylinder_array[e] = np.array([float(i)*0.001 for i in line.split(' ')])
+                    cylinder_array[e] = np.array([float(i)*0.001 for i in line.split(' ')[1:]])
                     e = e+1
     print(e)
     return cylinder_array
@@ -47,6 +47,9 @@ def get_cylinder_array(file):
 def draw_cercles(cylinder_array, swell = False):
     r = []
     fig, ax = plt.subplots(ncols = 2) 
+
+    print(cylinder_array.shape)
+
     for i in range(cylinder_array.shape[0]):
         radius = cylinder_array[i][-2]
         r.append(radius)
@@ -62,10 +65,9 @@ def draw_cercles(cylinder_array, swell = False):
         name = "slice.png"
     else:
         name = "slice_swell.png"
-    
 
     v = sns.histplot(data=pd.DataFrame({"radius[mm]": r}),
-            x="radius[mm]", kde=True, color='lightblue', ax = ax[1])
+            x="radius[mm]", kde=False, color='lightblue', ax = ax[1])
 
     plt.show()
 
@@ -73,7 +75,7 @@ def draw_cercles(cylinder_array, swell = False):
 
 def main():
 
-    file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/conf2.txt"
+    file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/_gamma_distributed_axon_list.txt"
 
     cylinder_array = get_cylinder_array(file)
     draw_cercles(cylinder_array)

@@ -1096,15 +1096,13 @@ void ParallelMCSimulation::addObstacleConfigurations()
         SimErrno::info(message,cout);
 
         AxonGammaDistribution gamma_dist(params.dyn_perc, params.volume_inc_perc,  params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
-                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii);
+                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii, params.active_state);
 
 
         gamma_dist.displayGammaDistribution();
 
         gamma_dist.createGammaSubstrate();
 
-        message = "Substrate created ! \n";
-        SimErrno::info(message, cout);
 
         //for (unsigned i = 0; i < gamma_dist.dyn_cylinders.size(); i++)
         //{
@@ -1133,13 +1131,18 @@ void ParallelMCSimulation::addObstacleConfigurations()
 
         this->axons_list = gamma_dist.axons;
 
+        //for (unsigned i=0; i< axons_list.size(); ++i){
+        //    for (unsigned s=0; s< this->axons_list[i].spheres.size(); ++s){
+        //        this->dyn_spheres_list.push_back(this->axons_list[i].spheres[s]);
+        //    }
+        //}
+         
         //params.cylinders_files.push_back(file);
 
         out.close();
 
         SimErrno::info("Done.\n",cout);
     }
-
 
     if(params.gamma_sph_packing == true){
 

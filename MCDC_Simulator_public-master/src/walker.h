@@ -54,7 +54,9 @@ public:
 
     int in_ply_index;                                               /*!< Auxiliar index to save if the walker was inside a convex ply object    */
 
-    int in_sph_index;                                               /*!< Auxiliar index to save if the walker was inside a sphere               */
+    int in_sph_index;  
+    
+    int in_ax_index;                                               /*!< Auxiliar index to save if the walker was inside a sphere               */
 
     //ObstacleCollisionSphere cylinders_collision_sphere;             /*!< Collision sphere for collition against cylidners                       */
 

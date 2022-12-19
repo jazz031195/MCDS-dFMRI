@@ -36,7 +36,7 @@ Parameters::Parameters()
 
     ini_walkers_file = "";
     num_proc    = 0;
-    verbatim    = false;
+    verbatim    = true;
 
     record_phase_times.clear();
     record_pos_times.clear();
@@ -679,6 +679,9 @@ void Parameters::readGammaParams(ifstream &in)
             in >> min_obstacle_radii;
         }
         else if(str_dist(tmp,"percentage_dynamic_cylinders") <= 1){
+            in >> dyn_perc;
+        }
+        else if(str_dist(tmp,"percentage_dynamic_axons") <= 1){
             in >> dyn_perc;
         }
         else if(str_dist(tmp,"percentage_increase_of_volume") <= 1){

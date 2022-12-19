@@ -35,7 +35,8 @@ public:
     Eigen::Vector3d min_limits;                     /*!< voxel min limits (if any) (bottom left corner)                             */
     Eigen::Vector3d max_limits;                     /*!< voxel max limits (if any)                                                  */
     
-
+    bool active_state;
+    
     /*!
      *  \param P_ Cylinder origin
      *  \param Q_ cylinder direction.
@@ -52,7 +53,7 @@ public:
      *  \param scale scale factor for the values passed. Useful when reading a file.
      *  \brief Initialize everything.
      */
-    AxonGammaDistribution(double, double, unsigned, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius = 0.001);
+    AxonGammaDistribution(double, double, unsigned, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius = 0.001, bool active_state = false);
      
      /*!
      *  \brief Shows a small histogram of the gamma distribution

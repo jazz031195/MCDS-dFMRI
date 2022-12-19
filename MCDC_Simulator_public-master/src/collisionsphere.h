@@ -91,7 +91,7 @@ public:
 
 };
 
-/*! \class CylinderCollisionSphere
+/*! \class PLYCollisionSphere
  *  \brief Class to save the PLY mehses and the subset of triangles that a can collide to a walker
  *
  */
