@@ -76,6 +76,7 @@ bool Sentinel::checkErrors(Walker &walker, const Parameters &params, bool noPLY,
         }
     }
 
+
     if(this->rejected_step == true){
         rejected_step = false;
         setRejectedError();

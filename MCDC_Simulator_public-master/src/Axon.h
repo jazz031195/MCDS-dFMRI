@@ -101,6 +101,10 @@ public:
     double minDistance(Eigen::Vector3d pos);
 
     double intersection_sphere_vector(Dynamic_Sphere &s, Eigen::Vector3d &step, Eigen::Vector3d &pos, bool isintra);
+
+    bool isInside(Eigen::Vector3d pos, double distance_to_be_inside);
+
 };
+
 
 #endif // AXON_H

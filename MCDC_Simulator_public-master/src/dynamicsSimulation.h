@@ -159,7 +159,7 @@ public:
 
     bool isInsideSpheres(Eigen::Vector3d &position, int& sph_id,double distance_to_be_inside);
 
-    bool isInsideAxons(Eigen::Vector3d &position, int& ax_id,double distance_to_be_inside);
+    bool isInsideAxons(Eigen::Vector3d &position, int& ax_id ,double distance_to_be_inside);
 
 private:    
 
@@ -275,7 +275,7 @@ private:
      * \brief   finds an intra celullar 3d position inside the voxel (needs a voxel initialized).
      * \param   intra_pos vector to save the 3d position.
      */
-    inline void getAnIntraCellularPosition(Eigen::Vector3d& intra_pos, int &cyl_ind, int &ply_ind, int &sph_ind, int &ax_ind);
+    inline void getAnIntraCellularPosition(Eigen::Vector3d& intra_pos, int &cyl_ind, int &ply_ind, int &sph_ind, int& ax_id);
 
     /*!
      * \brief   finds an extra cellular 3d position inside the voxel (needs a voxel initialized).
