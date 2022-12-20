@@ -78,7 +78,58 @@ def create_data(dwi_path):
     data_dwi = pd.concat(datas)
 
     return data_dwi
-    
+
+def get_adc(dwi_path):
+    data = create_data(dwi_path)
+    axes = ["x","y","z"]
+    orientations = ["radial","radial","axial"]
+    adcs = []
+    for a in axes:
+        ax_data = data.loc[data[a]>0]
+        b1 = list(ax_data["b"])[-1]
+        ax_data = ax_data.loc[ax_data["b"] == b1]
+        adcs.append(list(ax_data["adc"])[0])
+    new_data = pd.DataFrame(columns = ["axis", "adc"])
+    new_data["orientations"] = orientations
+    new_data["axis"] = axes
+    new_data["adc"] = adcs
+    return new_data
+
+
+
+def assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_rest_path):
+
+    intra_active = get_adc(intra_active_path)
+    intra_active["state"] = ["active"]*len(intra_active)
+    intra_active["loc"] = ["intra"]*len(intra_active)
+    extra_active = get_adc(extra_active_path)
+    extra_active["state"] = ["active"]*len(extra_active)
+    extra_active["loc"] = ["extra"]*len(extra_active)
+    intra_rest = get_adc(intra_rest_path)
+    intra_rest["state"] = ["rest"]*len(intra_rest)
+    intra_rest["loc"] = ["intra"]*len(intra_rest)
+    extra_rest = get_adc(extra_rest_path)
+    extra_rest["state"] = ["rest"]*len(extra_rest)
+    extra_rest["loc"] = ["extra"]*len(extra_rest)
+
+    result = pd.concat([intra_active, intra_rest, extra_active, extra_rest])
+
+    return result
+
+def plot(result):
+    fig1 = plt.figure(0)
+    sns.catplot(x="orientations", y="adc",
+             hue="state", col = "loc", kind = "box",
+             data=result)
+    plt.show() 
+    fig1 = plt.figure(1)
+    sns.catplot(x="orientations", y="adc",
+             hue="state", col = "loc", 
+             data=result)
+    plt.show() 
+
+
+
 def plot_DWI(data, path):
     data["orientation"] =  list(data["x"]).copy()
     data["orientation"] = list(map(lambda x,y : "x" if x == 1 else y,list(data["x"]), list(data["orientation"])))
@@ -466,13 +517,12 @@ def get_adc_diff_rest_active(folder, conf):
 
 
 
-folder = "N_10_6"
-conf = "conf1"
-loc="extra"
-state="rest"
-path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/active_extra1_DWI.txt"
-        
-data_dwi = create_data(path)
-print(data_dwi)
-z = get_ADC_value(data_dwi, orientation = "all")
-print(z)
+
+intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_active_DWI.txt"
+extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_active_DWI.txt"
+intra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_rest_DWI.txt"
+extra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_rest_DWI.txt"               
+data = assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_rest_path)
+
+print(data)
+plot(data)

@@ -99,7 +99,7 @@ bool SimErrno::checkSimulationParameters(Parameters &params)
     }
 
     if(params.axons_files.size()>0){
-        info("Checking Sphere list format...",cout);
+        info("Checking Axon list format...",cout);
         checkAxonsListFile(params);
         info("Done...",cout);
     }
@@ -742,7 +742,6 @@ bool SimErrno::checkAxonsListFile(Parameters &params)
             }
 
             std::vector<std::string> jkr = split_(line,' ');
-
             if(jkr.size() != 8 && jkr.size() != 5){
                 error( "Axon list file is not in the correct format." ,cout);
                 in.close();
@@ -750,7 +749,7 @@ bool SimErrno::checkAxonsListFile(Parameters &params)
                 return true;
             }
 
-            if (jkr.size() != 8){
+            if (jkr.size() < 8){
                 z_flag = true;
                 warning("No axons orientation inlcluded. Axon orientation was set towards the Z direction by default for all axons.",cout);
             }

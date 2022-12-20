@@ -44,6 +44,7 @@ ParallelMCSimulation::ParallelMCSimulation(std::string config_file)
     SimErrno::checkSimulationParameters(params);
     //printSimulationInfo();
     initializeUnitSimulations();
+    cout <<  "ok \n";
 
     SimErrno::printSimulatinInfo(params,std::cout);
 
@@ -58,6 +59,8 @@ ParallelMCSimulation::ParallelMCSimulation(Parameters &params)
     this->params = params;
 
     initializeUnitSimulations();
+    cout <<  "ok \n";
+
     SimErrno::printSimulatinInfo(params,std::cout);
     icvf=0;
       
@@ -163,10 +166,12 @@ void ParallelMCSimulation::initializeUnitSimulations()
 
     //Build anything that needs to be syn between simulations.
     specialInitializations();
+    cout <<  "after special initialisations \n";
 
     // The number of walker N devided between all the processes
 
     unsigned N_per_sim = params.num_walkers/params.num_proc;
+    std::vector<Axon> axons_ ;
 
     for(unsigned i = 0; i < params.num_proc-1; i++){
 
@@ -181,10 +186,10 @@ void ParallelMCSimulation::initializeUnitSimulations()
         simulation_->cylinder_list = &this->cylinders_list;
         simulation_->dyn_cylinder_list = &this->dyn_cylinders_list;
         simulation_->sphere_list = &this->spheres_list;
-        simulation_->dyn_sphere_list = &this->dyn_spheres_list;
         simulation_->axon_list = &this->axons_list;
         simulation_->dynamicsEngine->print_expected_time = 0;
         simulations.push_back(simulation_);
+
 
         if(params.verbatim)
             SimErrno::info( " Sim: " + to_string(simulation_->dynamicsEngine->id) + " Initialized",cout);
@@ -195,22 +200,28 @@ void ParallelMCSimulation::initializeUnitSimulations()
     //Parameters for each simulation simulation
     Parameters params_temp = params;
     params_temp.num_walkers = params.num_walkers - N_per_sim *(params.num_proc-1);
-    params_temp.output_base_name+= "_"+std::to_string(params.num_proc-1);
+    //params_temp.output_base_name+= "_"+std::to_string(params.num_proc-1);
 
     MCSimulation* simulation_ = new MCSimulation(params_temp);
-    //simulation_->dynamicsEngine->print_expected_time = 0;
+    simulation_->dynamicsEngine->print_expected_time = 0;
     simulation_->plyObstacles_list = &this->plyObstacles_list;
     simulation_->cylinder_list = &this->cylinders_list;
     simulation_->dyn_cylinder_list = &this->dyn_cylinders_list;
     simulation_->sphere_list    = &this->spheres_list;
-    simulation_->dyn_sphere_list    = &this->dyn_spheres_list;
-    simulation_->axon_list    = &this->axons_list;
+    for (unsigned i=0 ; i< (&this->axons_list)->size(); ++i){
+        cout <<  "i : " << i << " \n";
+        axons_.push_back(axons_list.at(i));
+    }
+    //axons_ = &this->axons_list;
+    simulation_->axon_list  = &axons_;
+
     simulations.push_back(simulation_);
+
+    cout <<  "end \n";
 
 
     if(params.verbatim)
         SimErrno::info( " Sim: " + to_string(simulation_->dynamicsEngine->id) + " Initialized",cout);
-        SimErrno::info( "here",cout);
 }
 
 void ParallelMCSimulation::jointResults()
@@ -829,7 +840,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
         }
         in.close();
 
-        in.open(params.dyn_cylinders_files[i]);
+        in.open(params.axons_files[i]);
 
         if(z_flag){
             double x,y,z,r;
@@ -843,11 +854,11 @@ void ParallelMCSimulation::addObstaclesFromFiles()
 
             while (in >> x >> y >> z >> r >> s)
             {
-                if (params.active_state && s){
-                    r *= sqrt(1+volume_inc_perc);
-                }
-                axons_list.push_back(Axon(r,Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),volume_inc_perc,s, scale));
+                axons_list.push_back(Axon(r,Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),volume_inc_perc, params.active_state,s, scale));
             }
+
+            params.max_limits = Eigen::Vector3d(z*scale,z*scale,z*scale);
+            params.min_limits = Eigen::Vector3d(scale,scale,scale);
             params.volume_inc_perc = volume_inc_perc;
             params.gamma_icvf = icvf;
             params.dyn_perc = dyn_perc;
@@ -868,11 +879,10 @@ void ParallelMCSimulation::addObstaclesFromFiles()
 
             while (in >> x >> y >> z >> ox >> oy >> oz >> r >> s)
             {
-                if (params.active_state && s){
-                    r *= sqrt(1+volume_inc_perc);
-                }
-                axons_list.push_back(Axon(r, Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),volume_inc_perc, s, scale));
+                axons_list.push_back(Axon(r, Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),volume_inc_perc, params.active_state, s, scale));
             }
+            params.max_limits = Eigen::Vector3d(oz*scale,oz*scale,oz*scale);
+            params.min_limits = Eigen::Vector3d(z*scale,z*scale,z*scale);
             params.volume_inc_perc = volume_inc_perc;
             params.gamma_icvf = icvf;
             params.dyn_perc = dyn_perc;
@@ -905,6 +915,16 @@ void ParallelMCSimulation::addObstaclesFromFiles()
             spheres_list.push_back(Sphere(Eigen::Vector3d(x,y,z),r,scale));
         }
         in.close();
+    }
+
+    // Add voxel
+    if(params.voxels_list.size()<=0){
+        pair<Eigen::Vector3d,Eigen::Vector3d> voxel_(params.min_limits,params.max_limits);
+        params.voxels_list.push_back(voxel_);
+    }
+    else{
+        params.voxels_list[0].first =  params.min_limits;
+        params.voxels_list[0].second = params.max_limits;
     }
 }
 
@@ -1001,7 +1021,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
     }
 
 
-    if(params.gamma_cyl_packing == true){
+    if(params.gamma_cyl_packing){
 
         string message = "Initialializing Gamma distribution (" + std::to_string(params.gamma_packing_alpha) + ","
                 + std::to_string(params.gamma_packing_beta) + ").\n";
@@ -1041,7 +1061,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
         SimErrno::info("Done.\n",cout);
     }
 
-    if(params.gamma_dyn_cyl_packing == true){
+    if(params.gamma_dyn_cyl_packing){
 
         string message = "Initialializing Gamma distribution (" + std::to_string(params.gamma_packing_alpha) + ","
                 + std::to_string(params.gamma_packing_beta) + ").\n";
@@ -1086,7 +1106,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
         SimErrno::info("Done.\n",cout);
     }
 
-    if(params.gamma_ax_packing == true){
+    if(params.gamma_ax_packing){
 
         string message = "Initialializing Gamma distribution (" + std::to_string(params.gamma_packing_alpha) + ","
                 + std::to_string(params.gamma_packing_beta) + ").\n";
@@ -1131,6 +1151,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
         gamma_dist.printSubstrate(out);
 
         this->axons_list = gamma_dist.axons;
+
 
         //for (unsigned i=0; i< axons_list.size(); ++i){
         //    for (unsigned s=0; s< this->axons_list[i].spheres.size(); ++s){

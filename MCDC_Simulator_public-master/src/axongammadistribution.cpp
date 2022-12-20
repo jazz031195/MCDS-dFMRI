@@ -175,7 +175,7 @@ void AxonGammaDistribution::createGammaSubstrate()
                     Vector3d D = {x, y, z + max_limits[2]};
 
 
-                    Axon ax(radiis[i], Q, D, volume_inc_perc, bool_swell_ax_id[i], active_state);
+                    Axon ax(radiis[i], Q, D, volume_inc_perc, active_state, bool_swell_ax_id[i], 1);
                 
 
                     double min_distance;
@@ -242,7 +242,7 @@ void AxonGammaDistribution::printSubstrate(ostream &out)
 
     for (unsigned i = 0; i < axons.size(); i++)
     {
-        out << " " << axons[i].begin[0] * 1e3  << " " << axons[i].begin[1] * 1e3  << " " 
+        out << axons[i].begin[0] * 1e3  << " " << axons[i].begin[1] * 1e3  << " " 
         << axons[i].begin[2] * 1e3  << " " << axons[i].end[0] * 1e3  << " " 
         << axons[i].end[1] * 1e3  <<" "<< axons[i].end[2] * 1e3  <<" " 
         << axons[i].radius* 1e3 << " " << axons[i].swell 
@@ -369,7 +369,7 @@ void AxonGammaDistribution::checkBoundaryConditions(Axon ax, std::vector<Axon> &
             
             P[i]  = ax.begin[i] + min_limits[i] - max_limits[i];
             Q[i]=  ax.end[i] + min_limits[i] - max_limits[i];
-            Axon tmp (ax.radius, P, Q, ax.volume_inc_perc, ax.active_state);
+            Axon tmp (ax.radius, P, Q, ax.volume_inc_perc, ax.active_state, ax.swell, 1);
             to_add.push_back(tmp);
 
         }
@@ -379,7 +379,7 @@ void AxonGammaDistribution::checkBoundaryConditions(Axon ax, std::vector<Axon> &
         {
             P[i]  = ax.begin[i] - min_limits[i] + max_limits[i];
             Q[i]=  ax.end[i] - min_limits[i] + max_limits[i];
-            Axon tmp (ax.radius, P, Q, ax.volume_inc_perc, ax.active_state);
+            Axon tmp (ax.radius, P, Q, ax.volume_inc_perc, ax.active_state, ax.swell, 1);
             to_add.push_back(tmp);
 
         }
@@ -406,7 +406,7 @@ void AxonGammaDistribution::checkBoundaryConditions(Axon ax, std::vector<Axon> &
 
                     P[i]  = jkr.begin[i] + min_limits[i] - max_limits[i];
                     Q[i]=  jkr.end[i] + min_limits[i] - max_limits[i];
-                    Axon tmp (jkr.radius, P, Q, jkr.volume_inc_perc, jkr.active_state);
+                    Axon tmp (jkr.radius, P, Q, jkr.volume_inc_perc, jkr.active_state, jkr.swell, 1);
                     to_add.push_back(tmp);
 
 
@@ -417,7 +417,7 @@ void AxonGammaDistribution::checkBoundaryConditions(Axon ax, std::vector<Axon> &
 
                     P[i]  = jkr.begin[i] - min_limits[i] + max_limits[i];
                     Q[i]=  jkr.end[i] - min_limits[i] + max_limits[i];
-                    Axon tmp (jkr.radius, P, Q, jkr.volume_inc_perc, jkr.active_state);
+                    Axon tmp (jkr.radius, P, Q, jkr.volume_inc_perc, jkr.active_state, jkr.swell, 1);
                     to_add.push_back(tmp);
 
 
