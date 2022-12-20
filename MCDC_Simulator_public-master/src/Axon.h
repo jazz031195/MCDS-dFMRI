@@ -38,7 +38,7 @@ public:
     ~Axon();
 
 
-    Axon(double radius_, Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ = false, bool swell_ = false, double scale = 1):radius(radius_*scale),begin(begin_*scale),end(end_*scale),volume_inc_perc(volume_inc_perc_), active_state(active_state_), swell(swell_){
+    Axon(double radius_, Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , double scale):radius(radius_*scale),begin(begin_*scale),end(end_*scale),volume_inc_perc(volume_inc_perc_), active_state(active_state_), swell(swell_){
 
         std::vector<Eigen::Vector3d> centers; 
         Eigen::Vector3d pos = begin;

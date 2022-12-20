@@ -705,7 +705,6 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos,int &cyl
        // cout << initialization_gap[2] << endl;
         Vector3d pos_temp = {x,y,z};
 
-
         isintra = isInIntra(pos_temp,cyl_ind,ply_ind, sph_ind,ax_ind, -0.1);
         if(checkIfPosInsideVoxel(pos_temp) && (isintra)){
             
@@ -1092,9 +1091,11 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
     /*                                                     */
     /*********************   WARNING  **********************/
     unsigned w=0;
-    int ax_id_;
+
     for (w = 0 ; w < params.num_walkers; w++)
     {
+        cout << "Walker : " << w <<  "\n" <<  endl;
+
         //flag in case there was any error with the particle.
         back_tracking = false;
 
