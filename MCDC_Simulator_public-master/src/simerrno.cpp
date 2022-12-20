@@ -98,6 +98,12 @@ bool SimErrno::checkSimulationParameters(Parameters &params)
         info("Done...",cout);
     }
 
+    if(params.axons_files.size()>0){
+        info("Checking Sphere list format...",cout);
+        checkAxonsListFile(params);
+        info("Done...",cout);
+    }
+
     if(params.ini_walkers_file.size() > 2){
         info("Checking walker initial position list format...",cout);
         checkInitWalkerFile(params);
@@ -692,6 +698,92 @@ bool SimErrno::checkDynCylindersListFile(Parameters &params)
     return true;
 }
 
+bool SimErrno::checkAxonsListFile(Parameters &params)
+{
+    for(unsigned i = 0; i < params.axons_files.size(); i++){
+        bool z_flag = false;
+        ifstream in(params.axons_files[i]);
+
+        if(!in){
+            error( "Axon list file cannot be open." ,cout);
+            assert(0);
+            in.close();
+            return true;
+        }
+
+        bool first=true;
+        unsigned enum_ = 1;
+        for( std::string line; getline( in, line ); )
+        {
+            if(first) {
+                std::vector<std::string> jkr = split_(line,' ');
+                if (jkr.size()!= 1){
+                    error( "First line must be only the overall scale factor: ",cout);
+                    in.close();
+                    assert(0);
+                    return true;
+                }
+                enum_ += 1;
+                first-=1;continue;
+
+            }
+
+            if (enum_ == 2 || enum_ == 3 || enum_ == 4){
+                std::vector<std::string> jkr = split_(line,' ');
+                if (jkr.size()!= 1){
+                    error( "line must be only the activation time: ",cout);
+                    in.close();
+                    assert(0);
+                    return true;
+                }
+                enum_ += 1;
+                continue;
+
+            }
+
+            std::vector<std::string> jkr = split_(line,' ');
+
+            if(jkr.size() != 8 && jkr.size() != 5){
+                error( "Axon list file is not in the correct format." ,cout);
+                in.close();
+                assert(0);
+                return true;
+            }
+
+            if (jkr.size() != 8){
+                z_flag = true;
+                warning("No axons orientation inlcluded. Axon orientation was set towards the Z direction by default for all axons.",cout);
+            }
+            break;
+        }
+        in.close();
+
+        in.open(params.axons_files[i]);
+
+        if(!z_flag){
+            double x,y,z,ox,oy,oz,r;
+            bool s;
+            double scale;
+            double volume_inc_perc, dyn_perc, icvf;
+            in >> scale;
+            in >> volume_inc_perc;
+            in >> dyn_perc;
+            in >> icvf;
+            while (in >> x >> y >> z >> ox >> oy >> oz >> r >> s)
+            {
+                if ((x - ox) == 0.0 && (z - oz) == 0.0 && (y - oy) == 0.0){
+                    error( "Axon list has wrongly defined axons. Invalid orientation: ",cout);
+                    in.close();
+                    assert(0);
+                    return true;
+                }
+            }
+            in.close();
+        }
+    }
+
+    return true;
+}
 
 bool SimErrno::checkSphereListFile(Parameters &params)
 {
@@ -1062,6 +1154,13 @@ void SimErrno::printSimulatinInfo(Parameters &params, ostream &out,bool color)
         infoMenu(" Min. radius:           ------",  " "+ to_string(params.min_obstacle_radii)+" um",out, color,35);
     }
     if(params.gamma_dyn_cyl_packing){
+        infoMenu(" Gamma Configuration:   ------", " true", out, color,35);
+        infoMenu(" Gamma alpha:           ------",  " "+ to_string(params.gamma_packing_alpha)+" um",out, color,35);
+        infoMenu(" Gamma scale:           ------",  " "+ to_string(params.gamma_packing_beta),out, color,35);
+        infoMenu(" Target ICVF:           ------",  " "+ to_string(params.gamma_icvf),out, color,35);
+        infoMenu(" Min. radius:           ------",  " "+ to_string(params.min_obstacle_radii)+" um",out, color,35);
+    }
+    if(params.gamma_ax_packing){
         infoMenu(" Gamma Configuration:   ------", " true", out, color,35);
         infoMenu(" Gamma alpha:           ------",  " "+ to_string(params.gamma_packing_alpha)+" um",out, color,35);
         infoMenu(" Gamma scale:           ------",  " "+ to_string(params.gamma_packing_beta),out, color,35);

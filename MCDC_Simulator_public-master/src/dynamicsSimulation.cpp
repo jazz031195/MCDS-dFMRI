@@ -983,6 +983,7 @@ bool DynamicsSimulation::isInsideAxons(Vector3d &position, int& ax_id,double dis
             intra_tries++;
             ax_id = i;
             return true;
+            break;
         }
     }
 
@@ -1139,6 +1140,8 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
                 if ( error == Sentinel::rejected  )
                     continue;
             }
+
+
             
 
             // Saves the final particle position after bouncing in the time t.
@@ -1152,11 +1155,7 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
             walker.rejection_count = 0;
 
         }// end for t
-        if (axons_list->size() >0 && isInsideAxons(walker.pos_v, ax_id_, 0)== false && walker.initial_location == Walker::intra){
-            back_tracking = true;
-            sentinela.illegal_count++;
-            w--;
-        }
+
         if(!back_tracking)
             if(finalPositionCheck()){
                 back_tracking=true;
@@ -1322,6 +1321,9 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
 
     // Clears the status of the sentinel.
     sentinela.clear();
+    bool isinside;
+    int ax_id;
+    int size_list_axons = axons_list->size();
 
     unsigned bouncing_count = 0;
     do{
@@ -1348,7 +1350,9 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
                 walker.next_direction = {0,0,0};
             }
         }
-        sentinela.checkErrors(walker,params,((*plyObstacles_list).size() == 0),bouncing_count);
+        isinside = isInsideAxons(walker.pos_v, ax_id, barrier_tickness);
+        
+        sentinela.checkErrors(walker,params,((*plyObstacles_list).size() == 0),bouncing_count, size_list_axons, isinside);
 
     }while(bounced);
 

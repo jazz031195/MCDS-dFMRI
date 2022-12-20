@@ -45,9 +45,11 @@ bool Dynamic_Sphere::checkCollision_(Walker &walker, Eigen::Vector3d &step, doub
     double a = 1;
     double b = m.dot(step);
     double c = m.dot(m) - radius*radius;
-    if(b > EPS_VAL && c > EPS_VAL){
-        colision.type = Collision::null;
-        return false;
+    if (isintra == false){
+        if(b > EPS_VAL && c > EPS_VAL){
+            colision.type = Collision::null;
+            return false;
+        }
     }
 
 
@@ -72,6 +74,7 @@ inline bool Dynamic_Sphere::handleCollition(Walker& walker, Collision &colision,
 
     // take the longest path if walker is in axon
     if (isintra){
+        colision.col_location = Collision::inside;
         if (t1> t2){
             t2 = t1;
         }
@@ -156,7 +159,7 @@ inline bool Dynamic_Sphere::handleCollition(Walker& walker, Collision &colision,
     elasticBounceAgainsPlane(walker.pos_v,normal,colision.t,temp_step);
     colision.bounced_direction = temp_step.normalized();
 
-    //string message = "Colision ! \n";
+    //string message = "Colision at t : "+to_string(colision.t)+" \n";
     //SimErrno::error(message,cout);    
 
     return true;
