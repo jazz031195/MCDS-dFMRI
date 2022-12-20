@@ -45,7 +45,7 @@ public:
 
     void setRejectedError();
 
-    bool checkErrors(Walker &w, const Parameters &params, bool noPLY, unsigned &bouncing_count);
+    bool checkErrors(Walker &w, const Parameters &params, bool noPLY, unsigned &bouncing_count, int& axons_list_size, bool& isinside_axons);
 
     void deportationProcess(Walker &walker, unsigned &w, unsigned& t , bool& back_tracking, Parameters &params, int id);
 

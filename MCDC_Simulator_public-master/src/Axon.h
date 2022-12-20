@@ -46,7 +46,7 @@ public:
         centers.clear();
         double length = (end-begin).norm();
 
-        double dist_ = this->radius/2;
+        double dist_ = this->radius/4;
 
         centers.push_back(pos);
         do{
@@ -100,7 +100,7 @@ public:
 
     double minDistance(Eigen::Vector3d pos);
 
-    double intersection_sphere_vector(Dynamic_Sphere &s, Eigen::Vector3d &step, Eigen::Vector3d &pos, bool isintra);
+    double intersection_sphere_vector(Dynamic_Sphere &s, Eigen::Vector3d &step, double& step_length, Eigen::Vector3d &pos, bool isintra);
 
     bool isInside(Eigen::Vector3d pos, double distance_to_be_inside);
 

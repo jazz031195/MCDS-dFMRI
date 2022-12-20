@@ -210,6 +210,7 @@ void ParallelMCSimulation::initializeUnitSimulations()
 
     if(params.verbatim)
         SimErrno::info( " Sim: " + to_string(simulation_->dynamicsEngine->id) + " Initialized",cout);
+        SimErrno::info( "here",cout);
 }
 
 void ParallelMCSimulation::jointResults()
