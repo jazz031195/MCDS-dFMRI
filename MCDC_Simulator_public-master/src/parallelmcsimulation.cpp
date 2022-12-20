@@ -44,6 +44,7 @@ ParallelMCSimulation::ParallelMCSimulation(std::string config_file)
     SimErrno::checkSimulationParameters(params);
     //printSimulationInfo();
     initializeUnitSimulations();
+    cout <<  "ok \n";
 
     SimErrno::printSimulatinInfo(params,std::cout);
 
@@ -58,6 +59,8 @@ ParallelMCSimulation::ParallelMCSimulation(Parameters &params)
     this->params = params;
 
     initializeUnitSimulations();
+    cout <<  "ok \n";
+
     SimErrno::printSimulatinInfo(params,std::cout);
     icvf=0;
       
@@ -163,10 +166,12 @@ void ParallelMCSimulation::initializeUnitSimulations()
 
     //Build anything that needs to be syn between simulations.
     specialInitializations();
+    cout <<  "after special initialisations \n";
 
     // The number of walker N devided between all the processes
 
     unsigned N_per_sim = params.num_walkers/params.num_proc;
+    std::vector<Axon> axons_ ;
 
     for(unsigned i = 0; i < params.num_proc-1; i++){
 
@@ -185,6 +190,7 @@ void ParallelMCSimulation::initializeUnitSimulations()
         simulation_->dynamicsEngine->print_expected_time = 0;
         simulations.push_back(simulation_);
 
+
         if(params.verbatim)
             SimErrno::info( " Sim: " + to_string(simulation_->dynamicsEngine->id) + " Initialized",cout);
     }
@@ -202,9 +208,16 @@ void ParallelMCSimulation::initializeUnitSimulations()
     simulation_->cylinder_list = &this->cylinders_list;
     simulation_->dyn_cylinder_list = &this->dyn_cylinders_list;
     simulation_->sphere_list    = &this->spheres_list;
-    simulation_->axon_list    = &this->axons_list;
+    for (unsigned i=0 ; i< (&this->axons_list)->size(); ++i){
+        cout <<  "i : " << i << " \n";
+        axons_.push_back(axons_list.at(i));
+    }
+    //axons_ = &this->axons_list;
+    simulation_->axon_list  = &axons_;
 
     simulations.push_back(simulation_);
+
+    cout <<  "end \n";
 
 
     if(params.verbatim)

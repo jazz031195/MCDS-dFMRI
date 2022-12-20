@@ -70,7 +70,7 @@ MCSimulation::MCSimulation(Parameters& params_)
     cylinder_list = nullptr;
     dyn_cylinder_list = nullptr;
     dyn_sphere_list = nullptr;
-    axon_list = nullptr;
+    //axon_list = nullptr;
 
 
     params = params_;

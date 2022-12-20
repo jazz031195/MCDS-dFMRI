@@ -29,7 +29,7 @@ def get_nbr_cylinders ():
     return nbr_cylinders
 
 def get_cylinder_array(file):
-    nbr_cylinders = get_nbr_cylinders ()
+    nbr_cylinders = 64
     cylinder_array = np.zeros((nbr_cylinders,8))
 
     with open(file) as f:
@@ -39,7 +39,7 @@ def get_cylinder_array(file):
             if e< nbr_cylinders:
                 if len(line.split(' ')) > 5:
                     
-                    cylinder_array[e] = np.array([float(i)*0.001 for i in line.split(' ')[1:]])
+                    cylinder_array[e] = np.array([float(i)*0.001 for i in line.split(' ')[:]])
                     e = e+1
     print(e)
     return cylinder_array
