@@ -184,7 +184,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
     {
         
 
-        if (tried > 10000)
+        if (tried > 1000)
         {
             message = " Radii distribution cannot be sampled [Min. radius Error]\n";
             SimErrno::error(message, cout);
@@ -228,38 +228,42 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
             //vector<Axon> axons_to_add;
 
             axons.clear();
+            unsigned stuck = 0;
+
             for (unsigned i = 0; i < num_obstacles; i++)
             {
+                if(stuck < 10000){
+                    //out << " obstacle :"<< i << endl;
+                    double t = udist(gen);
+                    double distance_to_border = radiis[i]*sqrt(1+volume_inc_perc) + barrier_tickness;
+                    double x = (t * (max_limits[0]-distance_to_border)) + (1 - t) * (min_limits[0]+ distance_to_border);
+                    t = udist(gen);
+                    double y = (t * (max_limits[1]-distance_to_border) + (1 - t) * (min_limits[1]+ distance_to_border));
 
-                //out << " obstacle :"<< i << endl;
-                double t = udist(gen);
-                double distance_to_border = radiis[i]*sqrt(1+volume_inc_perc) + barrier_tickness;
-                double x = (t * (max_limits[0]-distance_to_border)) + (1 - t) * (min_limits[0]+ distance_to_border);
-                t = udist(gen);
-                double y = (t * (max_limits[1]-distance_to_border) + (1 - t) * (min_limits[1]+ distance_to_border));
+                    Vector3d Q = {x, y, min_limits[2] + distance_to_border};
+                    Vector3d D = {x, y, max_limits[2] - distance_to_border};
 
-                Vector3d Q = {x, y, min_limits[2] + distance_to_border};
-                Vector3d D = {x, y, max_limits[2] - distance_to_border};
+                    Axon ax(radiis[i], Q, D, volume_inc_perc, active_state, bool_swell_ax_id[i], 1);
 
-                Axon ax(radiis[i], Q, D, volume_inc_perc, active_state, bool_swell_ax_id[i], 1);
+                    std::vector<Dynamic_Sphere> spheres_to_add = GrowAxon(ax, max_radius_, i,  out);
 
-                std::vector<Dynamic_Sphere> spheres_to_add = GrowAxon(ax, max_radius_, i,  out);
+                    ax.set_spheres(spheres_to_add);
 
-                ax.set_spheres(spheres_to_add);
+                    //bool collision = isColliding(ax, max_radius + EPS_VAL, i, out);
 
-
-                //bool collision = isColliding(ax, max_radius + EPS_VAL, i, out);
-
-                //if (!collision)
-                if(spheres_to_add.size() != 0)
-                {
-                    axons.push_back(ax);
-                    add_projection(ax, i, EPS_VAL, out);
-                 }
-                else{
-                    i -= 1;
-                    continue;
-                }  
+                    //if (!collision)
+                    if(spheres_to_add.size() != 0)
+                    {
+                        axons.push_back(ax);
+                        add_projection(ax, i, EPS_VAL, out);
+                        stuck = 0;
+                    }
+                    else{
+                        i -= 1; 
+                        stuck += 1;
+                        continue;
+                    }  
+                }
 
                 int dummy;
                 double icvf_current = computeICVF(axons, min_limits, max_limits, dummy);
@@ -303,6 +307,8 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
     // TODO cambiar a INFO
     int perc_;
     double icvf_current = computeICVF(axons, min_limits, max_limits, perc_);
+
+    out <<"icvf:"<< icvf_current << endl;
 
     message = "Percentage of axons selected: " + to_string(double(perc_) / radiis.size() * 100.0) + "%,\nICVF achieved: " + to_string(icvf_current * 100) + "  (" + to_string(int((icvf_current / icvf * 100))) + "% of the desired icvf)\n";
     SimErrno::info(message, cout);
@@ -529,7 +535,7 @@ double AxonGammaDistribution::computeICVF(std::vector<Axon> &axons, Vector3d &mi
         }
         double rad = axons[i].radius;
 
-        double ax_length = ((axons[i].spheres).size()-1)*rad/4;
+        double ax_length = ((axons[i].spheres).size()-1)*rad/4 + 2*rad;
         
         AreaC += M_PI * rad * rad* ax_length;
         num_no_repeat++;
@@ -618,7 +624,7 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
     Dynamic_Sphere s1(new_pos, ax.radius,ax.volume_inc_perc,ax.swell, axon_id, 1);
     std::vector<Dynamic_Sphere> spheres_to_add;
 
-    int max_tries = 20;
+    int max_tries = 1000;
     bool stop = false;
 
     out << "try_axon :" << axon_id << endl;
@@ -628,14 +634,13 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
         return spheres_to_add;
     }
 
-    int fibre_collapse = 0;
     do{  
 
         //out << "pos : (" << new_pos[0] << ", " << new_pos[1] << ", " << new_pos[2] << ") " << endl;
         //out << "end: (" << ax.end[0] << ", " << ax.end[1] << ", " << ax.end[2] << ") " << endl;
         tries =0;
         tie(phi_to_target, gamma_to_target) = phi_gamma_to_target (prev_pos, new_pos, ax.end, out);
-        out << "phi to target : "<< phi_to_target/M_PI << "*pi, gamma to target :"<< gamma_to_target/M_PI <<"*pi" << endl;
+        //out << "phi to target : "<< phi_to_target/M_PI << "*pi, gamma to target :"<< gamma_to_target/M_PI <<"*pi" << endl;
         achieved = false;
 
         while(!achieved && tries < max_tries){
@@ -645,12 +650,12 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
             gamma = gamma_dist(gen)*M_PI;
             if (gamma > M_PI/4){
                 gamma = M_PI/4;
-            } 
-            else if (gamma < - M_PI/4) {
-                gamma = -M_PI/4;
             }
+            else if(gamma < - M_PI/4){
+                gamma = - M_PI/4;
+            } 
 
-            out << "phi : " << phi/M_PI << "*pi , gamma : " << gamma/M_PI <<"*pi"<< endl;
+            //out << "phi : " << phi/M_PI << "*pi , gamma : " << gamma/M_PI <<"*pi"<< endl;
             delta_x = dist_*cos(phi)*sin(gamma);
             delta_y = dist_*sin(phi)*sin(gamma);
             delta_z = dist_*cos(gamma);
@@ -688,16 +693,16 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
         }
         // fibre collapse
         if(tries >= max_tries && !achieved){
-            if (centers.size() > 3 && fibre_collapse < 5){
-                centers.pop_back();
-                out << "Max tries reached ! centers.size() : " << centers.size() << endl;
-                new_pos = centers[-1];
-                prev_pos = centers[-2];
-                fibre_collapse += 1;
-            }
-            else{
+            //if (centers.size() > 3 ){
+            //    centers.pop_back();
+            //    out << "Max tries reached ! centers.size() : " << centers.size() << endl;
+            //    new_pos = centers[-1];
+            //    prev_pos = centers[-2];
+            //    tries = 0;
+            //}
+            //else{
                 return spheres_to_add;
-            }
+            //}
         }
 
     }while (new_pos[2] < ax.end[2]-dist_ );

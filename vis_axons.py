@@ -36,7 +36,7 @@ def draw_cercles(axons, swell = False):
 
     def plot_sphere(r,x,y,z):
         return mlab.mesh(r*x_+x, r*y_+y, r*z_+z)  
-    for i in range(len(axons)):
+    for i in range(30):
         spheres = axons[i]
         for ii in range(len(spheres)):
             radius = spheres[ii][3]
@@ -69,3 +69,5 @@ def main():
     draw_cercles(axons)
 
 main()
+
+

@@ -516,13 +516,15 @@ def get_adc_diff_rest_active(folder, conf):
     print("Change in ADC from rest to active : ", (active-rest))
 
 
+dwi_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/_DWI.txt"
 
-
-intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_active_DWI.txt"
-extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_active_DWI.txt"
-intra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_rest_DWI.txt"
-extra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_rest_DWI.txt"               
-data = assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_rest_path)
-
+data = create_data(dwi_path)
 print(data)
-plot(data)
+#intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_active_DWI.txt"
+#extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_active_DWI.txt"
+#intra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_rest_DWI.txt"
+#extra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_rest_DWI.txt"               
+#data = assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_rest_path)
+
+#print(data)
+#plot(data)
