@@ -29,8 +29,15 @@ Axon::Axon(const Axon &ax)
     begin = ax.begin;
     end = ax.end;
     max_radius = ax.max_radius;
+    min_radius = ax.min_radius;
     active_state = ax.active_state;
 
+
+}
+
+void Axon::set_spheres(std::vector<Dynamic_Sphere> &spheres_to_add){
+
+    this->spheres = spheres_to_add;
 
 }
 

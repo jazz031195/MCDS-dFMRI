@@ -69,7 +69,7 @@ ParallelMCSimulation::ParallelMCSimulation(Parameters &params)
 ParallelMCSimulation::~ParallelMCSimulation()
 {
     for(unsigned i = 0; i < simulations.size(); i++){
-        delete simulations[i];
+        delete &simulations[i];
     }
 }
 
@@ -208,12 +208,7 @@ void ParallelMCSimulation::initializeUnitSimulations()
     simulation_->cylinder_list = &this->cylinders_list;
     simulation_->dyn_cylinder_list = &this->dyn_cylinders_list;
     simulation_->sphere_list    = &this->spheres_list;
-    for (unsigned i=0 ; i< (&this->axons_list)->size(); ++i){
-        cout <<  "i : " << i << " \n";
-        axons_.push_back(axons_list.at(i));
-    }
-    //axons_ = &this->axons_list;
-    simulation_->axon_list  = &axons_;
+    simulation_->axon_list = &this->axons_list;
 
     simulations.push_back(simulation_);
 
@@ -1121,8 +1116,9 @@ void ParallelMCSimulation::addObstacleConfigurations()
 
 
         gamma_dist.displayGammaDistribution();
-
-        gamma_dist.createGammaSubstrate();
+        string file = params.output_base_name + "_gamma_distributed_axon_list_.txt";
+        ofstream out(file);
+        gamma_dist.createGammaSubstrate(out);
 
 
         //for (unsigned i = 0; i < gamma_dist.dyn_cylinders.size(); i++)
@@ -1144,13 +1140,16 @@ void ParallelMCSimulation::addObstacleConfigurations()
             params.voxels_list[0].second = params.max_limits;
         }
 
-        string file = params.output_base_name + "_gamma_distributed_axon_list.txt";
-
-        ofstream out(file);
-
-        gamma_dist.printSubstrate(out);
+        
+        
+        file = params.output_base_name + "_gamma_distributed_axon_list.txt";
+        ofstream out_(file);
+        gamma_dist.printSubstrate(out_);
 
         this->axons_list = gamma_dist.axons;
+        message = "axons : " + std::to_string(this->axons_list.size()) + " \n";
+        SimErrno::info(message,cout);
+
 
 
         //for (unsigned i=0; i< axons_list.size(); ++i){
