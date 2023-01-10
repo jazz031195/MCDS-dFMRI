@@ -643,9 +643,12 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
             phi = phi_dist(gen)*M_PI;
             std::normal_distribution<float> gamma_dist (gamma_to_target/M_PI, 0.1); 
             gamma = gamma_dist(gen)*M_PI;
-            while (gamma > M_PI/4 || gamma < - M_PI/4){
-                gamma = gamma_dist(gen)*M_PI;
+            if (gamma > M_PI/4){
+                gamma = M_PI/4;
             } 
+            else if (gamma < - M_PI/4) {
+                gamma = -M_PI/4;
+            }
 
             out << "phi : " << phi/M_PI << "*pi , gamma : " << gamma/M_PI <<"*pi"<< endl;
             delta_x = dist_*cos(phi)*sin(gamma);
