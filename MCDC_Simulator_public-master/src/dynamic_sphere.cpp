@@ -19,6 +19,7 @@ Dynamic_Sphere::Dynamic_Sphere(const Dynamic_Sphere &sph)
 
 }
 
+
 bool Dynamic_Sphere::checkCollision_(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision, bool &isintra)
 {
     //tmax = step_length
@@ -191,7 +192,12 @@ bool Dynamic_Sphere::isInside(Walker &w){
 
 bool Dynamic_Sphere::isInside(Eigen::Vector3d pos, double distance_to_be_inside){
     double d_ = (pos - this->center).norm();
-    d_ = d_-this->radius;
+    if (swell){
+        d_ = d_- (this->radius)*sqrt(1+volume_inc_perc);
+    } 
+    else{  
+        d_ = d_-this->radius;
+    } 
    // return d_>0.0?d_:0.0;
     return d_ <= distance_to_be_inside;
 }

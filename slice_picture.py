@@ -55,7 +55,11 @@ def draw_cercles(cylinder_array, swell = False):
         r.append(radius)
         x = cylinder_array[i][0]
         y = cylinder_array[i][1]
-        circle1 = plt.Circle((x, y), radius, color='orange')
+        swell = cylinder_array[i][-1]
+        if (swell > 0):
+            circle1 = plt.Circle((x, y), radius, color='red')
+        else:
+            circle1 = plt.Circle((x, y), radius, color='orange')
         ax[0].add_patch(circle1)
         
     #plt.xlabel("[mm]")

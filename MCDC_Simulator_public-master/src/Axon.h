@@ -24,11 +24,13 @@ public:
     std::vector<Dynamic_Sphere> spheres; 
     double radius;
     double max_radius;
+    double min_radius;
     bool swell;
     Eigen::Vector3d begin;
     Eigen::Vector3d end;
     double volume_inc_perc;
     bool active_state;
+
 
     /*!
      *  \brief Default constructor. Does nothing
@@ -38,51 +40,44 @@ public:
     ~Axon();
 
 
-    Axon(double radius_, Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , double scale):radius(radius_*scale),begin(begin_*scale),end(end_*scale),volume_inc_perc(volume_inc_perc_), active_state(active_state_), swell(swell_){
+    Axon(double min_radius_,  Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , double scale):min_radius(min_radius_*scale), begin(begin_*scale),end(end_*scale),volume_inc_perc(volume_inc_perc_), active_state(active_state_), swell(swell_){
 
-        std::vector<Eigen::Vector3d> centers; 
-        Eigen::Vector3d pos = begin;
+        radius = min_radius;
         spheres.clear();
-        centers.clear();
-        double length = (end-begin).norm();
 
-        double dist_ = this->radius/4;
-
-        centers.push_back(pos);
-        do{
-            //pos[0] = pos[0] + squeletton[0]*dist_;
-            //pos[1] = pos[1] + squeletton[1]*dist_;
-            pos[2] = pos[2] + dist_;
-            centers.push_back(pos);
-        }while (pos[2] < length/2);
-        // to make axon period wrt z
-
-        Eigen::Vector3d last_pos = end;
-        centers.push_back(last_pos);
-        do{
-            //last_pos[0] = last_pos[0] - squeletton[0]*dist_;
-            //last_pos[1] = last_pos[1] - squeletton[1]*dist_;
-            last_pos[2] = last_pos[2] - dist_;
-            centers.push_back(last_pos);
-        }while (last_pos[2] >= length/2);
-
-        max_radius = sqrt(1+volume_inc_perc)*radius;
+        if (swell){ 
+            max_radius = sqrt(1+volume_inc_perc)*radius;
+        }
+        else{
+            max_radius = radius;
+        } 
 
         if (swell && active_state){
             radius = max_radius;
         } 
 
+        //double dist_ = this->radius/4;
 
-        for (unsigned i=0; i< centers.size(); ++i){
-            Dynamic_Sphere sphere(centers[i], radius,volume_inc_perc,  swell, id);  
-            this->spheres.push_back(sphere);
+        //Eigen::Vector3d first_pos = begin;
+        //centers.push_back(first_pos);
 
-        }
+        //do{
 
+        //    pos[2] = pos[2] + dist_;
+        //    centers.push_back(pos);
+        //}while (pos[2] < end[2] - dist_);
+        // to make axon period wrt z
+
+        //Eigen::Vector3d last_pos = end;
+        //centers.push_back(last_pos);
+
+        //double position;
+        //for (unsigned i=0; i< centers.size(); ++i){
+        //    Dynamic_Sphere sphere(centers[i], radius,volume_inc_perc,  swell, id, scale);  
+        //    this->spheres.push_back(sphere);
+
+        //}
         id = count++;
-
-
-
     }
     Axon(Axon const &ax);
 
@@ -103,6 +98,8 @@ public:
     double intersection_sphere_vector(Dynamic_Sphere &s, Eigen::Vector3d &step, double& step_length, Eigen::Vector3d &pos, bool isintra);
 
     bool isInside(Eigen::Vector3d pos, double distance_to_be_inside);
+
+    void set_spheres(std::vector<Dynamic_Sphere> &spheres_to_add);
 
 };
 

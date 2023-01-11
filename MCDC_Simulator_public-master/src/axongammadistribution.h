@@ -36,6 +36,20 @@ public:
     Eigen::Vector3d max_limits;                     /*!< voxel max limits (if any)                                                  */
     
     bool active_state;
+
+    struct projection_pt{
+        double position;
+        int axon_id;
+        int sphere_id;
+    };
+    std::vector<projection_pt> projections_x;
+    std::vector<projection_pt> projections_y;
+    std::vector<projection_pt> projections_z;
+
+
+    // [position, axon_id, sphere_id], axes x,y,z
+    //std::vector<std::vector<projection_pt>> projections;
+
     
     /*!
      *  \param P_ Cylinder origin
@@ -62,36 +76,22 @@ public:
     /*!
      *  \brief Samples and constructs a Gamma distribution
     */
-    void createGammaSubstrate();
+    void createGammaSubstrate(ostream& out);
 
-    void updateGammaSubstrate();
 
     /*!
      *  \brief Prints the cylinders positions in a file or output stream.
      *  \param out ostream where to write the info.
     */
     void printSubstrate(std::ostream& out);
-
+    bool isSphereColliding(Dynamic_Sphere sph, double distance_to_be_inside, int axon_id, int sph_id, ostream& out);
+    void add_projection(Axon ax, int ax_index, double distance_to_be_inside, ostream& out);
+    std::vector<projection_pt> find_collisions(projection_pt proj_on_axis_min, projection_pt proj_on_axis_max,std::vector<projection_pt> projections_on_axis, ostream& out);
+    bool isColliding(Axon ax,  double distance_to_be_inside, int axon_id, ostream& out);
+    bool search_for_sphere(std::vector<projection_pt> spheres_, projection_pt s);
+    std::vector<Dynamic_Sphere> GrowAxon(Axon ax, double distance_to_be_inside, int axon_id,  ostream& out);
+    bool check_borders(Eigen::Vector3d pos, double distance_to_border);
 private:
-
-    /*!
-     *  \brief Checks for collision between inside a voxel (with periodic boundaries)
-     *  \param cyl cylinder to check collision with
-     *  \param min_limits Voxel min limits.
-     *  \param max_limits Voxel max limits.
-     *  \param cylinders_list cylinders already added.
-     *  \param min_distance that two cylinders can be close to.
-    */
-    bool checkForCollition(Axon ax, Eigen::Vector3d min_limits, Eigen::Vector3d max_limits, std::vector<Axon>& axons_list, double &min_distance);
-
-    /*!
-     *  \brief Auxiliary function to check the BOundary collision
-     *  \param cyl cylinder to check collision with.
-     *  \param min_limits Voxel min limits.
-     *  \param max_limits Voxel max limits.
-     *  \param cylinders_list cylinders already added.
-    */
-    void checkBoundaryConditions(Axon ax, std::vector<Axon>& axons_list, Eigen::Vector3d min_limits, Eigen::Vector3d max_limits);
 
     /*!
      *  \brief Computes Intra Celular Volum Fraction given the voxel limits and the list of added cylinders.
