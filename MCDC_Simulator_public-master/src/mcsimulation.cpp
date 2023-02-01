@@ -19,6 +19,7 @@ MCSimulation::MCSimulation()
     dyn_cylinder_list = nullptr;
     dyn_sphere_list = nullptr;
     axon_list= nullptr;
+
     id = count;
     count++;
 }
@@ -34,6 +35,7 @@ MCSimulation::MCSimulation(std::string config_file)
     dyn_cylinder_list = nullptr;
     dyn_sphere_list = nullptr;
     axon_list= nullptr;
+
 
     params.readSchemeFile(config_file);
     dynamicsEngine = new DynamicsSimulation(params);
@@ -153,6 +155,8 @@ void MCSimulation::addObstacles()
     this->dynamicsEngine->dyn_cylinders_list = this->dyn_cylinder_list;
     //this->dynamicsEngine->dyn_spheres_list = this->dyn_sphere_list;
     this->dynamicsEngine->axons_list = this->axon_list;
+
+
 }
 
 

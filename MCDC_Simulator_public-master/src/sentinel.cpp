@@ -50,7 +50,7 @@ void Sentinel::setRejectedError(){
 }
 
 
-bool Sentinel::checkErrors(Walker &walker, const Parameters &params, bool noPLY, unsigned& bouncing_count, int& axons_list_size, bool& isinside_axons)
+bool Sentinel::checkErrors(Walker &walker, const Parameters &params, bool noPLY, unsigned& bouncing_count)
 {
 
     //If it was rejected to many times we have to take out the walker.
@@ -67,8 +67,10 @@ bool Sentinel::checkErrors(Walker &walker, const Parameters &params, bool noPLY,
         throw(this->error);
     }
 
-    if( (walker.location != Walker::unknown) && (params.obstacle_permeability <= 0.0) && deport_illegals == true ){
+    if( (walker.location != Walker::unknown) && (params.obstacle_permeability <= 0.0) ){
+
         if(walker.initial_location != walker.location){
+            cout << "walker.location : " << walker.location << endl;
             setCrossingError(uint(walker.in_obj_index));
             illegal_count++;
             throw(this->error);
@@ -76,13 +78,6 @@ bool Sentinel::checkErrors(Walker &walker, const Parameters &params, bool noPLY,
         }
     }
 
-    if (axons_list_size >0 && isinside_axons== false && walker.initial_location == Walker::intra){
-        setCrossingError(uint(walker.in_obj_index));
-        illegal_count++;
-        throw(this->error);
-        cout <<  "illegal_count++" << endl;
-
-    }
 
 
     if(this->rejected_step == true){

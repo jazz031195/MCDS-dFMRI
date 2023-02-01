@@ -728,10 +728,10 @@ bool SimErrno::checkAxonsListFile(Parameters &params)
 
             }
 
-            if (enum_ == 2 || enum_ == 3 || enum_ == 4){
+            if (enum_ == 2 || enum_ == 3 || enum_ == 4 || enum_ == 5 || enum_ == 6){
                 std::vector<std::string> jkr = split_(line,' ');
                 if (jkr.size()!= 1){
-                    error( "line must be only the activation time: ",cout);
+                    error( "line have one value",cout);
                     in.close();
                     assert(0);
                     return true;
@@ -742,43 +742,20 @@ bool SimErrno::checkAxonsListFile(Parameters &params)
             }
 
             std::vector<std::string> jkr = split_(line,' ');
-            if(jkr.size() != 8 && jkr.size() != 5){
+            if(jkr.size() != 2 && jkr.size() != 5){
                 error( "Axon list file is not in the correct format." ,cout);
+                string mess  = "Length of line : "+ to_string(jkr.size());
+                error( mess,cout);
                 in.close();
                 assert(0);
                 return true;
             }
 
-            if (jkr.size() < 8){
-                z_flag = true;
-                warning("No axons orientation inlcluded. Axon orientation was set towards the Z direction by default for all axons.",cout);
-            }
+
             break;
         }
         in.close();
 
-        in.open(params.axons_files[i]);
-
-        if(!z_flag){
-            double x,y,z,ox,oy,oz,r;
-            bool s;
-            double scale;
-            double volume_inc_perc, dyn_perc, icvf;
-            in >> scale;
-            in >> volume_inc_perc;
-            in >> dyn_perc;
-            in >> icvf;
-            while (in >> x >> y >> z >> ox >> oy >> oz >> r >> s)
-            {
-                if ((x - ox) == 0.0 && (z - oz) == 0.0 && (y - oy) == 0.0){
-                    error( "Axon list has wrongly defined axons. Invalid orientation: ",cout);
-                    in.close();
-                    assert(0);
-                    return true;
-                }
-            }
-            in.close();
-        }
     }
 
     return true;

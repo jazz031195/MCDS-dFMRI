@@ -16,9 +16,17 @@ Dynamic_Sphere::Dynamic_Sphere(const Dynamic_Sphere &sph)
     volume_inc_perc = sph.volume_inc_perc; 
     ax_id = sph.ax_id;
     id = count++;
+    active_state = sph.active_state;
+    min_radius = sph.min_radius;
+    max_radius = sph.max_radius;
 
 }
 
+void Dynamic_Sphere::set_center(Eigen::Vector3d center_)
+{
+    this->center = center_; 
+
+}
 
 bool Dynamic_Sphere::checkCollision_(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision, bool &isintra)
 {
@@ -32,7 +40,7 @@ bool Dynamic_Sphere::checkCollision_(Walker &walker, Eigen::Vector3d &step, doub
     // total distance
     double distance_to_sphere = m.norm();
     // collision distance
-    double d_ = distance_to_sphere - radius;
+    double d_ = distance_to_sphere - max_radius;
 
     //If the minimum distance from the walker to the cylinder is more than
     // the actual step size, we can discard this collision.
@@ -45,7 +53,7 @@ bool Dynamic_Sphere::checkCollision_(Walker &walker, Eigen::Vector3d &step, doub
 
     double a = 1;
     double b = m.dot(step);
-    double c = m.dot(m) - radius*radius;
+    double c = m.dot(m) - max_radius*max_radius;
     if (isintra == false){
         if(b > EPS_VAL && c > EPS_VAL){
             colision.type = Collision::null;
@@ -91,18 +99,6 @@ inline bool Dynamic_Sphere::handleCollition(Walker& walker, Collision &colision,
         return false;
     }
 
-
-    //WARNING: Cuidar este patch
-    // Implementa Percolacion
-    if(percolation>0.0){
-        double _percolation_ (double(rand())/RAND_MAX);
-
-        if( percolation - _percolation_ > EPS_VAL ){
-            count_perc_crossings++;
-            return false;
-        }
-    }
-
     // a spin that's bouncing ignores collision at 0 (is in a wall)
     if(walker.status == Walker::bouncing){
         //string message = "  Bouncing : axon id :"+to_string(ax_id)+", pos of sphere (" +std::to_string(center[0])+", "+std::to_string(center[1])+", "+std::to_string(center[2])+") \n";
@@ -139,9 +135,9 @@ inline bool Dynamic_Sphere::handleCollition(Walker& walker, Collision &colision,
 
             //string message = "Inside ! : axon id :"+to_string(ax_id)+", pos of sphere (" +std::to_string(center[0])+", "+std::to_string(center[1])+", "+std::to_string(center[2])+") \n";
             //SimErrno::error(message,cout);
-            walker.in_obj_index = -1;
+        //    walker.in_obj_index = -1;
         }
-        else if(c>1e-10){
+    else if(c>1e-10){
 
             colision.col_location = Collision::outside;
             
@@ -192,12 +188,15 @@ bool Dynamic_Sphere::isInside(Walker &w){
 
 bool Dynamic_Sphere::isInside(Eigen::Vector3d pos, double distance_to_be_inside){
     double d_ = (pos - this->center).norm();
-    if (swell){
-        d_ = d_- (this->radius)*sqrt(1+volume_inc_perc);
-    } 
-    else{  
-        d_ = d_-this->radius;
-    } 
+ 
+    d_ = d_-this->radius;
+    
    // return d_>0.0?d_:0.0;
     return d_ <= distance_to_be_inside;
+}
+
+bool Dynamic_Sphere::distSmallerThan(Eigen::Vector3d pos, double distance){
+    double d_ = (pos - this->center).norm();
+    
+    return d_ <= distance;
 }
