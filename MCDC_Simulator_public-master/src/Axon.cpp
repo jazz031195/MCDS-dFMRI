@@ -283,6 +283,17 @@ bool Axon::intersection_sphere_vector(double &t1, double &t2, Dynamic_Sphere &s,
     Vector3d m = pos - s.center;
     double rad = s.radius;
 
+    // collision distance
+    double d_ = m.norm() - rad;
+
+    //If the minimum distance from the walker to the cylinder is more than
+    // the actual step size, we can discard this collision.
+    if(d_> EPS_VAL){
+        if(d_ > step_length+barrier_tickness){
+            return false;
+        }
+    }
+
     double a = 1;
     double b = (m.dot(step));
     c = m.dot(m) - rad*rad;
@@ -292,7 +303,7 @@ bool Axon::intersection_sphere_vector(double &t1, double &t2, Dynamic_Sphere &s,
     
     double discr = b*b - a*c;
 
-    if (discr < 0 ){
+    if (discr <= 0.0 ){
         return false;
     }
 
@@ -315,6 +326,38 @@ double getAverage(std::vector<double> const& v) {
     return sum / v.size();
 }
 
+int Axon::closest_sphere_dichotomy(Walker &walker, double &step_lenght, int& sphere_index){
+    Vector3d O;
+    walker.getVoxelPosition(O);
+    int number_spheres = spheres.size();
+    int i=0;
+    int i_last = number_spheres-1;
+    bool stop = false;
+    int count= 0;
+    int half_way;
+    double first_distance;
+    double last_distance;
+    while ((i_last-i)>1){
+        half_way = int((i_last+i)/2);
+        first_distance =(spheres[i].center-O).norm() - spheres[i].radius;
+        last_distance =(spheres[i_last].center-O).norm() - spheres[i_last].radius;
+        if(first_distance < last_distance){
+            i_last = half_way;
+        } 
+        else{
+            i = half_way;
+        } 
+        count += 1;
+    }
+    if (first_distance < last_distance){
+        return i;
+    }
+    else{
+        return i_last;
+    }  
+ 
+} 
+
 bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, Collision &colision)
 {
     string message;
@@ -323,7 +366,7 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
     Vector3d next_step = step*step_lenght+O;
 
     bool isintra;
-    bool next_step_intra = isPosInsideAxon(next_step, 0, false);
+    bool next_step_intra = isPosInsideAxon(next_step, barrier_tickness, false);
     bool collision_check = false;
     if (walker.location == Walker::intra){
         isintra = true;
@@ -345,7 +388,6 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
     // if is intra and so is next step -> no collision with border
     if(isintra && next_step_intra){
         colision.type = Collision::null;
-        cout << "wuuut" << endl;
         return false;
     }
 
@@ -357,7 +399,23 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
     dist_intersections.clear();
     int sph_id;
 
-    
+    //int sphere_index;
+
+    // find a random sphere that is near the walker 
+    //int nearest_sphere = closest_sphere_dichotomy(walker, step_lenght, sphere_index);
+
+    //int sph_begin;
+    //int sph_end;
+
+    //sph_begin = sphere_index - int((step_lenght+ barrier_tickness)*6/radius);
+    //if(sph_begin < 0 ){
+    //    sph_begin = 0;
+    //} 
+    //sph_end  = sphere_index + int((step_lenght+ barrier_tickness)*6/radius);
+    //if (sph_end > spheres.size()){
+    //    sph_end = spheres.size();
+    //} 
+ 
     for (unsigned i=0 ; i< spheres.size(); ++i){
         // distances to collision
         double t1;
@@ -440,7 +498,7 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
         }
             
 
-        cout << "c :" << colision.rn << endl;
+        //cout << "c :" << colision.rn << endl;
             
 
         colision.t = fmin(dist_to_collision,step_lenght);
@@ -456,7 +514,16 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
         Vector3d normal = (colision.colision_point- colliding_sphere.center).normalized();
         Vector3d temp_step = step;
         elasticBounceAgainsPlane(walker.pos_v,normal,colision.t,temp_step);
-        colision.bounced_direction = temp_step.normalized();
+        Vector3d next_pos = walker.pos_v+ temp_step*colision.t;
+        bool is_next_intra = isPosInsideAxon(next_pos, barrier_tickness, false);
+        if ((!isintra && is_next_intra)|| (isintra && !is_next_intra)){
+        //    cout << "not elastic bounce " << endl;
+            colision.bounced_direction = (-step).normalized();
+        }
+        else{  
+            //cout <<"elastic bounce"<< endl;
+            colision.bounced_direction = temp_step.normalized();
+        } 
         return true;
         
     }

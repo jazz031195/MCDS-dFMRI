@@ -88,6 +88,7 @@ public:
     void add_projection(int axon_id);
     bool isNearAxon(Eigen::Vector3d &position,  double distance_to_be_inside);
     bool isPosInsideAxon(Eigen::Vector3d &position,  double distance_to_be_inside, bool swell);
+    int closest_sphere_dichotomy(Walker &walker, double &step_lenght, int& sphere_index);
 
 };
 

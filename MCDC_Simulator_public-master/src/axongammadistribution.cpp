@@ -402,7 +402,7 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
     Dynamic_Sphere s1(new_pos, ax.radius,ax.volume_inc_perc,ax.swell, axon_id, 1, ax.active_state);
     std::vector<Dynamic_Sphere> spheres_to_add;
 
-    int max_tries = 1000;
+    int max_tries = 10000;
     bool stop = false;
 
     out << "try_axon :" << axon_id << endl;
@@ -426,10 +426,10 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
         achieved = false;
 
         while(!achieved && tries < max_tries){
-            std::normal_distribution<float> phi_dist (phi_to_target/M_PI, 0.1); 
+            std::normal_distribution<float> phi_dist (phi_to_target/M_PI, 0.08); 
             phi = phi_dist(gen)*M_PI;
             //phi = phi_to_target;
-            std::normal_distribution<float> gamma_dist (gamma_to_target/M_PI, 0.1); 
+            std::normal_distribution<float> gamma_dist (gamma_to_target/M_PI, 0.08); 
             gamma = gamma_dist(gen)*M_PI;
             //gamma = gamma_to_target;
             if (gamma > M_PI/4+ gamma_straight){

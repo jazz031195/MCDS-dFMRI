@@ -1415,7 +1415,6 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
     //For each Axon Obstacle
     for(unsigned int i = 0 ; i < walker.axons_collision_sphere.small_sphere_list_end; i++ )
     {
-
         unsigned index = walker.axons_collision_sphere.collision_list->at(i);
         //cout<< "axon : " << index << endl;
 

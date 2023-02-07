@@ -29,19 +29,22 @@ def get_nbr_cylinders ():
     return nbr_cylinders
 
 def get_cylinder_array(file):
-    nbr_cylinders = 64
-    cylinder_array = np.zeros((nbr_cylinders,8))
-
+    nbr_cylinders = 50
+    cylinder_array = np.zeros((nbr_cylinders,5))
+    prev_length = 0
     with open(file) as f:
         e = 0
         for line in f.readlines():
 
             if e< nbr_cylinders:
-                if len(line.split(' ')) > 5:
+                
+                if len(line.split(' ')) > 4 and prev_length < 3:
+                    
                     
                     cylinder_array[e] = np.array([float(i)*0.001 for i in line.split(' ')[:]])
                     e = e+1
-    print(e)
+            prev_length = len(line.split(' '))
+
     return cylinder_array
 
 def draw_cercles(cylinder_array, swell = False):
@@ -52,7 +55,7 @@ def draw_cercles(cylinder_array, swell = False):
 
     for i in range(cylinder_array.shape[0]):
         radius = cylinder_array[i][-2]
-        r.append(radius)
+        r.append(radius*1000)
         x = cylinder_array[i][0]
         y = cylinder_array[i][1]
         swell = cylinder_array[i][-1]
@@ -70,8 +73,8 @@ def draw_cercles(cylinder_array, swell = False):
     else:
         name = "slice_swell.png"
 
-    v = sns.histplot(data=pd.DataFrame({"radius[mm]": r}),
-            x="radius[mm]", kde=False, color='lightblue', ax = ax[1])
+    v = sns.histplot(data=pd.DataFrame({"radius[um]": r}),
+            x="radius[um]", kde=False, color='lightblue', ax = ax[1])
 
     plt.show()
 
