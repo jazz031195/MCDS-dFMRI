@@ -1375,10 +1375,23 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
     Collision colision_tmp;
     colision_tmp.type = Collision::null;
     colision_tmp.t = INFINITY_VALUE;
+    int cyl_id,  ply_id, sph_id, ax_id;
 
     //Origin O
     Eigen::Vector3d ray_origin;
     walker.getVoxelPosition(ray_origin);
+
+    bool isintra = isInIntra(ray_origin, cyl_id,  ply_id, sph_id, ax_id, barrier_tickness);
+
+    if(walker.initial_location == Walker::intra && isintra){
+        walker.intra_extra_consensus--;
+        walker.location = Walker::intra;
+    }
+    if(walker.initial_location == Walker::intra && !isintra){
+        //walker.intra_extra_consensus++;
+        //walker.location = Walker::extra;
+        cout << "is extra !" << endl;
+    }
 
     //To keep track of the closest collision
     double max_collision_distance = tmax;
@@ -1413,6 +1426,7 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
     }
 
     //For each Axon Obstacle
+
     for(unsigned int i = 0 ; i < walker.axons_collision_sphere.small_sphere_list_end; i++ )
     {
         unsigned index = walker.axons_collision_sphere.collision_list->at(i);
@@ -1515,7 +1529,7 @@ void DynamicsSimulation::mapWalkerIntoVoxel(Eigen::Vector3d& bounced_step, Colli
 
     Eigen::Vector3d voxel_pos = walker.pos_v + (colision.t)*bounced_step;
 
-    int cyl_id, ply_id, sph_id, ax_id;
+    int cyl_id, ply_id, sph_id, ax_id, ax_id_;
 
     bool mapped_on_z = false;
     bool low_edge = false;
@@ -1563,6 +1577,10 @@ void DynamicsSimulation::mapWalkerIntoVoxel(Eigen::Vector3d& bounced_step, Colli
             double y = double(udist(gen));
             double z = voxel_pos[2];
 
+            if(z < barrier_tickness){
+                z = barrier_tickness;
+            }
+
             x = x*(params.min_sampling_area[0]) + ( 1.0-x)*params.max_sampling_area[0];
             y = y*(params.min_sampling_area[1]) + ( 1.0-y)*params.max_sampling_area[1];
             voxel_pos = {x,y,z};
@@ -1572,15 +1590,20 @@ void DynamicsSimulation::mapWalkerIntoVoxel(Eigen::Vector3d& bounced_step, Colli
             //bool isintra = isInsideAxons(voxel_pos,ax_id,barrier_tickness);
 
             if (params.ini_walker_flag.compare("intra")== 0){
-                isintra= isIntraEdge(voxel_pos, low_edge, true);
-                //isintra_ = isInIntra(voxel_pos,  cyl_id, ply_id, sph_id,  ax_id, 1e-6);
+                isintra= isIntraEdge(voxel_pos, low_edge, ax_id, true);
+                //isintra_ = isInsideAxons(voxel_pos,ax_id_,0);
                 //if(isintra != isintra_){
-                //    cout << "mapping problem !" << endl;
+
+                //    cout << "isIntraEdge : " << isintra << endl;
+                //    cout << "isInsideAxons : " << isintra_  << endl;
+                //    double d = axons_list->at(ax_id).minDistance(voxel_pos);
+                //    cout << "distance : " << d << endl;
                 //}
+
                 incorrectcomp = isintra;
             }
             else if (params.ini_walker_flag.compare("extra")== 0){
-                isintra= isIntraEdge(voxel_pos, low_edge, false);
+                isintra= isIntraEdge(voxel_pos, low_edge,ax_id, false);
                 incorrectcomp = !isintra;
             }
 
@@ -1596,34 +1619,24 @@ void DynamicsSimulation::mapWalkerIntoVoxel(Eigen::Vector3d& bounced_step, Colli
     }
 }
 
-bool DynamicsSimulation::isIntraEdge(Eigen::Vector3d& position, bool low_edge, bool init_loc_intra){
+bool DynamicsSimulation::isIntraEdge(Eigen::Vector3d& position, bool low_edge, int& ax_id, bool init_loc_intra){
     for (int i = 0 ; i < axons_list->size(); i++){
-        Vector3d axon_ref;
+        Vector3d sph_ref;
         if (low_edge){
-            axon_ref = axons_list->at(i).begin;
+            sph_ref = axons_list->at(i).begin;
         }
         else{
-            axon_ref = axons_list->at(i).end;
+            sph_ref = axons_list->at(i).end;
         }
-        //cout << " axon ref :" << axon_ref[2] << endl;
-        double distance = (axon_ref - position).norm();
-        if (init_loc_intra){
-            if (distance + barrier_tickness <= axons_list->at(i).radius){
-                //cout << "intra" << endl;
+        double distance = (sph_ref - position).norm();
+        if (distance < axons_list->at(i).radius){
+            if(checkIfPosInsideVoxel(position)){
+                ax_id = i;
                 return true;
                 break;
             }
-        }
-        else{
-            if (distance <= axons_list->at(i).radius + barrier_tickness){
-                //cout << "intra" << endl;
-                return true;
-                break;
-            }
-
         }
     }
-    //cout << "not intra" << endl;
     return false;
 }
 
@@ -1651,6 +1664,8 @@ bool DynamicsSimulation::updateWalkerPositionAndHandleBouncing(Vector3d &bounced
     walker.getRealPosition(real_pos);
     walker.getVoxelPosition(voxel_pos);
 
+    int cyl_id,  ply_id, sph_id, ax_id;
+
     bool bounced =false;
 
     //Sets the status of the walker
@@ -1662,6 +1677,7 @@ bool DynamicsSimulation::updateWalkerPositionAndHandleBouncing(Vector3d &bounced
         tmax = 0;
         return false;
     }
+
 
     if(colision.type == Collision::hit && colision.col_location != Collision::voxel)
     {
@@ -1681,7 +1697,6 @@ bool DynamicsSimulation::updateWalkerPositionAndHandleBouncing(Vector3d &bounced
         walker.status = Walker::bouncing;
 
         tmax -= displ;
-
         // Labels the walker w/r it's orientation.
         if(colision.col_location == Collision::inside){
             walker.intra_extra_consensus--;
@@ -1694,6 +1709,7 @@ bool DynamicsSimulation::updateWalkerPositionAndHandleBouncing(Vector3d &bounced
         if(walker.initial_location == Walker::unknown){
             walker.initial_location = walker.location;
         }
+        
         //string message = "Update position after bouncing \n";
         //SimErrno::info(message,cout);
         //We update the position.

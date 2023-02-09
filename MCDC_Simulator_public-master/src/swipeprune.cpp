@@ -133,9 +133,9 @@ std::vector<std::vector<Projections::projection_pt>> Projections::find_collision
 
         colisions_axis_projs.clear();
         
-        projection_pt proj_on_axis_min {position[x]- rad, ax_id, 1000};
+        projection_pt proj_on_axis_min {position[x]- rad - 100*barrier_tickness, ax_id, 1000};
         // get max projection
-        projection_pt proj_on_axis_max {position[x] + rad, ax_id, 1000};
+        projection_pt proj_on_axis_max {position[x] + rad + 100*barrier_tickness, ax_id, 1000};
 
         if (x== 0){
 

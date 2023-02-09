@@ -16,17 +16,13 @@ void Obstacle::elasticBounceAgainsPlane(Eigen::Vector3d &ray_origin, Eigen::Vect
     Eigen::Vector3d ray =  (-t*step).normalized();//
     double rn = ray.dot(normal);
 
-    if (rn < 1e-10 && rn > -1e-10 ){
-        step = ray;
-    }
-    else {
-        // Caso 3) ni cerca ni paralela
-        step = -ray + 2.0*normal*rn;
-    }
+    // Caso 3) ni cerca ni paralela
+    step = -ray + 2.0*normal*rn;
 
     //step = (rn>0.0)?normal:(-normal);
 
 }
+
 
 double Obstacle::minDistance(Walker &w)
 {

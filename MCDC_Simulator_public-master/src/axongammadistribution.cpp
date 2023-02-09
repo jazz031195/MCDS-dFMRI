@@ -427,11 +427,11 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
 
         while(!achieved && tries < max_tries){
             std::normal_distribution<float> phi_dist (phi_to_target/M_PI, 0.08); 
-            phi = phi_dist(gen)*M_PI;
-            //phi = phi_to_target;
+            //phi = phi_dist(gen)*M_PI;
+            phi = phi_to_target;
             std::normal_distribution<float> gamma_dist (gamma_to_target/M_PI, 0.08); 
-            gamma = gamma_dist(gen)*M_PI;
-            //gamma = gamma_to_target;
+            //gamma = gamma_dist(gen)*M_PI;
+            gamma = gamma_to_target;
             if (gamma > M_PI/4+ gamma_straight){
                 gamma = M_PI/4 + gamma_straight;
             }
