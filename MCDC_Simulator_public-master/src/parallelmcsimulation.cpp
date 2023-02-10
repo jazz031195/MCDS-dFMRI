@@ -846,7 +846,6 @@ void ParallelMCSimulation::addObstaclesFromFiles()
         std::vector<Dynamic_Sphere> spheres_ ;
         Dynamic_Sphere sphere_;
 
-        int n = 0;
         for( std::string line; getline( in, line ); ){
             
             std::vector<std::string> jkr = _split_(line,' ');
@@ -859,17 +858,18 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 s = stod(jkr[4]);
                 sphere_ = Dynamic_Sphere(Eigen::Vector3d(x,y,z), r, volume_inc_perc, s, ax_id, scale, params.active_state);
                 spheres_.push_back(sphere_);
+                cout << "adding sphere,  min radius :" << sphere_.min_radius <<", max radius :" << sphere_.max_radius <<", radius :" << sphere_.radius << ", swell : " << sphere_.swell << endl;
+            
             }
             if(jkr.size() == 2){
                 ax_id = stod(jkr[1]);
                 Eigen::Vector3d begin = {min_limits, min_limits, min_limits};
                 Eigen::Vector3d end = {max_limits, max_limits, max_limits};
                 Axon ax (r, begin, end,volume_inc_perc, params.active_state, s, scale);
-                ax.set_spheres(spheres_, n);
+                ax.set_spheres(spheres_, ax_id);
                 axons_list.push_back(ax);
                 spheres_.clear();
-                cout << "adding axon, begin x:" << ax.begin[0] << ", end x :" << ax.end[0] <<", radius :" << ax.min_radius << endl;
-                n += 1;
+                cout << "adding axon, begin x:" << ax.begin[0] << ", end x :" << ax.end[0] <<", min radius :" << ax.min_radius <<", max radius :" << ax.max_radius <<", radius :" << ax.radius << ", swell : " << ax.swell << endl;
             }
         }
 

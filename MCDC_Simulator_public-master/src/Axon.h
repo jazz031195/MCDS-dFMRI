@@ -87,7 +87,7 @@ public:
     void set_spheres(std::vector<Dynamic_Sphere> spheres_to_add, int axon_id);
     void add_projection(int axon_id);
     bool isNearAxon(Eigen::Vector3d &position,  double distance_to_be_inside);
-    bool isPosInsideAxon(Eigen::Vector3d &position,  double distance_to_be_inside, bool swell);
+    bool isPosInsideAxon(Eigen::Vector3d &position,  double distance_to_be_inside, bool swell_);
     int closest_sphere_dichotomy(Walker &walker, double &step_lenght);
 
 };

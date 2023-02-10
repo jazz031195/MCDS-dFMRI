@@ -43,7 +43,7 @@ public:
      *  \brief Initialize everything.
      */
     Dynamic_Sphere(Eigen::Vector3d center_, double min_radius_, double volume_inc_perc_, bool swell_, int ax_id_,double scale, bool active_state_):center(center_*scale),min_radius(min_radius_*scale), volume_inc_perc(volume_inc_perc_), ax_id(ax_id_),swell(swell_), active_state(active_state_){
-        
+        radius = min_radius;
         if (swell){
             max_radius = sqrt(1+volume_inc_perc)*radius;
         }
@@ -53,9 +53,7 @@ public:
         if (active_state){
             radius = max_radius;
         }
-        else{
-            radius = min_radius;
-        }
+
         id = count++;
 
     

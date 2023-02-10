@@ -1380,17 +1380,16 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
     //Origin O
     Eigen::Vector3d ray_origin;
     walker.getVoxelPosition(ray_origin);
-
-    bool isintra = isInIntra(ray_origin, cyl_id,  ply_id, sph_id, ax_id, barrier_tickness);
-
-    if(walker.initial_location == Walker::intra && isintra){
-        walker.intra_extra_consensus--;
-        walker.location = Walker::intra;
-    }
-    if(walker.initial_location == Walker::intra && !isintra){
-        //walker.intra_extra_consensus++;
-        //walker.location = Walker::extra;
-        cout << "is extra !" << endl;
+    if (walker.initial_location == Walker::intra){
+        bool isintra = isInIntra(ray_origin, cyl_id,  ply_id, sph_id, ax_id, barrier_tickness);
+        if(isintra){
+            walker.intra_extra_consensus--;
+            walker.location = Walker::intra;
+        }
+        else {
+            walker.intra_extra_consensus++;
+            walker.location = Walker::extra;
+        }
     }
 
     //To keep track of the closest collision
