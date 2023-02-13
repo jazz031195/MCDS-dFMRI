@@ -75,7 +75,9 @@ public:
     std::vector<Dynamic_Sphere> GrowAxon(Axon ax, double distance_to_be_inside, int axon_id,  ostream& out);
     bool check_borders(Eigen::Vector3d pos, double distance_to_border);
     bool isSphereColliding(Dynamic_Sphere sph,  ostream& out);
-
+    bool find_next_center(Axon ax, std::vector<double>& distances, double dist_,std::vector<double>& sph_radii, double& rad, Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, std::vector<Eigen::Vector3d>& centers, int axon_id, ostream& out);
+    void fiber_collapse(Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, std::vector<Eigen::Vector3d>& centers, int& fibre_collapsed_nbr, ostream& out);
+    void fill_spheres_in_between(Axon ax, std::vector<Eigen::Vector3d>& centers, std::vector<Dynamic_Sphere>& spheres_to_add, std::vector<double>& sph_radii);
 
 private:
 

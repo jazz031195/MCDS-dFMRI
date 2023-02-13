@@ -28,7 +28,7 @@ for i in range(len(axons)):
         y = spheres[ii][1]
         z = spheres[ii][2]
 
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=r, enter_editmode=False, align='WORLD', location=(x, y, z), scale=(1, 1, 1))
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=r, enter_editmode=False, align='WORLD', location=(x, y, z), scale=(100, 100, 100))
 
 
 

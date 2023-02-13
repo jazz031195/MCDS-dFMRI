@@ -65,8 +65,8 @@ def draw_cercles(cylinder_array, swell = False):
             circle1 = plt.Circle((x, y), radius, color='orange')
         ax[0].add_patch(circle1)
         
-    #plt.xlabel("[mm]")
-    #plt.ylabel("[mm]")
+    ax[0].set_xlabel("[mm]")
+    ax[0].set_ylabel("[mm]")
 
     if not swell:
         name = "slice.png"
@@ -82,7 +82,7 @@ def draw_cercles(cylinder_array, swell = False):
 
 def main():
 
-    file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/_gamma_distributed_axon_list.txt"
+    file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/_rep_00_gamma_distributed_axon_list.txt"
 
     cylinder_array = get_cylinder_array(file)
     draw_cercles(cylinder_array)

@@ -50,7 +50,7 @@ void Axon::add_projection(int axon_id){
 
             // projections_max
             // center + radius
-            position1 = spheres[i].center[axis] + max_radius;
+            position1 = spheres[i].center[axis] + spheres[i].max_radius;
             Projections::projection_pt p1 {position1, axon_id, sph_id};
             if (position1 < smallest_pos_){
                 smallest_pos_ = position1;
@@ -59,7 +59,7 @@ void Axon::add_projection(int axon_id){
                 largest_pos_= position1;
             }
             // center - radius
-            position2 = spheres[i].center[axis] - max_radius;
+            position2 = spheres[i].center[axis] - spheres[i].max_radius;
             Projections::projection_pt p2 {position2, axon_id, sph_id};
 
             if (position2 < smallest_pos_){
@@ -72,10 +72,10 @@ void Axon::add_projection(int axon_id){
 
             // projections
             // center + radius
-            position1_ = spheres[i].center[axis] + radius;
+            position1_ = spheres[i].center[axis] + spheres[i].radius;
             Projections::projection_pt p1_ {position1, axon_id, sph_id};
             // center - radius
-            position2_ = spheres[i].center[axis] - radius;
+            position2_ = spheres[i].center[axis] - spheres[i].radius;
             Projections::projection_pt p2_ {position2, axon_id, sph_id};
 
             projections.append_right_place(p1_,  p2_, axis);
@@ -131,6 +131,7 @@ bool Axon::isPosInsideAxon(Vector3d &position,  double distance_to_be_inside, bo
     bool colliding_all_axes;
     Dynamic_Sphere sphere_ ;
     double rad;
+    double rad_;
     // if position is in box with axon inside
     if(isNearAxon(position, distance_to_be_inside)){
         if (swell_){
@@ -156,7 +157,13 @@ bool Axon::isPosInsideAxon(Vector3d &position,  double distance_to_be_inside, bo
                 }
                 if (colliding_all_axes){
                     sphere_ = spheres[coliding_proj.sph_id];
-                    if (sphere_.distSmallerThan(position, distance_to_be_inside + rad)){ 
+                    if (swell_){
+                        rad_ = sphere_.max_radius;
+                    }
+                    else{
+                        rad_ = sphere_.radius;
+                    }
+                    if (sphere_.distSmallerThan(position, distance_to_be_inside + rad_)){ 
                         
                         return true;
                         break;
