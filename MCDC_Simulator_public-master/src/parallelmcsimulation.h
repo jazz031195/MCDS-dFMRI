@@ -36,6 +36,7 @@ public:
     std::vector <Dynamic_Sphere> dyn_spheres_list;  /*!< vector with all the instances of dynamic spheres                         */
     std::vector <Axon> axons_list;                  /*!< vector with all the instances of axons                         */
     std::vector<Eigen::Vector3f> total_ini_walker_pos; /*!< Number of threads (instances and processors) to be used      */
+    std::vector <Neuron> neurons_list;          /*!< vector with all the instances of axons                         */
 
     /*!
      *  \param config_file .conf file name with the full set of experiments parameters.

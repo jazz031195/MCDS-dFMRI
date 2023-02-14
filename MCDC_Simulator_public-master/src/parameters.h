@@ -49,6 +49,7 @@ public:
     std::vector<std::string> dyn_cylinders_files;   /*!< file paths with a list of dynamic cilinders obstacles                              */
     std::vector<std::string> dyn_spheres_files;     /*!< file paths with a list of dynamic spheres obstacles                              */
     std::vector<std::string> axons_files;           /*!< file paths with a list of axons obstacles                              */
+    std::vector<std::string> neurons_files;         /*!< file paths with a list of neurons obstacles                              */
     std::vector<std::string> PLY_files;             /*!< file paths with PLY obstacle files                                         */
     std::vector<std::string> spheres_files;         /*!< file paths with spheres obstacle files                                     */
     std::vector<double> PLY_scales;                 /*!< Auxiliary vector to save PLY file scales                                   */
@@ -78,6 +79,7 @@ public:
     bool        gamma_sph_packing;                  /*!< flag, true if a gamma distribution of  SPHERES will be initialized         */
     bool        gamma_ax_packing;                  /*!< flag, true if a gamma distribution of  axons will be initialized         */
     bool        gamma_output_conf;
+    bool        neuron_packing;                      /*< flag, true if substrate filled with neurons*/
     double      gamma_packing_alpha;
     double      gamma_packing_beta;
     double      gamma_icvf;

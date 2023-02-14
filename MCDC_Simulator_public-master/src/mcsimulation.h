@@ -54,6 +54,7 @@ public:
 
     std::vector <Axon>* axon_list;        /*!< pointer to a vector with all the instances of Axons   */
 
+    std::vector <Neuron>* neuron_list;        /*!< pointer to a vector with all the instances of Axons   */
 
 
     /*! \fn  MCSimulation.

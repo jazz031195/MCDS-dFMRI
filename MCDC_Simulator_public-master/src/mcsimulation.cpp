@@ -155,7 +155,7 @@ void MCSimulation::addObstacles()
     this->dynamicsEngine->dyn_cylinders_list = this->dyn_cylinder_list;
     //this->dynamicsEngine->dyn_spheres_list = this->dyn_sphere_list;
     this->dynamicsEngine->axons_list = this->axon_list;
-
+    this->dynamicsEngine->neurons_list = this->neuron_list;
 
 }
 

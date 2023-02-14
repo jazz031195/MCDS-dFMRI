@@ -1,5 +1,8 @@
 #!/bin/bash -l
 
+simulator_path="build/MC-DC_Simulator"
+mcdc_dir="MCDC_Simulator_public-master"
+
 # location : "extra" or "intra"
 declare -a locs=("extra"); 
 #state : "active" or "rest"
@@ -38,16 +41,11 @@ do
                 echo "loc: $l, num_walkers : $n, conf : $conf, state : $s, folder : $f is starting"
                 
                 python3 make_conf_file.py -l "$l" -n "$n" -c "$conf" -s "$s" -f "$f"
-                cd "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/src" || exit 
-                ./main "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedCylinders.conf"
+                $simulator_path "$mcdc_dir/docs/conf_file_examples/gammaDistributedCylinders.conf"
 
-                cd ..
-                cd ..
                 echo "loc: $l, num_walkers : $n, conf : $conf, state : $s, folder : $f is done"
                 
             done
         done
     done
 done
-  
-
