@@ -12,7 +12,10 @@
 #define AXON_H
 
 #include "dynamic_sphere.h"
+#include "swipeprune.h"
 #include "simerrno.h"
+#include "obstacle.h"
+
 using namespace std;
 
 /// @brief 
@@ -30,6 +33,8 @@ public:
     Eigen::Vector3d end;
     double volume_inc_perc;
     bool active_state;
+    Projections projections;
+    Projections projections_max;
 
 
     /*!
@@ -56,27 +61,9 @@ public:
             radius = max_radius;
         } 
 
-        //double dist_ = this->radius/4;
+        projections.clear_projections();
+        projections_max.clear_projections();
 
-        //Eigen::Vector3d first_pos = begin;
-        //centers.push_back(first_pos);
-
-        //do{
-
-        //    pos[2] = pos[2] + dist_;
-        //    centers.push_back(pos);
-        //}while (pos[2] < end[2] - dist_);
-        // to make axon period wrt z
-
-        //Eigen::Vector3d last_pos = end;
-        //centers.push_back(last_pos);
-
-        //double position;
-        //for (unsigned i=0; i< centers.size(); ++i){
-        //    Dynamic_Sphere sphere(centers[i], radius,volume_inc_perc,  swell, id, scale);  
-        //    this->spheres.push_back(sphere);
-
-        //}
         id = count++;
     }
     Axon(Axon const &ax);
@@ -90,16 +77,18 @@ public:
     std::vector<Dynamic_Sphere>  closestSpheres (Eigen::Vector3d pos);
 
     std::vector<double> Distances_to_Spheres(Eigen::Vector3d pos);
-
+    std::vector<double> Distances_to_Centers(Eigen::Vector3d pos);
+    double minDistanceCenter(Eigen::Vector3d pos);
     double minDistance(Walker &w);
 
     double minDistance(Eigen::Vector3d pos);
 
-    double intersection_sphere_vector(Dynamic_Sphere &s, Eigen::Vector3d &step, double& step_length, Eigen::Vector3d &pos, bool isintra);
-
-    bool isInside(Eigen::Vector3d pos, double distance_to_be_inside);
-
-    void set_spheres(std::vector<Dynamic_Sphere> &spheres_to_add);
+    bool intersection_sphere_vector(double &t1, double &t2,Dynamic_Sphere &s, Eigen::Vector3d &step, double &step_length, Eigen::Vector3d &pos, bool isintra, double &c);
+    void set_spheres(std::vector<Dynamic_Sphere> spheres_to_add, int axon_id);
+    void add_projection(int axon_id);
+    bool isNearAxon(Eigen::Vector3d &position,  double distance_to_be_inside);
+    bool isPosInsideAxon(Eigen::Vector3d &position,  double distance_to_be_inside, bool swell_);
+    int closest_sphere_dichotomy(Walker &walker, double &step_lenght);
 
 };
 

@@ -23,6 +23,9 @@ public:
     bool swell;
     double volume_inc_perc;
     int ax_id;
+    double max_radius;
+    double min_radius;
+    bool active_state;
 
     /*!
      *  \brief Default constructor. Does nothing
@@ -39,8 +42,20 @@ public:
      *  \param scale  overall scale for when reading files.
      *  \brief Initialize everything.
      */
-    Dynamic_Sphere(Eigen::Vector3d center_, double radius_, double volume_inc_perc_, bool swell_, int ax_id_,double scale):center(center_*scale),radius(radius_*scale), volume_inc_perc(volume_inc_perc_), ax_id(ax_id_),swell(swell_){
+    Dynamic_Sphere(Eigen::Vector3d center_, double min_radius_, double volume_inc_perc_, bool swell_, int ax_id_,double scale, bool active_state_):center(center_*scale),min_radius(min_radius_*scale), volume_inc_perc(volume_inc_perc_), ax_id(ax_id_),swell(swell_), active_state(active_state_){
+        radius = min_radius;
+        if (swell){
+            max_radius = sqrt(1+volume_inc_perc)*radius;
+        }
+        else {
+            max_radius = min_radius;
+        }
+        if (active_state){
+            radius = max_radius;
+        }
+
         id = count++;
+
     
     }
 
@@ -67,7 +82,8 @@ public:
     double minDistance(Walker &w);
     bool isInside(Walker &w);
     bool isInside(Eigen::Vector3d pos, double distance_to_be_inside);
-
+    bool distSmallerThan(Eigen::Vector3d pos, double distance);
+    void set_center(Eigen::Vector3d center_);
 private:
 
     /*! \fn  handleCollition
@@ -78,7 +94,6 @@ private:
      */
     inline bool handleCollition(Walker& walker, Collision &colision, Eigen::Vector3d& step,double& a,double& b, double& c,double& discr,double& step_length, bool& isintra);
 
-    
 };  
 
 #endif // Sphere_H

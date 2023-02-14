@@ -19,12 +19,7 @@ AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc
     axons.clear();
     this->min_radius = min_radius;
     active_state = active_state_;
-    projections_x.clear();
-    projections_y.clear();
-    projections_z.clear();
-
-
-    //for checking collision
+    icvf_current = 0;
 
 }
 void AxonGammaDistribution::computeMinimalSize(std::vector<double> radiis, double icvf_, Eigen::Vector3d &l)
@@ -77,73 +72,19 @@ void AxonGammaDistribution::displayGammaDistribution()
 }
 
 
-void AxonGammaDistribution::add_projection(Axon ax, int ax_index, double distance_to_be_inside, ostream& out){
-    string message;
-    // projections are in descending order. When added, it is added at the right position.
-    for (unsigned axis = 0; axis < 3; ++axis) {
 
-        for (int i=0; i<ax.spheres.size(); ++i){ 
 
-            double position1, position2;
-            int ax_id = ax_index;
-            std::vector<projection_pt> axon_projection_on_axis;
-            int sph_id = i;
-
-            if (axis == 0){
-                axon_projection_on_axis = projections_x;
-            }
-            else if (axis == 1){
-                axon_projection_on_axis = projections_y;
-            }
-            else if (axis == 2){
-                axon_projection_on_axis = projections_z;
-            }
-
-            // center + radius
-
-            position1 = ax.spheres[i].center[axis] + ax.max_radius;
-            //  find the first element smaller than the new position
-            auto pos1 = std::find_if(axon_projection_on_axis.begin(), axon_projection_on_axis.end(), [position1](projection_pt s) {
-                return s.position < position1 ;
-            });
-            // And then insert the new element at this position
-
-            axon_projection_on_axis.insert(pos1, {position1, ax_id, sph_id});
-
-            // center - radius
-
-            position2 = ax.spheres[i].center[axis] - ax.max_radius;
-            //  find the first element smaller than the new position
-            auto pos2 = std::find_if(axon_projection_on_axis.begin(), axon_projection_on_axis.end(), [position2](projection_pt s) {
-                return s.position < position2 ;
-            });
-
-            // And then insert the new element at this position
-            axon_projection_on_axis.insert(pos2, {position2, ax_id, sph_id});
-            
-            if (axis == 0){
-                projections_x = axon_projection_on_axis;
-            }
-            else if (axis == 1){
-                projections_y = axon_projection_on_axis;
-            }
-            else if (axis == 2){
-                projections_z = axon_projection_on_axis;
-            }
-        }
-    }
-    
-} 
 void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 {
     // generate the gamma distribution
     std::random_device rd;
     std::default_random_engine generator(rd());
     std::gamma_distribution<double> distribution(alpha, beta);
-    uint repetition = 2;
-    uint max_adjustments = 5;
+    uint repetition = 1;
+    uint max_adjustments = 2;
     double best_icvf = 0;
     vector<Axon> best_axons;
+    Projections best_projections;
     Eigen::Vector3d best_max_limits;
     min_limits = {0., 0., 0.};
 
@@ -161,9 +102,6 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
     string message;
 
-    projections_x.clear();
-    projections_y.clear();
-    projections_z.clear();
 
     // create list of ids that correspond to dynamic axons based on percentage input
     for (unsigned i = 0; i < number_swelling_axons; ++i)
@@ -228,34 +166,32 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
             //vector<Axon> axons_to_add;
 
             axons.clear();
+
             unsigned stuck = 0;
 
             for (unsigned i = 0; i < num_obstacles; i++)
             {
-                if(stuck < 10000){
-                    //out << " obstacle :"<< i << endl;
+                if(stuck < 3000){
                     double t = udist(gen);
                     double distance_to_border = radiis[i]*sqrt(1+volume_inc_perc) + barrier_tickness;
                     double x = (t * (max_limits[0]-distance_to_border)) + (1 - t) * (min_limits[0]+ distance_to_border);
                     t = udist(gen);
                     double y = (t * (max_limits[1]-distance_to_border) + (1 - t) * (min_limits[1]+ distance_to_border));
 
-                    Vector3d Q = {x, y, min_limits[2] + distance_to_border};
-                    Vector3d D = {x, y, max_limits[2] - distance_to_border};
+                    //out << " obstacle :"<< i << endl;
+
+                    Vector3d Q = {x, y, min_limits[2]};
+                    Vector3d D = {x, y, max_limits[2]};
+
 
                     Axon ax(radiis[i], Q, D, volume_inc_perc, active_state, bool_swell_ax_id[i], 1);
 
                     std::vector<Dynamic_Sphere> spheres_to_add = GrowAxon(ax, max_radius_, i,  out);
 
-                    ax.set_spheres(spheres_to_add);
-
-                    //bool collision = isColliding(ax, max_radius + EPS_VAL, i, out);
-
-                    //if (!collision)
                     if(spheres_to_add.size() != 0)
                     {
+                        ax.set_spheres(spheres_to_add, i);
                         axons.push_back(ax);
-                        add_projection(ax, i, EPS_VAL, out);
                         stuck = 0;
                     }
                     else{
@@ -266,7 +202,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
                 }
 
                 int dummy;
-                double icvf_current = computeICVF(axons, min_limits, max_limits, dummy);
+                icvf_current = computeICVF(axons, min_limits, max_limits, dummy);
                 if (icvf_current > best_icvf)
                 {
                     best_icvf = icvf_current;
@@ -281,17 +217,17 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
             if (this->icvf - best_icvf < 0.0005)
             {
                 achieved = true;
-                break;
+                //break;
             }
-        }
+        //}
         axons.clear();
         adjustments++;
         cout << best_icvf << endl;
         if (adjustments > max_adjustments)
         {
-            //break;
+            break;
         }
-    //}
+    }
 
     axons = best_axons;
     max_limits = best_max_limits;
@@ -306,14 +242,15 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
     // TODO cambiar a INFO
     int perc_;
-    double icvf_current = computeICVF(axons, min_limits, max_limits, perc_);
+    icvf_current = computeICVF(axons, min_limits, max_limits, perc_);
 
-    out <<"icvf:"<< icvf_current << endl;
+    out <<"icvf:"<< icvf_current << "voxel size: "<< max_limits[0] << endl;
 
     message = "Percentage of axons selected: " + to_string(double(perc_) / radiis.size() * 100.0) + "%,\nICVF achieved: " + to_string(icvf_current * 100) + "  (" + to_string(int((icvf_current / icvf * 100))) + "% of the desired icvf)\n";
     SimErrno::info(message, cout);
     message = "number of axons :  " + to_string(axons.size()) +"\n";
     SimErrno::info(message, cout);
+
 
 }
 
@@ -322,189 +259,18 @@ void AxonGammaDistribution::printSubstrate(ostream &out)
     out << 1e-3 << endl;
     out << volume_inc_perc << endl;
     out << dyn_perc << endl;
-    out << icvf << endl;
-
+    out << icvf_current << endl;
+    out << min_limits[2] << endl;
+    out << max_limits[2] << endl;
+    
     for (unsigned i = 0; i < axons.size(); i++)
     {
-        out << axons[i].begin[0] * 1e3  << " " << axons[i].begin[1] * 1e3  << " " 
-        << axons[i].begin[2] * 1e3  << " " << axons[i].end[0] * 1e3  << " " 
-        << axons[i].end[1] * 1e3  <<" "<< axons[i].end[2] * 1e3  <<" " 
-        << axons[i].min_radius* 1e3 << " " << axons[i].swell 
-        << endl;
-
-    }
-}
-
-std::vector<AxonGammaDistribution::projection_pt> AxonGammaDistribution::find_collisions(projection_pt proj_on_axis_min, projection_pt proj_on_axis_max,std::vector<projection_pt> projections_on_axis, ostream& out){
-    
-    std::vector<projection_pt> closest_spheres;
-    closest_spheres.clear();
-    string message;
-
-
-    if (projections_on_axis.size()== 0){
-        return closest_spheres; 
-    } 
-
-    // projection after which projections are smaller than min
-    auto pos_min = std::find_if(projections_on_axis.begin(), projections_on_axis.end(), [proj_on_axis_min](projection_pt s) {
-        return s.position <= proj_on_axis_min.position ;
-    });
-
-    // projection index after which projections are smaller than min
-    unsigned index_min = std::distance(std::begin(projections_on_axis), pos_min);  
-
-    // projection index after which projections are smaller than max
-    auto pos_max = std::find_if(projections_on_axis.begin(), projections_on_axis.end(), [proj_on_axis_max](projection_pt s) {
-        return s.position <= proj_on_axis_max.position ;
-    });
-
-    // projection index after which projections are smaller than max
-    unsigned index_max = std::distance(std::begin(projections_on_axis), pos_max);
-
-    if (index_min == index_max){
-        return closest_spheres; 
-    } 
-
-    //out << " **---------------------find collision-------------------**" << endl;
-    //out << "sphere : " << proj_on_axis_max.sphere_id << ", axon : " << proj_on_axis_max.axon_id << endl;
-    //out << "proj_on_axis_max.position : " << proj_on_axis_max.position << endl;
-    //out << "proj_on_axis_min.position : " << proj_on_axis_min.position << endl;
-    //out << "index_min : " << index_min << endl;
-    //out << "index_max :" << index_max << endl;
-
-    //for (unsigned i = 0 ; i < projections_on_axis.size(); i++){
-    //    out <<"pos : "<<projections_on_axis[i].position << " sphere :" << projections_on_axis[i].sphere_id << ", axon : "<< projections_on_axis[i].axon_id << endl;
-    //    if (i == index_min){
-    //        out << "--------- index_min ------------" << endl;
-    //    } 
-    //    if (i == index_max){
-    //        out << "--------- index_max ------------" << endl;
-    //    } 
-    //} 
-
-
-    for (unsigned i = index_max ; i < index_min; i++){
-        
-        projection_pt s{projections_on_axis[i].position, projections_on_axis[i].axon_id, projections_on_axis[i].sphere_id};  
-        if (!search_for_sphere(closest_spheres,s) && s.axon_id != proj_on_axis_min.axon_id){ 
-            closest_spheres.push_back(s);
-        } 
-        //out << "added : sphere_id : " <<s.sphere_id << ", axon_id : "<<s.axon_id <<  endl;
-
-        //message = "close sphere : "+to_string(s.position)+"\n";
-        //SimErrno::info(message,cout);
-    } 
-
-    return closest_spheres;
-}
-
-bool AxonGammaDistribution::search_for_sphere(std::vector<AxonGammaDistribution::projection_pt> spheres_, AxonGammaDistribution::projection_pt s){
-    
-    // search for s in spheres_
-    if (spheres_.size() == 0){
-        return false;
-    } 
-    for (unsigned i = 0; i < spheres_.size(); i++){
-        if (spheres_[i].axon_id == s.axon_id && spheres_[i].sphere_id == s.sphere_id){
-            return true;
-            break;
-
-        }  
-    } 
-    return false;
-}  
-
-bool AxonGammaDistribution::isSphereColliding(Dynamic_Sphere sph, double distance_to_be_inside, int axon_id, int sph_id, ostream& out){
-    std::vector<std::vector<projection_pt>> coliding_spheres;
-    std::vector<projection_pt> colisions_axis_spheres;
-    coliding_spheres.clear();
-    // on all axes
-    for (unsigned x = 0; x < 3; x++){
-        //out << "************" << x << "***********" << endl;
-        colisions_axis_spheres.clear();
-
-        projection_pt proj_on_axis_min = {sph.center[x]- distance_to_be_inside, axon_id, sph_id};
-        // get max projection
-        projection_pt proj_on_axis_max = {sph.center[x] + distance_to_be_inside, axon_id, sph_id};
-
-        if (x== 0){
-
-            colisions_axis_spheres = find_collisions(proj_on_axis_min, proj_on_axis_max, projections_x, out);
-
-        }  
-        else if (x == 1) {
-
-            colisions_axis_spheres = find_collisions(proj_on_axis_min, proj_on_axis_max, projections_y, out);
-        }  
-        else{
-
-            colisions_axis_spheres = find_collisions(proj_on_axis_min, proj_on_axis_max, projections_z, out);
-            
-        } 
-        if (colisions_axis_spheres.size()== 0){
-            return false;
-            break;
-        } 
-        else{ 
-            coliding_spheres.push_back(colisions_axis_spheres);
-
-        } 
-    }
-    //out << "coliding_spheres.size : " << coliding_spheres.size() << endl;
-
-    if (coliding_spheres.size() == 3){ 
-
-        // for all coliding spheres in x 
-        for(unsigned j = 0; j < coliding_spheres[0].size() ; j++){ 
-            const projection_pt coliding_sphere = coliding_spheres[0][j];
-                // if the same coliding spheres are also in y and z but are not from same axon 
-            if (search_for_sphere(coliding_spheres[0], coliding_sphere) && search_for_sphere(coliding_spheres[1], coliding_sphere) && search_for_sphere(coliding_spheres[2], coliding_sphere)){
-                
-                //out << "coliding_sphere.position:" << coliding_sphere.position << ", axon_id : " << coliding_sphere.axon_id << ", sphere_id : "<< coliding_sphere.sphere_id << endl;;
-                int sph_id = coliding_sphere.sphere_id;
-                int ax_id = coliding_sphere.axon_id;  
-                Dynamic_Sphere sphere_ = axons[ax_id].spheres[sph_id];
-
-                //out << "sphere_ center :" << sphere_.center[0]  << ", center + radius : " << sphere_.center[0] + sphere_.radius  << ", center - radius : " << sphere_.center[0] - sphere_.radius << endl;
-                //out << "axon radius :" << axons[ax_id].radius  << ", max_radius : " << axons[ax_id].max_radius   << ", swell : " << axons[ax_id].swell << endl;
-                //out << "sphere radius" << sphere_.radius << endl;
-                if (sph.isInside(sphere_.center, axons[ax_id].max_radius + 2*barrier_tickness)){ 
-                    //out <<  "colision !" << endl;;
-                    return true;
-                    break;
-                }  
-            } 
+        for (unsigned s = 0; s < axons[i].spheres.size(); s++){
+            out << axons[i].spheres[s].center[0]*1e3 << " " << axons[i].spheres[s].center[1]*1e3 << " " << axons[i].spheres[s].center[2]*1e3 << " " << axons[i].spheres[s].radius*1e3 << " "<<axons[i].spheres[s].swell << endl;
         }
+        out << "Axon: " << i << endl;
     }
-    return false; 
-
-} 
- 
-bool AxonGammaDistribution::isColliding(Axon ax, double distance_to_be_inside, int axon_id,  ostream& out){
-    string message;
-
-    if (axons.size() == 0){
-        return false;
-    } 
-    // for all spheres in axon
-    for (unsigned i = 0; i < ax.spheres.size(); i++){
-        out << "sphere :" << i << endl;
-        bool colision = isSphereColliding(ax.spheres[i], distance_to_be_inside, axon_id, i, out);
-        if (colision){
-            return true;
-            break;
-        } 
-    }
-    return false;
 }
-
-
-/*
-WARNING: The way we discard repeated cylinders is using radius. Repreated radius (like really the same)
-are considered the same. This becasuse we don't track wich cylinders had to be replciated to mantain the voxel
-symmetry
-*/
 
 double AxonGammaDistribution::computeICVF(std::vector<Axon> &axons, Vector3d &min_limits, Vector3d &max_limits, int &num_no_repeat)
 {
@@ -535,7 +301,7 @@ double AxonGammaDistribution::computeICVF(std::vector<Axon> &axons, Vector3d &mi
         }
         double rad = axons[i].radius;
 
-        double ax_length = ((axons[i].spheres).size()-1)*rad/4 + 2*rad;
+        double ax_length = ((axons[i].spheres).size()-2)*rad/4;
         
         AreaC += M_PI * rad * rad* ax_length;
         num_no_repeat++;
@@ -545,7 +311,7 @@ double AxonGammaDistribution::computeICVF(std::vector<Axon> &axons, Vector3d &mi
 
 
 
-std::tuple<double, double>  phi_gamma_to_target (Eigen::Vector3d prev_pos, Eigen::Vector3d new_pos, Eigen::Vector3d end,  ostream& out) {
+std::tuple<double, double, double, double>  phi_gamma_to_target (Eigen::Vector3d prev_pos, Eigen::Vector3d new_pos, Eigen::Vector3d end,  ostream& out) {
 
     Eigen::Vector3d vector_to_target = {end[0] - new_pos[0], end[1] - new_pos[1], end[2] - new_pos[2]};
     Eigen::Vector2d vector_to_target_xy = {vector_to_target[0] ,vector_to_target[1]};
@@ -566,169 +332,233 @@ std::tuple<double, double>  phi_gamma_to_target (Eigen::Vector3d prev_pos, Eigen
     //out << "straight_vector_xz : ( " << straight_vector_xz[0] << ", " << straight_vector_xz[1] << " )" << endl;
 
 
-    double phi_to_target = atan2(vector_to_target_xy[1], vector_to_target_xy[0])-atan2(straight_vector_xy[1],straight_vector_xy[0]);
-    double gamma_to_target = atan2(vector_to_target_xz[1],vector_to_target_xz[0])-atan2(straight_vector_xz[1],straight_vector_xz[0]);
+    double phi_to_target = atan2(vector_to_target_xy[1], vector_to_target_xy[0]);
+    double gamma_to_target = atan2(vector_to_target_xz[0],vector_to_target_xz[1]);
 
-    if (phi_to_target > M_PI)
-    { phi_to_target -= 2 * M_PI; }
-    else if (phi_to_target <= -M_PI)
-    { phi_to_target += 2 * M_PI; }
+    // caculate angle wrt x axis
+    double phi_straight = atan2(straight_vector_xy[1],straight_vector_xy[0]);
+    // calculate angle wrt z axis
+    double gamma_straight = atan2(straight_vector_xz[0],straight_vector_xz[1]);
 
-    if (gamma_to_target > M_PI)
-    { gamma_to_target -= 2 * M_PI; }
-    else if (gamma_to_target <= -M_PI)
-    { gamma_to_target += 2 * M_PI; }
-
-    return std::make_tuple(phi_to_target, gamma_to_target);
+    return std::make_tuple(phi_to_target, gamma_to_target, phi_straight, gamma_straight);
 }
 
 bool AxonGammaDistribution::check_borders(Eigen::Vector3d pos, double distance_to_border) {
     Eigen::Vector3d new_min_limits = {min_limits[0] + distance_to_border, min_limits[1] + distance_to_border,min_limits[2] + distance_to_border};
     Eigen::Vector3d new_max_limits = {max_limits[0] - distance_to_border, max_limits[1] - distance_to_border,max_limits[2] - distance_to_border};
 
-    if ((pos[0]-new_min_limits[0])<0 || (pos[1]-new_min_limits[1])<0 || (pos[2]-new_min_limits[2])<0){
+    if ((pos[0]-new_min_limits[0])<0 || (pos[1]-new_min_limits[1])<0 ){
         return true;
     }
-    else if ((pos[0]-new_max_limits[0])>0 || (pos[1]-new_max_limits[1])>0 || (pos[2]-new_max_limits[2])>0) {
+    else if ((pos[0]-new_max_limits[0])>0 || (pos[1]-new_max_limits[1])>0 ) {
         return true;
     }
     return false;
     
 }
 
-std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double distance_to_be_inside, int axon_id,  ostream& out){
+bool AxonGammaDistribution::isSphereColliding(Dynamic_Sphere sph, ostream& out){
+    
+    Vector3d position = sph.center;
+    double distance_to_be_inside = 2* barrier_tickness + sph.max_radius;
+    int ax_id;
 
-    std::vector<Eigen::Vector3d> centers;
-    double dist_ = ax.radius;
-    Eigen::Vector3d prev_pos = ax.begin;
-    centers.push_back(prev_pos);
+    for (unsigned i = 0; i < axons.size() ; i++){
+        bool isinside = axons[i].isPosInsideAxon(position, distance_to_be_inside, true);
+        if (isinside){
+            return true;
+            break;
+        }
+
+    }
+    return false;
+}
+
+bool AxonGammaDistribution::find_next_center(Axon ax, std::vector<double>& distances, double dist_,std::vector<double>& sph_radii, double& rad, Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, std::vector<Eigen::Vector3d>& centers, int axon_id, ostream& out){
+
+    double phi;
+    double gamma;
+    double phi_to_target, gamma_to_target, gamma_straight, phi_straight;
+    bool achieved = false;
+    int tries = 0;
+    int max_tries = 10000;
+    int sphere_id = 0;
+    Eigen::Vector3d pos_;
 
     std::random_device rd;
     std::mt19937 gen(rd()); 
 
-    int sphere_id = 0;
-
-    double phi;
-    double gamma;
-    double phi_to_target, gamma_to_target;
     double delta_x;
     double delta_y;
     double delta_z;
-    int tries ;
-    bool achieved;
-    Eigen::Vector3d pos_;
-    Eigen::Vector3d new_pos = {prev_pos[0], prev_pos[1], prev_pos[2]+dist_};
-    centers.push_back(new_pos);
 
-    Dynamic_Sphere s0(prev_pos, ax.radius,ax.volume_inc_perc,ax.swell, axon_id, 1);
-    Dynamic_Sphere s1(new_pos, ax.radius,ax.volume_inc_perc,ax.swell, axon_id, 1);
-    std::vector<Dynamic_Sphere> spheres_to_add;
+    while(!achieved && tries < max_tries){
+        std::normal_distribution<float> phi_dist (phi_to_target/M_PI, 0.08); 
+        phi = phi_dist(gen)*M_PI;
+        //phi = phi_to_target;
+        std::normal_distribution<float> gamma_dist (gamma_to_target/M_PI, 0.08); 
+        gamma = gamma_dist(gen)*M_PI;
+        //gamma = gamma_to_target;
+        if (gamma > M_PI/4+ gamma_straight){
+            gamma = M_PI/4 + gamma_straight;
+        }
+        else if(gamma < - M_PI/4 + gamma_straight){
+            gamma = - M_PI/4 + gamma_straight;
+        } 
 
-    int max_tries = 1000;
-    bool stop = false;
+        //out << "phi : " << phi/M_PI << "*pi , gamma : " << gamma/M_PI <<"*pi"<< endl;
+        delta_x = dist_*cos(phi)*sin(gamma);
+        delta_y = dist_*sin(phi)*sin(gamma);
+        delta_z = dist_*cos(gamma);
 
-    out << "try_axon :" << axon_id << endl;
-
-
-    if(isSphereColliding(s0, distance_to_be_inside, axon_id, sphere_id, out) || isSphereColliding(s1, distance_to_be_inside, axon_id, sphere_id, out)) {
-        return spheres_to_add;
-    }
-
-    do{  
-
-        //out << "pos : (" << new_pos[0] << ", " << new_pos[1] << ", " << new_pos[2] << ") " << endl;
-        //out << "end: (" << ax.end[0] << ", " << ax.end[1] << ", " << ax.end[2] << ") " << endl;
-        tries =0;
-        tie(phi_to_target, gamma_to_target) = phi_gamma_to_target (prev_pos, new_pos, ax.end, out);
-        //out << "phi to target : "<< phi_to_target/M_PI << "*pi, gamma to target :"<< gamma_to_target/M_PI <<"*pi" << endl;
-        achieved = false;
-
-        while(!achieved && tries < max_tries){
-            std::normal_distribution<float> phi_dist (phi_to_target/M_PI, 0.1); 
-            phi = phi_dist(gen)*M_PI;
-            std::normal_distribution<float> gamma_dist (gamma_to_target/M_PI, 0.1); 
-            gamma = gamma_dist(gen)*M_PI;
-            if (gamma > M_PI/4){
-                gamma = M_PI/4;
-            }
-            else if(gamma < - M_PI/4){
-                gamma = - M_PI/4;
-            } 
-
-            //out << "phi : " << phi/M_PI << "*pi , gamma : " << gamma/M_PI <<"*pi"<< endl;
-            delta_x = dist_*cos(phi)*sin(gamma);
-            delta_y = dist_*sin(phi)*sin(gamma);
-            delta_z = dist_*cos(gamma);
-
-            //out << "delta_y : "<< delta_y << ", delta_x :"<< delta_x <<", delta_z :" << delta_z<< endl;
+        //out << "delta_y : "<< delta_y << ", delta_x :"<< delta_x <<", delta_z :" << delta_z<< endl;
         
-            pos_ = new_pos;
+        pos_ = new_pos;
             
-            pos_[0] +=  delta_x;
-            pos_[1] +=  delta_y;
-            pos_[2] +=  delta_z;
+        pos_[0] +=  delta_x;
+        pos_[1] +=  delta_y;
+        pos_[2] +=  delta_z;
 
-            // check distance with border
+        // check distance with border
 
-            if (!check_borders(pos_, ax.max_radius + barrier_tickness)) {
+        if (!check_borders(pos_, rad*sqrt(1+ax.volume_inc_perc) + barrier_tickness)) {
 
-                // check collision with other spheres
-                Dynamic_Sphere s(pos_, ax.min_radius,ax.volume_inc_perc,ax.swell, axon_id, 1);
+            // check collision with other spheres
+            Dynamic_Sphere s(pos_, rad,ax.volume_inc_perc,ax.swell, axon_id, 1, ax.active_state);
 
-                if (!isSphereColliding(s, distance_to_be_inside, axon_id, sphere_id, out)){  
-                    sphere_id += 4;
-                    prev_pos = new_pos;
-                    new_pos = pos_;
-                    centers.push_back(new_pos);
-                    achieved = true;
-                } 
-                else {
-                    //out << "collision" << endl;
-                    tries += 1;
-                }
-            }
+            if (!isSphereColliding(s, out)){  
+                sphere_id += 4;
+                prev_pos = new_pos;
+                new_pos = pos_;
+                centers.push_back(new_pos);
+                achieved = true;
+                sph_radii.push_back(rad);
+                distances.push_back(dist_);
+                return true;
+                break;
+            } 
             else {
                 tries += 1;
             }
         }
-        // fibre collapse
-        if(tries >= max_tries && !achieved){
-            //if (centers.size() > 3 ){
-            //    centers.pop_back();
-            //    out << "Max tries reached ! centers.size() : " << centers.size() << endl;
-            //    new_pos = centers[-1];
-            //    prev_pos = centers[-2];
-            //    tries = 0;
-            //}
-            //else{
-                return spheres_to_add;
-            //}
-        }
+        else {
+            tries += 1;
+         }
+    }
+    return false;
+}
 
-    }while (new_pos[2] < ax.end[2]-dist_ );
+void AxonGammaDistribution::fiber_collapse(Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, std::vector<Eigen::Vector3d>& centers, int& fibre_collapsed_nbr, ostream& out){
+    int n = centers.size();
+    out << "Max tries reached ! centers.size() : " << centers.size() << endl;
+    Eigen::Vector3d p = {centers[n-2-fibre_collapsed_nbr][0], centers[n-2-fibre_collapsed_nbr][1],centers[n-2-fibre_collapsed_nbr][2]};
+    new_pos = p;
+    out << "new_pos :" << p[2]<< endl;
+    Eigen::Vector3d p2 ={centers[n-3-fibre_collapsed_nbr][0], centers[n-3-fibre_collapsed_nbr][1],centers[n-3-fibre_collapsed_nbr][2]};
+    prev_pos = p2;
+    out << "prev_pos :" <<p2[2] << endl;
+    fibre_collapsed_nbr += 1;
+    for (unsigned j=0; j< fibre_collapsed_nbr+1; ++j){
+        centers.pop_back();
+    }
+}
 
+void AxonGammaDistribution::fill_spheres_in_between(Axon ax, std::vector<Eigen::Vector3d>& centers, std::vector<Dynamic_Sphere>& spheres_to_add, std::vector<double>& sph_radii){
 
-
+    Dynamic_Sphere last_sphere;
     for (unsigned i=0; i< centers.size(); ++i){
-        Dynamic_Sphere sphere(centers[i], ax.min_radius,ax.volume_inc_perc,  ax.swell, ax.id, 1);  
-        spheres_to_add.push_back(sphere);
         if (i != 0){
             // squeleton has centers every r, so 3 spheres must be created in between
 
             Eigen::Vector3d center_between0 = {centers[i][0]/4+3*centers[i-1][0]/4, centers[i][1]/4+3*centers[i-1][1]/4, centers[i][2]/4+3*centers[i-1][2]/4};
-            Dynamic_Sphere sphere0 (center_between0, ax.min_radius,ax.volume_inc_perc,  ax.swell, ax.id, 1);  
-            spheres_to_add.push_back(sphere0);
+            Dynamic_Sphere sphere0 (center_between0, sph_radii[i-1],ax.volume_inc_perc,  ax.swell, ax.id, 1, ax.active_state);  
+            if (sphere0.center[2] < max_limits[2]){
+                last_sphere = sphere0;
+                spheres_to_add.push_back(sphere0);
+            }
 
             Eigen::Vector3d center_between1 = {(centers[i][0]+centers[i-1][0])/2, (centers[i][1]+centers[i-1][1])/2, (centers[i][2]+centers[i-1][2])/2};
-            Dynamic_Sphere sphere1(center_between1, ax.min_radius,ax.volume_inc_perc,  ax.swell, ax.id, 1);  
-            spheres_to_add.push_back(sphere1);
+            Dynamic_Sphere sphere1(center_between1, sph_radii[i-1],ax.volume_inc_perc,  ax.swell, ax.id, 1, ax.active_state);  
+            if (sphere1.center[2] < max_limits[2]){
+                last_sphere = sphere1;
+                spheres_to_add.push_back(sphere1);
+            }
 
             Eigen::Vector3d center_between2 = {3*centers[i][0]/4+centers[i-1][0]/4, 3*centers[i][1]/4+centers[i-1][1]/4, 3*centers[i][2]/4+centers[i-1][2]/4};
-            Dynamic_Sphere sphere2(center_between2, ax.min_radius,ax.volume_inc_perc,  ax.swell, ax.id, 1);  
-            spheres_to_add.push_back(sphere2);
+            Dynamic_Sphere sphere2(center_between2, sph_radii[i-1],ax.volume_inc_perc,  ax.swell, ax.id, 1, ax.active_state);  
+            if (sphere2.center[2] < max_limits[2]){
+                last_sphere = sphere2;
+                spheres_to_add.push_back(sphere2);
+            }
         //out << sphere.center[0] << " " << sphere.center[1] << " " << sphere.center[2] << " " << sphere.radius << endl;
         }
+        Dynamic_Sphere sphere(centers[i], sph_radii[i],ax.volume_inc_perc,  ax.swell, ax.id, 1, ax.active_state);  
+        if (sphere.center[2] < max_limits[2]){
+            last_sphere = sphere;
+            spheres_to_add.push_back(sphere);
+        }
+        if(i ==centers.size()-1){
+
+            //out << "last sphere : " << last_sphere.center[0] << " " << last_sphere.center[1] << " " << last_sphere.center[2] << " " << last_sphere.radius << endl;
+            last_sphere.set_center( {last_sphere.center[0], last_sphere.center[1], max_limits[2]});
+            spheres_to_add.push_back(last_sphere);
+        }
     }
+}
+
+bool shrink_sphere_rad(double& rad, double& dist_){
+    rad = rad *(1-0.01);
+    dist_ = rad;
+}
+
+std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double distance_to_be_inside, int axon_id,  ostream& out){
+
+    std::vector<Eigen::Vector3d> centers;
+    // add first position to the list of centers
+    Eigen::Vector3d new_pos = ax.begin;
+    centers.push_back(new_pos);
+    int max_fibre_collapse = 50 ;
+    std::vector<double> sph_radii;
+    std::vector<double> distances;
+    double dist_ = ax.radius;
+    double rad = ax.radius;
+
+
+    Eigen::Vector3d prev_pos = {new_pos[0], new_pos[1], new_pos[2]-ax.radius};
+
+    Dynamic_Sphere s1(new_pos, ax.radius,ax.volume_inc_perc,ax.swell, axon_id, 1, ax.active_state);
+    std::vector<Dynamic_Sphere> spheres_to_add;
+
+    bool stop = false;
+    int fibre_collapsed_nbr = 0;
+    out << "try_axon :" << axon_id << endl;
+
+    if(isSphereColliding(s1,out)) {
+        out << "no room !" << endl;
+        return spheres_to_add;
+    }
+    do{  
+
+        bool next_center_found = find_next_center(ax, distances, dist_, sph_radii, rad, new_pos, prev_pos, centers,axon_id, out);
+
+        // fibre collapse (see CONFIG)
+        if(!next_center_found){
+            
+            if (centers.size() > 3+fibre_collapsed_nbr && fibre_collapsed_nbr < max_fibre_collapse){
+     
+                fiber_collapse(new_pos, prev_pos, centers, fibre_collapsed_nbr, out);
+            }
+            else{
+
+                return spheres_to_add;
+            }
+        }
+
+    }while (new_pos[2] < ax.end[2] + dist_);
+
+    // create axon with 4 spheres in between each center
+    fill_spheres_in_between(ax, centers, spheres_to_add, sph_radii);
+
 
     return spheres_to_add;
 

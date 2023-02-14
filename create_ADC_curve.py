@@ -73,7 +73,7 @@ def create_data(dwi_path):
         signal = list(map(lambda Sb : np.log(Sb/Sb0), list(datas[i]["DWI"])))
         adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(datas[i]["b"]),list(datas[i]["DWI"])))
         datas[i]["log(Sb/So)"] = signal
-        datas[i]["adc"] = adc
+        datas[i]["adc [mm²/s]"] = adc
 
     data_dwi = pd.concat(datas)
 
@@ -88,11 +88,11 @@ def get_adc(dwi_path):
         ax_data = data.loc[data[a]>0]
         b1 = list(ax_data["b"])[-1]
         ax_data = ax_data.loc[ax_data["b"] == b1]
-        adcs.append(list(ax_data["adc"])[0])
-    new_data = pd.DataFrame(columns = ["axis", "adc"])
+        adcs.append(list(ax_data["adc [mm²/s]"])[0])
+    new_data = pd.DataFrame(columns = ["axis", "adc [mm²/s]"])
     new_data["orientations"] = orientations
     new_data["axis"] = axes
-    new_data["adc"] = adcs
+    new_data["adc [mm²/s]"] = adcs
     return new_data
 
 
@@ -118,12 +118,12 @@ def assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_r
 
 def plot(result):
     fig1 = plt.figure(0)
-    sns.catplot(x="orientations", y="adc",
+    sns.catplot(x="orientations", y="adc [mm²/s]",
              hue="state", col = "loc", kind = "box",
              data=result)
-    plt.show() 
+
     fig1 = plt.figure(1)
-    sns.catplot(x="orientations", y="adc",
+    sns.catplot(x="orientations", y="adc [mm²/s]",
              hue="state", col = "loc", 
              data=result)
     plt.show() 
@@ -516,15 +516,16 @@ def get_adc_diff_rest_active(folder, conf):
     print("Change in ADC from rest to active : ", (active-rest))
 
 
-dwi_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/_DWI.txt"
+#dwi_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/DWI_intra_rest.txt"
 
-data = create_data(dwi_path)
-print(data)
-#intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_active_DWI.txt"
-#extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_active_DWI.txt"
-#intra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_rest_DWI.txt"
-#extra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_rest_DWI.txt"               
-#data = assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_rest_path)
+#data = create_data(dwi_path)
+
+intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_active__DWI.txt"
+extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_active__DWI.txt"
+intra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra__DWI.txt"
+extra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra__DWI.txt"               
+data2 = assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_rest_path)
 
 #print(data)
-#plot(data)
+
+plot(data2)

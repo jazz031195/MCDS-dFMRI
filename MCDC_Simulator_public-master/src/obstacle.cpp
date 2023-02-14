@@ -23,6 +23,7 @@ void Obstacle::elasticBounceAgainsPlane(Eigen::Vector3d &ray_origin, Eigen::Vect
 
 }
 
+
 double Obstacle::minDistance(Walker &w)
 {
     return 0;

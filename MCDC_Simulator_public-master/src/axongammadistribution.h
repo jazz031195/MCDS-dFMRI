@@ -19,38 +19,26 @@
 #include "dynamic_sphere.h"
 
 
+
 class AxonGammaDistribution 
 {
 public:
 
     double dyn_perc;                                /*!< Percentage of dynamic cylinders that swell                                 */ 
     double volume_inc_perc;                         /*!< Percentage of Volume increase of cylinders that start to swell       */                                       
-    std::vector<Axon> axons;    /*!< Cylinder vector                                                            */
+    std::vector<Axon> axons;                        /*!< Axon vector                                                            */
     unsigned num_obstacles;                         /*!< number of cylnders fit inside the substrate                                */
     double alpha;                                   /*!< alpha coefficient of the Gamma distribution                                */
     double beta;                                    /*!< beta coefficient of the gamma distribution                                 */
     double icvf;                                    /*!< Achieved intra-celular volum fraction in the substrate                     */
     float min_radius;                                /*!< Minimum radius to be sampled from the gamma distribution                  */
-
+    double icvf_current;
+    
     Eigen::Vector3d min_limits;                     /*!< voxel min limits (if any) (bottom left corner)                             */
     Eigen::Vector3d max_limits;                     /*!< voxel max limits (if any)                                                  */
     
     bool active_state;
 
-    struct projection_pt{
-        double position;
-        int axon_id;
-        int sphere_id;
-    };
-    std::vector<projection_pt> projections_x;
-    std::vector<projection_pt> projections_y;
-    std::vector<projection_pt> projections_z;
-
-
-    // [position, axon_id, sphere_id], axes x,y,z
-    //std::vector<std::vector<projection_pt>> projections;
-
-    
     /*!
      *  \param P_ Cylinder origin
      *  \param Q_ cylinder direction.
@@ -84,13 +72,13 @@ public:
      *  \param out ostream where to write the info.
     */
     void printSubstrate(std::ostream& out);
-    bool isSphereColliding(Dynamic_Sphere sph, double distance_to_be_inside, int axon_id, int sph_id, ostream& out);
-    void add_projection(Axon ax, int ax_index, double distance_to_be_inside, ostream& out);
-    std::vector<projection_pt> find_collisions(projection_pt proj_on_axis_min, projection_pt proj_on_axis_max,std::vector<projection_pt> projections_on_axis, ostream& out);
-    bool isColliding(Axon ax,  double distance_to_be_inside, int axon_id, ostream& out);
-    bool search_for_sphere(std::vector<projection_pt> spheres_, projection_pt s);
     std::vector<Dynamic_Sphere> GrowAxon(Axon ax, double distance_to_be_inside, int axon_id,  ostream& out);
     bool check_borders(Eigen::Vector3d pos, double distance_to_border);
+    bool isSphereColliding(Dynamic_Sphere sph,  ostream& out);
+    bool find_next_center(Axon ax, std::vector<double>& distances, double dist_,std::vector<double>& sph_radii, double& rad, Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, std::vector<Eigen::Vector3d>& centers, int axon_id, ostream& out);
+    void fiber_collapse(Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, std::vector<Eigen::Vector3d>& centers, int& fibre_collapsed_nbr, ostream& out);
+    void fill_spheres_in_between(Axon ax, std::vector<Eigen::Vector3d>& centers, std::vector<Dynamic_Sphere>& spheres_to_add, std::vector<double>& sph_radii);
+
 private:
 
     /*!

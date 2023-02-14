@@ -22,6 +22,7 @@
 #include "cylinder.h"
 #include "dynamic_Cylinder.h"
 #include "dynamic_sphere.h"
+#include "axongammadistribution.h"
 #include "Axon.h"
 #include "sentinel.h"
 #include "propagator.h"
@@ -145,7 +146,7 @@ public:
      *         considered
      */
     bool isInIntra(Eigen::Vector3d& position, int& cyl_id,  int& ply_id, int& sph_id, int& ax_id, double distance_to_be_intra_ply=1e-6);
-
+    bool isIntraEdge(Eigen::Vector3d& position, bool low_edge, int& ax_id, bool init_loc_intra);
     /*!
      * \brief   Writes to disk the final propagator matrix.
      */
@@ -159,7 +160,7 @@ public:
 
     bool isInsideSpheres(Eigen::Vector3d &position, int& sph_id,double distance_to_be_inside);
 
-    bool isInsideAxons(Eigen::Vector3d &position, int& ax_id ,double distance_to_be_inside);
+    bool isInsideAxons(Eigen::Vector3d &position, int &ax_id, double distance_to_be_inside);
 
 private:    
 
