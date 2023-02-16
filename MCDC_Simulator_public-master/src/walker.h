@@ -69,6 +69,8 @@ public:
     ObstacleCollisionSphere dyn_spheres_collision_sphere;               /*!< Collision sphere for collition against dynamic spheres                       */
     
     ObstacleCollisionSphere axons_collision_sphere;               /*!< Collision sphere for collition against axons                     */
+    
+    ObstacleCollisionSphere neurons_collision_sphere;               /*!< Collision sphere for collition against neurons                     */
 
     PLYCollisionSphere ply_collision_sphere;                        /*!< Collision sphere for collition against PLY meshes                      */
 

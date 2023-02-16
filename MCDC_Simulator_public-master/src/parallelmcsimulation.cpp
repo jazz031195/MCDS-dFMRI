@@ -1213,8 +1213,8 @@ void ParallelMCSimulation::addObstacleConfigurations()
 
         neuron_dist.createSubstrate();
 
-        params.max_limits = neuron_dist.max_limits;
-        params.min_limits = neuron_dist.min_limits;
+        params.max_limits = neuron_dist.max_limits_vx;
+        params.min_limits = neuron_dist.min_limits_vx;
 
         if(params.voxels_list.size()<=0){
             pair<Eigen::Vector3d,Eigen::Vector3d> voxel_(params.min_limits,params.max_limits);

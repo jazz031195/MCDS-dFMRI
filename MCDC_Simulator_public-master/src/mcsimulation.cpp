@@ -19,6 +19,7 @@ MCSimulation::MCSimulation()
     dyn_cylinder_list = nullptr;
     dyn_sphere_list = nullptr;
     axon_list= nullptr;
+    neuron_list= nullptr;
 
     id = count;
     count++;
@@ -35,6 +36,7 @@ MCSimulation::MCSimulation(std::string config_file)
     dyn_cylinder_list = nullptr;
     dyn_sphere_list = nullptr;
     axon_list= nullptr;
+    neuron_list= nullptr;
 
 
     params.readSchemeFile(config_file);

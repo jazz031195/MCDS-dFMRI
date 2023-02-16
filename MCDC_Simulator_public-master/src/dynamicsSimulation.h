@@ -164,6 +164,8 @@ public:
     bool isInsideSpheres(Eigen::Vector3d &position, int& sph_id,double distance_to_be_inside);
 
     bool isInsideAxons(Eigen::Vector3d &position, int &ax_id, double distance_to_be_inside);
+    
+    bool isInsideNeurons(Eigen::Vector3d &position, int &ax_id, double distance_to_be_inside);
 
 private:    
 

@@ -25,8 +25,8 @@ public:
     std::vector<Neuron> neurons;                    /*!< All neurons of the simulation                                                           */
     unsigned num_obstacles;                         /*!< number of neurons to fit inside the substrate                                */
     double icvf;                                    /*!< Achieved intra-celular volum fraction in the substrate                     */
-    Eigen::Vector3d min_limits;                     /*!< voxel min limits (if any) (bottom left corner)                             */
-    Eigen::Vector3d max_limits;                     /*!< voxel max limits (if any)                                                  */
+    Eigen::Vector3d min_limits_vx;                  /*!< voxel min limits (if any) (bottom left corner)                             */
+    Eigen::Vector3d max_limits_vx;                  /*!< voxel max limits (if any)                                                  */
     
     struct projection_pt{
         double position;
@@ -55,8 +55,8 @@ public:
     std::vector<projection_pt> find_collisions(projection_pt proj_on_axis_min, projection_pt proj_on_axis_max,std::vector<projection_pt> projections_on_axis, ostream& out);
     bool isColliding(Axon ax,  double distance_to_be_inside, int axon_id, ostream& out);
     bool search_for_sphere(std::vector<projection_pt> spheres_, projection_pt s);
-    std::vector<Dynamic_Sphere> GrowAxon(Axon ax, double distance_to_be_inside, int axon_id,  ostream& out);
-    bool check_borders(Eigen::Vector3d pos, double distance_to_border);
+    bool isInVoxel(Eigen::Vector3d pos, double distance_to_border);
+    void growDendrites(Neuron& neuron, int neuron_id);
 
 private:
 

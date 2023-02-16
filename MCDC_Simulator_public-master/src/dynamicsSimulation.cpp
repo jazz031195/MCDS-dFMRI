@@ -205,6 +205,19 @@ void DynamicsSimulation::initObstacleInformation(){
     walker.axons_collision_sphere.list_size             = unsigned(axons_deque.size());
     walker.axons_collision_sphere.big_sphere_list_end   = walker.axons_collision_sphere.list_size;
 
+    //Neurons list of index initialization
+    for(unsigned i= 0 ; i < neurons_list->size();i++){
+        neurons_deque.push_back(i);
+
+        if(params.obstacle_permeability > 0.0){
+            (*neurons_list)[i].percolation = params.obstacle_permeability;
+        }
+    }
+
+    walker.neurons_collision_sphere.collision_list        = &neurons_deque;
+    walker.neurons_collision_sphere.list_size             = unsigned(neurons_deque.size());
+    walker.neurons_collision_sphere.big_sphere_list_end   = walker.neurons_collision_sphere.list_size;
+
     // PLY index list initialization
     for(unsigned i= 0 ; i < (*plyObstacles_list).size();i++){
         std::vector<unsigned> jkr;
@@ -985,6 +998,35 @@ bool DynamicsSimulation::isInsideAxons(Vector3d &position, int &ax_id, double di
     return false;
 }
 
+bool DynamicsSimulation::isInsideNeurons(Vector3d &position, int &neuron_id, double distance_to_be_inside)
+{
+    for (unsigned i = 0; i < neurons_list->size() ; i++){
+
+        Walker tmp;
+        tmp.setInitialPosition(position);
+
+        //track the number of positions checks for intra/extra positions
+        double dis = neurons_list->at(i).minDistance(tmp);
+
+        if( dis <= distance_to_be_inside ){
+            intra_tries++;
+            neuron_id = i;
+            return true;
+            break;
+        }
+    
+        for (unsigned j = 0; j < neurons_list->at(i).nb_dendrites; j++){
+            bool isinside = neurons_list->at(i).dendrites[j].isPosInsideAxon(position,  distance_to_be_inside, false);
+            if (isinside){
+                neuron_id = i;
+                return true;
+                break;
+            }
+        }
+    }
+    neuron_id = -1;
+    return false;
+}
 bool DynamicsSimulation::isInsidePLY(Vector3d &position, int &ply_id,double distance_to_be_inside)
 {
     ply_id= -1;
@@ -1057,7 +1099,9 @@ bool DynamicsSimulation::isInIntra(Vector3d &position, int& cyl_id,  int& ply_id
     if(cylinders_list->size()>0){
             isIntra|= this->isInsideCylinders(position,cyl_id,barrier_tickness);
     }
-
+    if(neurons_list->size()>0){
+            isIntra|= this->isInsideNeurons(position,cyl_id,barrier_tickness);
+    }
     if(plyObstacles_list->size()>0){
             isIntra|=isInsidePLY(position,ply_id,distance_to_be_intra_ply);
     }

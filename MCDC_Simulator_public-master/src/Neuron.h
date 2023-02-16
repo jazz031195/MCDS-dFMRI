@@ -24,7 +24,7 @@ public:
 
     static int nb_neurons;                  /* Number of neurons in the simulation*/
     int nb_dendrites;                       /* Number of dendrites */
-    int span_radius;                        /* Radius inside which all the dendrites are contained */
+    double span_radius;                     /* Radius [mm] inside which all the dendrites are contained */
     std::vector<Axon> dendrites;            /* Contains all the dendrites of the neuron*/
     Sphere soma;                            /* Soma of the neuron */
 
@@ -39,7 +39,6 @@ public:
     /* Copy constructor */
     Neuron(Neuron const &neuron);
 
-    void growDendrites();
     bool checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision);
 
 };

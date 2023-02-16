@@ -1115,6 +1115,9 @@ void SimErrno::printSimulatinInfo(Parameters &params, ostream &out,bool color)
     answer = (params.spheres_files.size() > 0) || params.gamma_sph_packing || params.hex_sphere_packing ?" true":" false";
     infoMenu(" Spherical obstacles:    ------",  answer, out, color,34);
 
+    answer = (params.neurons_files.size() > 0) || params.neuron_packing ?" true":" false";
+    infoMenu(" Neuronal obstacles:    ------",  answer, out, color,34);
+
     if(params.hex_sphere_packing){
         infoMenu(" Hex. sph. configuration:  ---", "true", out, color,35);
         infoMenu(" Hex. radius:           ------",  " "+ to_string(params.hex_packing_radius*1e3)+" um",out, color,35);
