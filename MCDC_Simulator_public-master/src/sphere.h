@@ -57,10 +57,11 @@ public:
 
     /*! \fn  minDistance
      *  \param walker, Walker instance in the simulation.
-     *  \brief Returns the minimum distance from the walker to the Sphere. Used to set the reachable
+     *  \brief Returns the minimum distance from the walker to the Sphere enveloppe. Used to set the reachable
      *  Spheres that a given walker can reach.
      */
     double minDistance(Walker &w);
+    double minDistance(Eigen::Vector3d pos);
 
 private:
 

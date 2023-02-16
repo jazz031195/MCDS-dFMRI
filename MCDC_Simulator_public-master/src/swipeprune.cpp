@@ -64,14 +64,14 @@ void Projections::append_right_place(Projections::projection_pt p1, Projections:
 }
 
 
-std::vector<Projections::projection_pt> Projections::find_collisions(projection_pt proj_on_axis_min, projection_pt proj_on_axis_max,std::vector<projection_pt> projections_on_axis){
+std::vector<Projections::projection_pt> Projections::find_collisions(projection_pt proj_on_axis_min, projection_pt proj_on_axis_max, std::vector<projection_pt> projections_on_axis){
     
     std::vector<projection_pt> closest_spheres;
     closest_spheres.clear();
     string message;
 
 
-    if (projections_on_axis.size()== 0){
+    if (projections_on_axis.size() == 0){
         return closest_spheres; 
     } 
 
@@ -129,20 +129,20 @@ std::vector<std::vector<Projections::projection_pt>> Projections::find_collision
     std::vector<projection_pt> colisions_axis_projs;
     coliding_projs.clear();
     // on all axes
-    for (unsigned x = 0; x < 3; x++){
+    for (unsigned axis = 0; axis < 3; axis++){
 
         colisions_axis_projs.clear();
         
-        projection_pt proj_on_axis_min {position[x]- rad - 100*barrier_tickness, ax_id, 1000};
+        projection_pt proj_on_axis_min {position[axis] - rad - 100*barrier_tickness, ax_id, 1000};
         // get max projection
-        projection_pt proj_on_axis_max {position[x] + rad + 100*barrier_tickness, ax_id, 1000};
+        projection_pt proj_on_axis_max {position[axis] + rad + 100*barrier_tickness, ax_id, 1000};
 
-        if (x== 0){
+        if (axis == 0){
 
             colisions_axis_projs = find_collisions(proj_on_axis_min, proj_on_axis_max, sph_projections_x);
 
         }  
-        else if (x == 1) {
+        else if (axis == 1) {
 
             colisions_axis_projs = find_collisions(proj_on_axis_min, proj_on_axis_max, sph_projections_y);
         }  
@@ -151,13 +151,12 @@ std::vector<std::vector<Projections::projection_pt>> Projections::find_collision
             colisions_axis_projs = find_collisions(proj_on_axis_min, proj_on_axis_max, sph_projections_z);
             
         } 
-        if (colisions_axis_projs.size()== 0){
+        if (colisions_axis_projs.size() == 0){
             return coliding_projs;
             break;
         } 
         else{ 
             coliding_projs.push_back(colisions_axis_projs);
-
         } 
     }
     return coliding_projs;

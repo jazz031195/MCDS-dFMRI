@@ -148,7 +148,7 @@ public:
      *         with a defined "inside region" can be considered. Voxel periodicity is not
      *         considered
      */
-    bool isInIntra(Eigen::Vector3d& position, int& cyl_id,  int& ply_id, int& sph_id, int& ax_id, double distance_to_be_intra_ply=1e-6);
+    bool isInIntra(Eigen::Vector3d& position, int& cyl_id,  int& ply_id, int& sph_id, int& ax_id, int& neuron_id, double distance_to_be_intra_ply=1e-6);
     bool isIntraEdge(Eigen::Vector3d& position, bool low_edge, int& ax_id, bool init_loc_intra);
     /*!
      * \brief   Writes to disk the final propagator matrix.
@@ -281,7 +281,7 @@ private:
      * \brief   finds an intra celullar 3d position inside the voxel (needs a voxel initialized).
      * \param   intra_pos vector to save the 3d position.
      */
-    inline void getAnIntraCellularPosition(Eigen::Vector3d& intra_pos, int &cyl_ind, int &ply_ind, int &sph_ind, int& ax_id);
+    inline void getAnIntraCellularPosition(Eigen::Vector3d& intra_pos, int &cyl_ind, int &ply_ind, int &sph_ind, int& ax_id, int& neuron_id);
 
     /*!
      * \brief   finds an extra cellular 3d position inside the voxel (needs a voxel initialized).

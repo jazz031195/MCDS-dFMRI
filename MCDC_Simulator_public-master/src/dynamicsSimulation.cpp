@@ -281,11 +281,11 @@ void DynamicsSimulation::computeICVF()
 
 bool DynamicsSimulation::finalPositionCheck()
 {
-    int cyl_id,ply_id,sph_id, ax_id;
+    int cyl_id,ply_id,sph_id, ax_id, neuron_id;
 
     if( sentinela.deport_illegals and params.obstacle_permeability <=0 and walker.status != Walker::bouncing and walker.status != Walker::on_object){
 
-        bool isIntra = isInIntra(this->walker.pos_v,cyl_id,ply_id,sph_id,ax_id,0);
+        bool isIntra = isInIntra(this->walker.pos_v,cyl_id,ply_id,sph_id,ax_id,neuron_id,0);
 
         //cout << isIntra << " " << this->walker.location << "  " << walker.initial_location << endl;
 
@@ -520,7 +520,7 @@ void DynamicsSimulation::iniWalkerPosition()
 
         Vector3d intra_pos;
 
-        getAnIntraCellularPosition(intra_pos,walker.in_obj_index,walker.in_ply_index,walker.in_sph_index, walker.in_ax_index);
+        getAnIntraCellularPosition(intra_pos,walker.in_obj_index,walker.in_ply_index,walker.in_sph_index, walker.in_ax_index, walker.in_neuron_index);
         walker.setInitialPosition(intra_pos);
         walker.intra_extra_consensus--;
         walker.initial_location = Walker::intra;
@@ -536,7 +536,7 @@ void DynamicsSimulation::iniWalkerPosition()
     else if(voxels_list.size() > 0 or params.custom_sampling_area){
         walker.setRandomInitialPosition(params.min_sampling_area,params.max_sampling_area);
         if(params.computeVolume){
-            bool intra_flag =isInIntra(walker.ini_pos, walker.in_obj_index,walker.in_ply_index, walker.in_sph_index,walker.in_ax_index, 0.0);
+            bool intra_flag =isInIntra(walker.ini_pos, walker.in_obj_index,walker.in_ply_index, walker.in_sph_index,walker.in_ax_index, walker.in_neuron_index, 0.0);
             walker.location = (intra_flag==1)?Walker::RelativeLocation::intra:Walker::RelativeLocation::extra;
             walker.initial_location = walker.location;
         }
@@ -616,6 +616,26 @@ void DynamicsSimulation::initWalkerObstacleIndexes()
         }
     }
 
+    //* Neurons Collision Sphere *//
+
+    // The outer collision sphere has a radius r = l*T 
+    walker.neurons_collision_sphere.setBigSphereSize(outer_col_dist_factor);
+    // The inner collision sphere has radius l*T*collision_sphere_distance
+    walker.neurons_collision_sphere.setSmallSphereSize(inner_col_dist_factor);
+
+    // New version Neurons obstacle selection
+    walker.neurons_collision_sphere.small_sphere_list_end = 0;
+    walker.neurons_collision_sphere.big_sphere_list_end = unsigned(neurons_deque.size());
+
+    // We add and remove the cylinder indexes that are or not inside sphere.
+    for(unsigned i = 0 ; i < walker.neurons_collision_sphere.list_size; i++ ){
+        unsigned index = walker.neurons_collision_sphere.collision_list->at(i);
+        float dist = float((*neurons_list)[index].minDistance(walker));
+        if (dist < walker.neurons_collision_sphere.small_sphere_distance){
+            walker.neurons_collision_sphere.pushToSmallSphere(i);
+        }
+    }
+
 
     //* Spheres Collision Sphere *//
     // The outer collision sphere has a radius r = l*T
@@ -684,7 +704,7 @@ void DynamicsSimulation::updateCollitionSphere(unsigned t)
     }
 }
 
-void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos,int &cyl_ind, int& ply_ind, int& sph_ind, int& ax_ind)
+void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos,int &cyl_ind, int& ply_ind, int& sph_ind, int& ax_ind, int& neuron_ind)
 {
     string message;
     bool isintra = false;
@@ -723,7 +743,7 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos,int &cyl
        // cout << initialization_gap[2] << endl;
         Vector3d pos_temp = {x,y,z};
 
-        isintra = isInIntra(pos_temp,cyl_ind,ply_ind, sph_ind,ax_ind, -0.1);
+        isintra = isInIntra(pos_temp, cyl_ind, ply_ind, sph_ind, ax_ind, neuron_ind, -0.1);
         if(checkIfPosInsideVoxel(pos_temp) && (isintra)){
             
             //message = "is inside : "+std::to_string(isintra)+" \n";
@@ -741,7 +761,7 @@ void DynamicsSimulation::getAnExtraCellularPosition(Vector3d &extra_pos)
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> udist(0,1);
-    int dummy_a,dummy_b,dummy_c, dummy_d;
+    int dummy_a,dummy_b,dummy_c, dummy_d, dummy_e;
     if(voxels_list.size()<=0){
         SimErrno::error("Cannot initialize extra-cellular walkers within the given substrate, no voxel.",cout);
         assert(0);
@@ -767,7 +787,7 @@ void DynamicsSimulation::getAnExtraCellularPosition(Vector3d &extra_pos)
 
         Vector3d pos_temp = {x,y,z};
 
-        if(checkIfPosInsideVoxel(pos_temp) && (!isInIntra(pos_temp, dummy_a,dummy_b,dummy_c,dummy_d,barrier_tickness))){
+        if(checkIfPosInsideVoxel(pos_temp) && (!isInIntra(pos_temp, dummy_a,dummy_b,dummy_c,dummy_d,dummy_e,barrier_tickness))){
             extra_pos = pos_temp;
             return;
         }
@@ -855,9 +875,26 @@ void DynamicsSimulation::updateWalkerObstacleIndexes(unsigned t_)
             walker.axons_collision_sphere.pushToSmallSphere(i);
         }
     }
+
+    //Neuron obstacle update.
+    walker.neurons_collision_sphere.small_sphere_list_end = 0;
+    for(unsigned i = 0 ; i < walker.neurons_collision_sphere.big_sphere_list_end; i++ )
+    {
+        unsigned index = walker.neurons_collision_sphere.collision_list->at(i);
+        float dist    = float((*neurons_list)[index].minDistance(walker));
+
+        if (dist > walker.neurons_collision_sphere.big_sphere_distance)
+        {
+            walker.neurons_collision_sphere.popFromBigSphere(i);
+        }
+        if (dist < walker.neurons_collision_sphere.small_sphere_distance)
+        {
+            walker.neurons_collision_sphere.pushToSmallSphere(i);
+        }
+    }
+    
     //Spheres obstacle update.
     walker.spheres_collision_sphere.small_sphere_list_end = 0;
-
     for(unsigned i = 0 ; i < walker.spheres_collision_sphere.big_sphere_list_end; i++ )
     {
         unsigned index = walker.spheres_collision_sphere.collision_list->at(i);
@@ -998,33 +1035,18 @@ bool DynamicsSimulation::isInsideAxons(Vector3d &position, int &ax_id, double di
     return false;
 }
 
-bool DynamicsSimulation::isInsideNeurons(Vector3d &position, int &neuron_id, double distance_to_be_inside)
+bool DynamicsSimulation::isInsideNeurons(Vector3d &position, int &neuron_id, double barrier_thickness)
 {
-    for (unsigned i = 0; i < neurons_list->size() ; i++){
-
-        Walker tmp;
-        tmp.setInitialPosition(position);
-
-        //track the number of positions checks for intra/extra positions
-        double dis = neurons_list->at(i).minDistance(tmp);
-
-        if( dis <= distance_to_be_inside ){
-            intra_tries++;
+    for (unsigned i = 0; i < neurons_list->size() ; i++)
+    {
+        bool isinside = neurons_list->at(i).isPosInsideNeuron(position,  barrier_thickness, false);
+        if (isinside)
+        {
             neuron_id = i;
             return true;
             break;
         }
-    
-        for (unsigned j = 0; j < neurons_list->at(i).nb_dendrites; j++){
-            bool isinside = neurons_list->at(i).dendrites[j].isPosInsideAxon(position,  distance_to_be_inside, false);
-            if (isinside){
-                neuron_id = i;
-                return true;
-                break;
-            }
-        }
     }
-    neuron_id = -1;
     return false;
 }
 bool DynamicsSimulation::isInsidePLY(Vector3d &position, int &ply_id,double distance_to_be_inside)
@@ -1085,7 +1107,7 @@ bool DynamicsSimulation::isInsidePLY(Vector3d &position, int &ply_id,double dist
 }
 
 
-bool DynamicsSimulation::isInIntra(Vector3d &position, int& cyl_id,  int& ply_id, int& sph_id, int& ax_id, double distance_to_be_intra_ply)
+bool DynamicsSimulation::isInIntra(Vector3d &position, int& cyl_id,  int& ply_id, int& sph_id, int& ax_id, int& neuron_id, double distance_to_be_intra_ply)
 {
     bool isIntra = false;
     total_tries++;
@@ -1364,11 +1386,6 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
 
     // Clears the status of the sentinel.
     sentinela.clear();
-    bool isinside;
-    int ax_id;
-    int sph_id;
-
-    int size_list_axons = axons_list->size();
 
     unsigned bouncing_count = 0;
     do{
@@ -1422,13 +1439,13 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
     Collision colision_tmp;
     colision_tmp.type = Collision::null;
     colision_tmp.t = INFINITY_VALUE;
-    int cyl_id,  ply_id, sph_id, ax_id;
+    int cyl_id,  ply_id, sph_id, ax_id, neuron_id;
 
     //Origin O
     Eigen::Vector3d ray_origin;
     walker.getVoxelPosition(ray_origin);
     if (walker.initial_location == Walker::intra){
-        bool isintra = isInIntra(ray_origin, cyl_id,  ply_id, sph_id, ax_id, barrier_tickness);
+        bool isintra = isInIntra(ray_origin, cyl_id,  ply_id, sph_id, ax_id, neuron_id, barrier_tickness);
         if(isintra){
             walker.intra_extra_consensus--;
             walker.location = Walker::intra;
@@ -1483,6 +1500,16 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
         
     }
 
+    //For each Neuron Obstacle
+    for(unsigned int i = 0 ; i < walker.neurons_collision_sphere.small_sphere_list_end; i++ )
+    {
+        unsigned index = walker.neurons_collision_sphere.collision_list->at(i);
+        //cout<< "axon : " << index << endl;
+
+        (*neurons_list)[index].checkCollision(walker,bounced_step,tmax,colision_tmp);
+        handleCollisions(colision,colision_tmp,max_collision_distance,index);
+        
+    }
 
     //For each Sphere Obstacle
     for(unsigned int i = 0 ; i < walker.spheres_collision_sphere.small_sphere_list_end; i++ )

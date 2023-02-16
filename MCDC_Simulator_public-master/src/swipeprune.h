@@ -26,7 +26,7 @@ public:
         int axon_id;
         int sph_id;
     };
-    // each axon is in a rectangle, rectangle defined by a vector of 2 Vector2d : [(Xsmall, Xlarge), (Ysmall, Ylarge)]
+    // each axon is in a rectangle, rectangle defined by a vector of 3 Vector2d : [(Xsmall, Xlarge), (Ysmall, Ylarge), (Zsmall, Zlarge)]
     std::vector<Eigen::Vector2d> axon_projections;
     // projection of spheres in x, y, and z axes
     std::vector<projection_pt> sph_projections_x;

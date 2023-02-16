@@ -143,3 +143,13 @@ double Sphere::minDistance(Walker &w){
    // return d_>0.0?d_:0.0;
     return d_;
 }
+
+double Sphere::minDistance(Vector3d pos)
+{
+
+    // First check distance to soma
+    Vector3d m = pos - center;
+    double distance_to_sphere = m.norm() - radius;
+
+    return distance_to_sphere;
+}

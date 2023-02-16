@@ -55,8 +55,8 @@ void NeuronDistribution::createSubstrate()
 
     uint repetition = 1;
     uint max_adjustments = 5;
-    double best_icvf = 0;
-    Eigen::Vector3d best_max_limits;
+    // double best_icvf = 0;
+    // Eigen::Vector3d best_max_limits;
     min_limits_vx = {0.,0.,0.};
 
     bool achieved = false;
@@ -64,21 +64,18 @@ void NeuronDistribution::createSubstrate()
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> udist(0,1);
 
-    int tried = 0;
-
     uint adjustments = 0;
      // We increease 1% the total area. (Is prefered to fit all the spheres than achieve a perfect ICVF.)
     double adj_increase = icvf*0.01;
     while(!achieved){
 
-        double target_icvf = this->icvf+adjustments*adj_increase;
+        // double target_icvf = this->icvf+adjustments*adj_increase;
 
         for(uint t = 0 ;  t < repetition; t++){
             neurons.clear();
             for(unsigned i = 0 ; i < num_obstacles; i++){
                 unsigned stuck = 0;
                 while(++stuck <= 1000){
-                    achieved = true;
                     double t = udist(gen);
                     double x = (t*max_limits_vx[0] + (1-t)*min_limits_vx[0]);
                     t        = udist(gen);
@@ -96,6 +93,7 @@ void NeuronDistribution::createSubstrate()
 
                     if(!collision){
                         neurons.push_back(neuron);
+                        achieved = true;
                         break;
                     }
                     
@@ -153,7 +151,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
             double y = distribution(generator);
             double z = distribution(generator);
 
-            while(x==0 & y==0 & z==0)
+            while(x==0 && y==0 && z==0)
             {
                 x = distribution(generator);
                 y = distribution(generator);
@@ -169,7 +167,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
             double sphere_radius = 0.5e-3;
             // If the vector is not already contained in start_dendrites, add it. 
             // Otherwise, decrement i and do one more round
-            if(i != 0 & std::count(start_dendrites.begin(), start_dendrites.end(), dendrite_start) & !isInVoxel(dendrite_start, sphere_radius + barrier_tickness)){ i--; tries++; }
+            if((i != 0) && std::count(start_dendrites.begin(), start_dendrites.end(), dendrite_start) && (!isInVoxel(dendrite_start, sphere_radius + barrier_tickness))){ i--; tries++; }
             else
             {
                 start_dendrites.push_back(dendrite_start);
@@ -192,6 +190,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
                     else{ break; }
                 }
                 dendrite.set_spheres(spheres_to_add, i);
+                dendrite.add_projection(i);
                 neuron.dendrites.push_back(dendrite);
                 break;
             }

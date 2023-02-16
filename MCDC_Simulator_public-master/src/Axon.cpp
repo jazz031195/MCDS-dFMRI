@@ -35,8 +35,8 @@ Axon::Axon(const Axon &ax)
 }
 
 void Axon::add_projection(int axon_id){
-    Vector2d smallest_pos;
-    Vector2d largest_pos;
+    Vector3d smallest_pos;
+    Vector3d largest_pos;
 
     // projections are in descending order. When added, it is added at the right position.
     for (unsigned axis = 0; axis < 3; ++axis) {
@@ -81,18 +81,20 @@ void Axon::add_projection(int axon_id){
             projections.append_right_place(p1_,  p2_, axis);
         }
 
-        if (axis < 2){
-            smallest_pos[axis] = smallest_pos_;
-            largest_pos[axis] = largest_pos_;
-        }
+        smallest_pos[axis] = smallest_pos_;
+        largest_pos[axis] = largest_pos_;
+        
     }
 
     Vector2d x_limits = {smallest_pos[0], largest_pos[0]};
     Vector2d y_limits = {smallest_pos[1], largest_pos[1]};
+    Vector2d z_limits = {smallest_pos[2], largest_pos[2]};
     projections_max.axon_projections.push_back(x_limits);
     projections_max.axon_projections.push_back(y_limits);
+    projections_max.axon_projections.push_back(z_limits);
     projections.axon_projections.push_back(x_limits);
     projections.axon_projections.push_back(y_limits);
+    projections.axon_projections.push_back(z_limits);
     
 }
 
