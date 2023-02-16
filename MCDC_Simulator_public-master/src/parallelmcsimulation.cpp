@@ -861,7 +861,8 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 cout << "adding sphere,  min radius :" << sphere_.min_radius <<", max radius :" << sphere_.max_radius <<", radius :" << sphere_.radius << ", swell : " << sphere_.swell << endl;
             
             }
-            if(jkr.size() == 2){
+
+            if(jkr.size() == 3 ){
                 ax_id = stod(jkr[1]);
                 Eigen::Vector3d begin = {min_limits, min_limits, min_limits};
                 Eigen::Vector3d end = {max_limits, max_limits, max_limits};
@@ -1110,7 +1111,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
         SimErrno::info(message,cout);
 
         AxonGammaDistribution gamma_dist(params.dyn_perc, params.volume_inc_perc,  params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
-                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii, params.active_state);
+                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii, params.active_state, params.c2);
 
 
         gamma_dist.displayGammaDistribution();
