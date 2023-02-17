@@ -431,6 +431,7 @@ double AxonGammaDistribution::computeICVF(std::vector<Axon> &axons, Vector3d &mi
 
 std::tuple<double, double>  phi_theta_to_target (Eigen::Vector3d prev_pos, Eigen::Vector3d new_pos, Eigen::Vector3d end,  ostream& out) {
     /*
+    Find phi and theta angles in spherical coordinates
     see : http://douglashalse.com/index.php/2019/09/25/spherical-coordinates/
 
     */
@@ -473,9 +474,10 @@ bool AxonGammaDistribution::isSphereColliding(Dynamic_Sphere sph){
     Vector3d position = sph.center;
     double distance_to_be_inside = 10* barrier_tickness + sph.max_radius;
     int ax_id;
+    std::vector<int> col_sphere_ids;
 
     for (unsigned i = 0; i < axons.size() ; i++){
-        bool isinside = axons[i].isPosInsideAxon(position, distance_to_be_inside, true);
+        bool isinside = axons[i].isPosInsideAxon(position, distance_to_be_inside, true, col_sphere_ids);
         if (isinside){
             return true;
             break;
