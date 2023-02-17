@@ -45,11 +45,6 @@ void NeuronDistribution::computeMinimalSize(std::vector<double> radiis, double i
 }
 
 
-void NeuronDistribution::add_projection(Axon ax, int ax_index, double distance_to_be_inside, ostream& out)
-{
-  
-} 
-
 void NeuronDistribution::createSubstrate()
 {
 
@@ -85,6 +80,16 @@ void NeuronDistribution::createSubstrate()
 
                     Eigen::Vector3d soma_center = {x, y, z};
                     double soma_radius = 5e-3; //mm
+
+                    if ((x - min_limits_vx[0] <= barrier_tickness + soma_radius) ||
+                        (max_limits_vx[0] - x <= barrier_tickness + soma_radius) ||
+                        (y - min_limits_vx[1] <= barrier_tickness + soma_radius) ||
+                        (max_limits_vx[1] - y <= barrier_tickness + soma_radius) ||
+                        (z - min_limits_vx[2] <= barrier_tickness + soma_radius) ||
+                        (max_limits_vx[2] - z <= barrier_tickness + soma_radius))
+                        {
+                            continue;
+                        } 
                     Neuron neuron(soma_center, soma_radius);
                     growDendrites(neuron, i);
 
@@ -190,7 +195,6 @@ void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
                     else{ break; }
                 }
                 dendrite.set_spheres(spheres_to_add, i);
-                dendrite.add_projection(i);
                 neuron.dendrites.push_back(dendrite);
                 break;
             }

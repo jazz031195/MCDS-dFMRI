@@ -11,7 +11,7 @@
 #define NEURON_H
 
 #include "Axon.h"
-#include "sphere.h"
+#include "dynamic_sphere.h"
 #include "simerrno.h"
 #include <iostream>
 #include <random>
@@ -28,13 +28,13 @@ public:
     int nb_dendrites;                       /* Number of dendrites */
     double span_radius;                     /* Radius [mm] inside which all the dendrites are contained */
     std::vector<Axon> dendrites;            /* Contains all the dendrites of the neuron*/
-    Sphere soma;                            /* Soma of the neuron */
+    Dynamic_Sphere soma;                            /* Soma of the neuron */
 
     Neuron();
 
     ~Neuron();
 
-    Neuron(std::vector<Axon> dendrites, Sphere soma);
+    Neuron(std::vector<Axon> dendrites, Dynamic_Sphere soma);
     Neuron(std::vector<Axon> dendrites, Eigen::Vector3d soma_center, double soma_radius);
     Neuron(Eigen::Vector3d soma_center, double soma_radius);
     
@@ -57,7 +57,7 @@ public:
     std::tuple<std::string, int> isNearNeuron(Eigen::Vector3d &position,  double barrier_thickness);
     /* Find the closest sphere between a walker and a neuron */
     std::tuple<std::string, int, int> closest_sphere_dichotomy(Walker &walker, double &step_lenght, double barrier_tickness);
-    bool intersection_sphere_vector(double &t1, double &t2, Dynamic_Sphere &s, Eigen::Vector3d &step, double &step_length, Eigen::Vector3d &pos, bool isintra, double &c);
+    bool intersection_sphere_vector(double &intercept1, double &intercept2, Dynamic_Sphere &s, Eigen::Vector3d &step_dir, double &step_length, Eigen::Vector3d &traj_orig, double &c);
 
 
 };

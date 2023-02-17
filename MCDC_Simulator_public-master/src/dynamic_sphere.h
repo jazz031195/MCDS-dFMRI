@@ -11,8 +11,9 @@
 #define DYN_SPHERE_H
 
 #include "obstacle.h"
+#include "sphere.h"
 
-class Dynamic_Sphere : public Obstacle
+class Dynamic_Sphere : public Sphere
 {
 public:
 
@@ -63,7 +64,9 @@ public:
      *  \brief constrcutor by copy
      */
     Dynamic_Sphere(Dynamic_Sphere const &sph);
-
+    Dynamic_Sphere(Sphere const& s);
+    Dynamic_Sphere(Eigen::Vector3d soma_center, double soma_radius);
+    
     /*! \fn  checkCollision
      *  \param walker, Walker instance in the simulation.
      *  \param 3d step. Is assumed to be normalized.
@@ -79,7 +82,6 @@ public:
      *  \brief Returns the minimum distance from the walker to the Sphere. Used to set the reachable
      *  Spheres that a given walker can reach.
      */
-    double minDistance(Walker &w);
     bool isInside(Walker &w);
     bool isInside(Eigen::Vector3d pos, double distance_to_be_inside);
     bool distSmallerThan(Eigen::Vector3d pos, double distance);

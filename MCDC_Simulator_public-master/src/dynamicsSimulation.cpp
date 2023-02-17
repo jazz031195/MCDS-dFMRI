@@ -520,7 +520,7 @@ void DynamicsSimulation::iniWalkerPosition()
 
         Vector3d intra_pos;
 
-        getAnIntraCellularPosition(intra_pos,walker.in_obj_index,walker.in_ply_index,walker.in_sph_index, walker.in_ax_index, walker.in_neuron_index);
+        getAnIntraCellularPosition(intra_pos, walker.in_obj_index, walker.in_ply_index, walker.in_sph_index, walker.in_ax_index, walker.in_neuron_index);
         walker.setInitialPosition(intra_pos);
         walker.intra_extra_consensus--;
         walker.initial_location = Walker::intra;
@@ -722,7 +722,7 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos,int &cyl
         assert(0);
     }
 
-    unsigned count = 0;
+    int count = 0;
     while(true){
 
         if(count > 100000){
@@ -743,7 +743,7 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos,int &cyl
        // cout << initialization_gap[2] << endl;
         Vector3d pos_temp = {x,y,z};
 
-        isintra = isInIntra(pos_temp, cyl_ind, ply_ind, sph_ind, ax_ind, neuron_ind, -0.1);
+        isintra = isInIntra(pos_temp, cyl_ind, ply_ind, sph_ind, ax_ind, neuron_ind, -barrier_tickness);
         if(checkIfPosInsideVoxel(pos_temp) && (isintra)){
             
             //message = "is inside : "+std::to_string(isintra)+" \n";
@@ -1122,7 +1122,7 @@ bool DynamicsSimulation::isInIntra(Vector3d &position, int& cyl_id,  int& ply_id
             isIntra|= this->isInsideCylinders(position,cyl_id,barrier_tickness);
     }
     if(neurons_list->size()>0){
-            isIntra|= this->isInsideNeurons(position,cyl_id,barrier_tickness);
+            isIntra|= this->isInsideNeurons(position, neuron_id, barrier_tickness);
     }
     if(plyObstacles_list->size()>0){
             isIntra|=isInsidePLY(position,ply_id,distance_to_be_intra_ply);

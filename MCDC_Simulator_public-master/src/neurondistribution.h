@@ -51,7 +51,6 @@ public:
     */
     void printSubstrate(std::ostream& out);
     bool isSphereColliding(Dynamic_Sphere sph, double distance_to_be_inside, int axon_id, int sph_id, ostream& out);
-    void add_projection(Axon ax, int ax_index, double distance_to_be_inside, ostream& out);
     std::vector<projection_pt> find_collisions(projection_pt proj_on_axis_min, projection_pt proj_on_axis_max,std::vector<projection_pt> projections_on_axis, ostream& out);
     bool isColliding(Axon ax,  double distance_to_be_inside, int axon_id, ostream& out);
     bool search_for_sphere(std::vector<projection_pt> spheres_, projection_pt s);

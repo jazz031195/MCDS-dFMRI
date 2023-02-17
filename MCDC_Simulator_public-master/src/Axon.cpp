@@ -43,7 +43,7 @@ void Axon::add_projection(int axon_id){
         double smallest_pos_ = 100;
         double largest_pos_ = 0;
 
-        for (int i=0; i<spheres.size(); ++i){ 
+        for (int i=0; i < spheres.size(); ++i){ 
 
             double position1, position2, position1_, position2_;
             int sph_id = i;

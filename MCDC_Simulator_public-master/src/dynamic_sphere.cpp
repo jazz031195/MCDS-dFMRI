@@ -8,6 +8,20 @@ using namespace std;
 
 int Dynamic_Sphere::count = 0;
 
+Dynamic_Sphere::Dynamic_Sphere(Vector3d soma_center, double soma_radius)
+{
+    center = soma_center;
+    radius = soma_radius;
+    id = count++;
+}
+
+Dynamic_Sphere::Dynamic_Sphere(Sphere const& s)
+{
+    center = s.center;
+    radius = s.radius;
+    id = count++;
+}
+
 Dynamic_Sphere::Dynamic_Sphere(const Dynamic_Sphere &sph)
 {
     center = sph.center;
@@ -163,20 +177,6 @@ inline bool Dynamic_Sphere::handleCollition(Walker& walker, Collision &colision,
 
 }
 
-double Dynamic_Sphere::minDistance(Walker &w){
-
-    //Origin of the ray
-    Vector3d O;
-    w.getVoxelPosition(O);
-    Vector3d m = O - this->center;
-    // minimum distance to the cylinder axis.
-    double distance_to_sphere = m.norm();
-
-    //Minimum distance to the shpere wall.
-    double d_ = (distance_to_sphere - radius);
-   // return d_>0.0?d_:0.0;
-    return d_;
-}
 
 bool Dynamic_Sphere::isInside(Walker &w){
 
