@@ -707,7 +707,7 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos,int &cyl
        // cout << initialization_gap[2] << endl;
         Vector3d pos_temp = {x,y,z};
 
-        isintra = isInIntra(pos_temp,cyl_ind,ply_ind, sph_ind,ax_ind, -0.1);
+        isintra = isInIntra(pos_temp,cyl_ind,ply_ind, sph_ind,ax_ind, -barrier_tickness);
         if(checkIfPosInsideVoxel(pos_temp) && (isintra)){
             
             //message = "is inside : "+std::to_string(isintra)+" \n";
@@ -970,8 +970,9 @@ bool DynamicsSimulation::isInsideDynCylinders(Vector3d &position, int& cyl_id,do
 
 bool DynamicsSimulation::isInsideAxons(Vector3d &position, int &ax_id, double distance_to_be_inside)
 {
+    std::vector<int> col_sphere_ids;
     for (unsigned i = 0; i < axons_list->size() ; i++){
-        bool isinside = axons_list->at(i).isPosInsideAxon(position,  distance_to_be_inside, false);
+        bool isinside = axons_list->at(i).isPosInsideAxon(position,  distance_to_be_inside, false, col_sphere_ids);
         if (isinside){
             ax_id = i;
             return true;
@@ -1380,17 +1381,15 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
     //Origin O
     Eigen::Vector3d ray_origin;
     walker.getVoxelPosition(ray_origin);
-    if (walker.initial_location == Walker::intra){
-        bool isintra = isInIntra(ray_origin, cyl_id,  ply_id, sph_id, ax_id, barrier_tickness);
-        if(isintra){
-            walker.intra_extra_consensus--;
-            walker.location = Walker::intra;
-        }
-        else {
-            walker.intra_extra_consensus++;
-            walker.location = Walker::extra;
-        }
+
+    bool isintra = isInIntra(ray_origin, cyl_id,  ply_id, sph_id, ax_id, barrier_tickness);
+    if(isintra){
+        walker.location = Walker::intra;
     }
+    else if (!isintra) {
+        walker.location = Walker::extra;
+    }
+    
 
     //To keep track of the closest collision
     double max_collision_distance = tmax;
