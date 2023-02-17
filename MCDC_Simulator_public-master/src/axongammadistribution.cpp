@@ -429,36 +429,29 @@ double AxonGammaDistribution::computeICVF(std::vector<Axon> &axons, Vector3d &mi
 
 
 
-std::tuple<double, double>  phi_gamma_to_target (Eigen::Vector3d prev_pos, Eigen::Vector3d new_pos, Eigen::Vector3d end,  ostream& out) {
+std::tuple<double, double>  phi_theta_to_target (Eigen::Vector3d prev_pos, Eigen::Vector3d new_pos, Eigen::Vector3d end,  ostream& out) {
+    /*
+    see : http://douglashalse.com/index.php/2019/09/25/spherical-coordinates/
 
+    */
     Eigen::Vector3d vector_to_target = {end[0] - new_pos[0], end[1] - new_pos[1], end[2] - new_pos[2]};
-    Eigen::Vector2d vector_to_target_xy = {vector_to_target[0] ,vector_to_target[1]};
-    vector_to_target_xy = vector_to_target_xy.normalized();
-    Eigen::Vector2d vector_to_target_xz = {vector_to_target[0] ,vector_to_target[2]}; 
-    vector_to_target_xz = vector_to_target_xz.normalized();
+    vector_to_target = vector_to_target.normalized();
+    double phi_to_target;
+    if (vector_to_target[0] != 0){
+        phi_to_target = atan(vector_to_target[1]/vector_to_target[0]);
+    }
+    else{
+        phi_to_target = M_PI/2;
+    }
 
-    //out << "vector_to_target_xy : ( " << vector_to_target_xy[0] << ", " << vector_to_target_xy[1] << " )" << endl;
-    //out << "vector_to_target_xz : ( " << vector_to_target_xz[0] << ", " << vector_to_target_xz[1] << " )" << endl;
-
-    //Eigen::Vector3d straight_vector = {new_pos[0] - prev_pos[0], new_pos[1] - prev_pos[1], new_pos[2] - prev_pos[2]};
-    //Eigen::Vector2d straight_vector_xy = {straight_vector[0] ,straight_vector[1] };
-    //straight_vector_xy = straight_vector_xy.normalized();
-    //Eigen::Vector2d straight_vector_xz = {straight_vector[0] ,straight_vector[2] }; 
-    //straight_vector_xz = straight_vector_xz.normalized();
-
-    //out << "straight_vector_xy : ( " << straight_vector_xy[0] << ", " << straight_vector_xy[1] << " )" << endl;
-    //out << "straight_vector_xz : ( " << straight_vector_xz[0] << ", " << straight_vector_xz[1] << " )" << endl;
-
-
-    double phi_to_target = atan2(vector_to_target_xy[1], vector_to_target_xy[0]);
-    double gamma_to_target = atan2(vector_to_target_xz[0],vector_to_target_xz[1]);
-
-    // caculate angle wrt x axis
-    //double phi_straight = atan2(straight_vector_xy[1],straight_vector_xy[0]);
-    // calculate angle wrt z axis
-    //double gamma_straight = atan2(straight_vector_xz[0],straight_vector_xz[1]);
-
-    return std::make_tuple(phi_to_target, gamma_to_target);
+    double theta_to_target;
+    if (vector_to_target[2] != 0){
+        theta_to_target = atan(sqrt(vector_to_target[0]*vector_to_target[0]+vector_to_target[1]*vector_to_target[1])/vector_to_target[2]);
+    }
+    else{
+        theta_to_target = M_PI/2;
+    }
+    return std::make_tuple(phi_to_target, theta_to_target);
 }
 
 bool AxonGammaDistribution::check_borders(Eigen::Vector3d pos, double distance_to_border) {
@@ -495,8 +488,8 @@ bool AxonGammaDistribution::isSphereColliding(Dynamic_Sphere sph){
 bool AxonGammaDistribution::find_next_center(Axon ax, Dynamic_Sphere& s, double dist_, double& rad, Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, int axon_id, ostream& out){
 
     double phi;
-    double gamma;
-    double phi_to_target, gamma_to_target;
+    double theta;
+    double phi_to_target, theta_to_target;
     bool achieved = false;
     int tries = 0;
     int max_tries = 50000;
@@ -510,39 +503,33 @@ bool AxonGammaDistribution::find_next_center(Axon ax, Dynamic_Sphere& s, double 
     double delta_y;
     double delta_z;
 
-    double angle_between = M_PI/3;
+    //double angle_between = M_PI/3;
 
     while(!achieved && tries < max_tries){
-        tie(phi_to_target, gamma_to_target) = phi_gamma_to_target (prev_pos, new_pos, ax.end,  out);
-        std::normal_distribution<float> phi_dist (phi_to_target/M_PI, 0.05); 
-        std::normal_distribution<float> gamma_dist (gamma_to_target/M_PI, 0.05); 
-        while (angle_between >= M_PI/3){
-            phi = phi_dist(gen)*M_PI;
-            //phi = phi_to_target;
-            gamma = gamma_dist(gen)*M_PI;
-            //gamma = gamma_to_target;
+        tie(phi_to_target, theta_to_target) = phi_theta_to_target (prev_pos, new_pos, ax.end,  out);
+        std::normal_distribution<float> phi_dist (phi_to_target/M_PI, 0.1); 
+        std::normal_distribution<float> theta_dist (theta_to_target/M_PI, 0.1); 
+        //while (angle_between >= M_PI/3){
+        phi = phi_dist(gen)*M_PI;
+        theta = theta_dist(gen)*M_PI;
 
-            //out << "phi : " << phi/M_PI << "*pi , gamma : " << gamma/M_PI <<"*pi"<< endl;
-            delta_x = dist_*cos(phi)*sin(gamma);
-            delta_y = dist_*sin(phi)*sin(gamma);
-            delta_z = dist_*cos(gamma);
 
-            //out << "delta_y : "<< delta_y << ", delta_x :"<< delta_x <<", delta_z :" << delta_z<< endl;
-            
-            pos_ = new_pos;
-            Eigen::Vector3d prev_to_pos = (new_pos-prev_pos).normalized();
+        delta_x = dist_*cos(phi)*sin(theta);
+        delta_y = dist_*sin(phi)*sin(theta);
+        delta_z = dist_*cos(theta);
+
+        pos_ = new_pos;
+        //Eigen::Vector3d prev_to_pos = (new_pos-prev_pos).normalized();
                 
-            pos_[0] +=  delta_x;
-            pos_[1] +=  delta_y;
-            pos_[2] +=  delta_z;
+        pos_[0] +=  delta_x;
+        pos_[1] +=  delta_y;
+        pos_[2] +=  delta_z;
 
-            Eigen::Vector3d pos_to_new_pos = (pos_-new_pos).normalized();
+        //Eigen::Vector3d pos_to_new_pos = (pos_-new_pos).normalized();
 
-            angle_between = acos(pos_to_new_pos.dot(prev_to_pos));
+        //angle_between = acos(pos_to_new_pos.dot(prev_to_pos));
 
-
-            //out << "angle between :" << angle_between/M_PI << " PI " << endl;
-        }
+        //}
 
         // check distance with border
         if (!check_borders(pos_, rad*sqrt(1+ax.volume_inc_perc) + barrier_tickness)) {
@@ -553,7 +540,6 @@ bool AxonGammaDistribution::find_next_center(Axon ax, Dynamic_Sphere& s, double 
             if (!isSphereColliding(sphere_)){ 
                 s =sphere_; 
                 achieved = true;
-                //out << "sphere at center : "<< sphere_.center<< ",with radius "<< sphere_.min_radius <<" doesn't collide" << endl;
                 return true;
                 break;
             } 
@@ -633,7 +619,6 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
     // initial distance between spheres is the radius
     double dist_ = rad;
     double prev_radius;
-
 
     Eigen::Vector3d prev_pos = {new_pos[0], new_pos[1], new_pos[2]-dist_};
 
