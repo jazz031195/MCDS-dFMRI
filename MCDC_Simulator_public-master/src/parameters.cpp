@@ -691,6 +691,10 @@ void Parameters::readGammaParams(ifstream &in)
             in >> gamma_icvf;
 
         }
+        else if(str_dist(tmp,"c2") <= 1){
+            in >> c2;
+
+        }
 
         else if(str_dist(tmp,"") == 0){
             in.clear();
