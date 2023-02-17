@@ -5,6 +5,7 @@
 #include <chrono>
 
 
+
 using namespace std;
 using namespace Eigen;
 using namespace std::chrono;
@@ -31,12 +32,13 @@ AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc
 }
 void AxonGammaDistribution::computeMinimalSize(std::vector<double> radiis, double icvf_, Eigen::Vector3d &l)
 {
+    /*
+    Computes the minimal Voxel size for the chosen icvf, by assuming straight axons
 
-    /*A little heuristic for complicated ICVF: > 0.7*/
-    if (icvf_ >= 0.7 && icvf_ < 0.99)
-    {
-        icvf_ += 0.01;
-    }
+    radiis : list of radii for each axon to grow
+    icvf_ : Intracompartment volume fraction
+    l : 3D vector with each of the 3 values being the length of the vector
+    */
 
     double area = 0;
 
@@ -52,6 +54,9 @@ void AxonGammaDistribution::computeMinimalSize(std::vector<double> radiis, doubl
 
 void AxonGammaDistribution::displayGammaDistribution()
 {
+    /* 
+    Displays the Gamma Distribution of the axons
+    */
     const int nrolls=10000;  // number of experiments
     const int nstars=100;    // maximum number of stars to distribute
     string message;
@@ -79,48 +84,54 @@ void AxonGammaDistribution::displayGammaDistribution()
 }
 
 void AxonGammaDistribution::find_target_point (double c2, double radius, Eigen::Vector3d& initial_point , Eigen::Vector3d& target_point){
+    /*
+    Finds the target of the axon (position of last sphere) w.r.t the c2 value given.
+    
+    c2 : Mean(cos²(angle))
+    radius : Radius of axon
+    initial_point : Position from which the axon will start to grow
+    target_point : Position of the target of the growth
+    */
 
+    // find initial point in random position in voxel
+    std::random_device rd;
+    std::mt19937 gen(rd()); 
     bool achieved = false;
+    std::uniform_real_distribution<double> udist_(0, 1);
+    double t = udist_(gen);
+    double distance_to_border = radius*sqrt(1+volume_inc_perc) + barrier_tickness;
+    double x_i = (t * (max_limits[0]-distance_to_border)) + (1 - t) * (min_limits[0]+ distance_to_border);
+    t = udist_(gen);
+    double y_i = (t * (max_limits[1]-distance_to_border) + (1 - t) * (min_limits[1]+ distance_to_border));
+
 
     while(!achieved){
-        std::random_device rd;
-        std::mt19937 gen(rd()); 
-        std::normal_distribution<float> cos_2_dist (c2, 0.04); 
 
+        // c2 is mean(cos²(angle)), so we take cos²(angle) from a distribution that has c2 as mean
+        std::normal_distribution<float> cos_2_dist (c2, 0.04); 
         double cos_2 = cos_2_dist(gen);
         while (cos_2 < 0 || cos_2 > 1){
             cos_2 = cos_2_dist(gen);
         }
-        double sin_2 = 1-cos_2;
-        double slope_2 = sin_2/cos_2;
-        double diff_square_x_y = slope_2*max_limits[2];
 
-        std::uniform_real_distribution<double> udist(0, diff_square_x_y);
-        double diff_y_2 = udist(gen);
-        double diff_y = sqrt(diff_y_2);
-        double diff_x_2 = diff_square_x_y - diff_y_2;
-        double diff_x = sqrt(diff_x_2);
-        // 0: x,y > 0, 1: x > 0 and y < 0, 2: x<0 and y>0, 3 : x,y <0
-        std::uniform_real_distribution<float> pos_or_neg (0, 4);
-        int pos_or_neg_ = int(pos_or_neg(gen));
-        if (pos_or_neg_ == 1 || pos_or_neg_== 3){
-            diff_y = -diff_y;
-        }
-        if(pos_or_neg_ == 2 || pos_or_neg_== 3){
-            diff_x = -diff_x;
-        }
+        // target_point - initial_point = diff
+        // diff_2 = diff²
+        double diff_x_2, diff_y_2, diff_z_2;
+        // vi.dot(diff) = cos(angle) (between vo (straight vector) and diff (vector in angle))
+        // vi = [0,0,1] -> diff[z] = cos(angle)
+        // cos²(angle) = cos_2 = diff_z²
+        diff_z_2 = cos_2;
+        std::uniform_real_distribution<double> udist_y(diff_z_2-1, 1-diff_z_2);
+        diff_y_2 = udist_y(gen);
+        std::uniform_real_distribution<double> udist_x(diff_z_2+diff_y_2 -1, 1-diff_z_2-diff_y_2);
+        diff_x_2 = udist_x(gen);
 
-        std::uniform_real_distribution<double> udist_(0, 1);
-        double t = udist_(gen);
-        double distance_to_border = radius*sqrt(1+volume_inc_perc) + barrier_tickness;
-        double x_i = (t * (max_limits[0]-distance_to_border)) + (1 - t) * (min_limits[0]+ distance_to_border);
-        t = udist_(gen);
-        double y_i = (t * (max_limits[1]-distance_to_border) + (1 - t) * (min_limits[1]+ distance_to_border));
+        double length = max_limits[2]/sqrt(diff_z_2);
+        double x_f = x_i + length*sqrt(diff_x_2);
+        double y_f = y_i + length*sqrt(diff_y_2);
 
-        double x_f = x_i + diff_x;
-        double y_f = y_i + diff_y;
-
-        if (check_borders({x_f, y_f, max_limits[2]}, radius*sqrt(1+volume_inc_perc))){
+        // check if target point is in the voxel limits 
+        if (!check_borders({x_f, y_f, max_limits[2]}, radius*sqrt(1+volume_inc_perc))){
             achieved = true;
             initial_point = {x_i, y_i, min_limits[2]};
             target_point = {x_f, y_f, max_limits[2]};
@@ -128,10 +139,20 @@ void AxonGammaDistribution::find_target_point (double c2, double radius, Eigen::
     }
 }
 
-
+void display_progress(double nbr_axons, double number_obstacles){
+    int cTotalLength = 50;
+    double lProgress = nbr_axons/number_obstacles;
+    cout << 
+        "\r[" <<                                            //'\r' aka carriage return should move printer's cursor back at the beginning of the current line
+            string(int(cTotalLength * lProgress), '*') <<        //printing filled part
+            string(int(cTotalLength * (1 - lProgress)), '-') <<  //printing empty part
+        "] "  << nbr_axons << "/" << number_obstacles << endl;          //printing percentage
+} 
 void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 {
-    // generate the gamma distribution
+    /* 
+        Generates the gamma distribution of axons. 
+    */
     std::random_device rd;
     std::default_random_engine generator(rd());
     std::gamma_distribution<double> distribution(alpha, beta);
@@ -148,7 +169,6 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
     std::vector<double> radiis(num_obstacles, 0);
 
     int number_swelling_axons = int(num_obstacles * dyn_perc);
-    //std::vector<int> swell_cyl_id(number_swelling_cylinders, 0);
     std::vector<bool> bool_swell_ax_id(num_obstacles, false);
 
     bool achieved = false;
@@ -158,8 +178,9 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
     string message;
 
     auto start = high_resolution_clock::now();
+    cout << " Growing axons " << endl;
 
-    // create list of ids that correspond to dynamic axons based on percentage input
+    // create list bools that show whether an axon has the potential to swell
     for (unsigned i = 0; i < number_swelling_axons; ++i)
     {
         int random_id = rand() % num_obstacles;
@@ -169,7 +190,6 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
                 random_id = rand() % num_obstacles;
             }
         }
-        //swell_cyl_id[i] = random_id;
         bool_swell_ax_id[random_id] = true;
     }
 
@@ -177,7 +197,6 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
     for (unsigned i = 0; i < num_obstacles; ++i)
     {
         
-
         if (tried > 1000)
         {
             message = " Radii distribution cannot be sampled [Min. radius Error]\n";
@@ -186,6 +205,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
         }
         double jkr = distribution(generator);
 
+        // generates the radii in a list
         if (jkr < this->min_radius)
         {
             i--;
@@ -198,7 +218,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
     }
 
 
-    // using a lambda function:
+    // sorts the radii 
     std::sort(radiis.begin(), radiis.end(), [](const double a, double b) -> bool
               { return a > b; });
 
@@ -219,7 +239,6 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
         for (uint t = 0; t < repetition; t++)
         {
-            //vector<Axon> axons_to_add;
 
             axons.clear();
 
@@ -230,19 +249,18 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
             for (unsigned i = 0; i < num_obstacles; i++)
             {
+                
                 if(stuck < 3000){
 
                     if (c2 == 1){
-                    double t = udist(gen);
-                    double distance_to_border = radiis[i]*sqrt(1+volume_inc_perc) + barrier_tickness;
-                    double x = (t * (max_limits[0]-distance_to_border)) + (1 - t) * (min_limits[0]+ distance_to_border);
-                    t = udist(gen);
-                    double y = (t * (max_limits[1]-distance_to_border) + (1 - t) * (min_limits[1]+ distance_to_border));
+                        double t = udist(gen);
+                        double distance_to_border = radiis[i]*sqrt(1+volume_inc_perc) + barrier_tickness;
+                        double x = (t * (max_limits[0]-distance_to_border)) + (1 - t) * (min_limits[0]+ distance_to_border);
+                        t = udist(gen);
+                        double y = (t * (max_limits[1]-distance_to_border) + (1 - t) * (min_limits[1]+ distance_to_border));
 
-                    //out << " obstacle :"<< i << endl;
-
-                    Q = {x, y, min_limits[2]};
-                    D = {x, y, max_limits[2]};
+                        Q = {x, y, min_limits[2]};
+                        D = {x, y, max_limits[2]};
                     }
                     else{
 
@@ -264,7 +282,8 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
                         i -= 1; 
                         stuck += 1;
                         continue;
-                    }  
+                    }
+                    display_progress(axons.size(), num_obstacles);
                 }
 
                 int dummy;
@@ -495,12 +514,11 @@ bool AxonGammaDistribution::find_next_center(Axon ax, Dynamic_Sphere& s, double 
 
     while(!achieved && tries < max_tries){
         tie(phi_to_target, gamma_to_target) = phi_gamma_to_target (prev_pos, new_pos, ax.end,  out);
-
+        std::normal_distribution<float> phi_dist (phi_to_target/M_PI, 0.05); 
+        std::normal_distribution<float> gamma_dist (gamma_to_target/M_PI, 0.05); 
         while (angle_between >= M_PI/3){
-            std::normal_distribution<float> phi_dist (phi_to_target/M_PI, 0.1); 
             phi = phi_dist(gen)*M_PI;
             //phi = phi_to_target;
-            std::normal_distribution<float> gamma_dist (gamma_to_target/M_PI, 0.1); 
             gamma = gamma_dist(gen)*M_PI;
             //gamma = gamma_to_target;
 
@@ -522,9 +540,6 @@ bool AxonGammaDistribution::find_next_center(Axon ax, Dynamic_Sphere& s, double 
 
             angle_between = acos(pos_to_new_pos.dot(prev_to_pos));
 
-            if(angle_between >= M_PI/3){
-                out << "angle: " << angle_between/M_PI <<  endl;
-            }
 
             //out << "angle between :" << angle_between/M_PI << " PI " << endl;
         }
@@ -629,8 +644,6 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
     int fibre_collapsed_nbr = 0;
     double shrink_perc = 0.0;
 
-    out << "try_axon :" << axon_id << endl;
-
     if(isSphereColliding(s1)) {
         return spheres_to_add;
     }
@@ -692,13 +705,13 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
     }while (new_pos[2] < ax.end[2]);
 
     // add spheres to spheres_to_add
-    out << "spheres :" << endl;
+    //out << "spheres :" << endl;
     bool last_sphere_add =false;
     for (unsigned i=0; i< sph_radii.size(); ++i){
         if (!last_sphere_add && centers[i][2]<= max_limits[2]){
             Dynamic_Sphere s(centers[i], sph_radii[i],ax.volume_inc_perc,ax.swell, axon_id, 1, ax.active_state);
             spheres_to_add.push_back(s);
-            out << "sphere at : " << centers[i] << endl;
+            //out << "sphere at : " << centers[i] << endl;
         }
         else if (!last_sphere_add){
             double dist_i_1= abs((centers[i-1] - max_limits).norm());
@@ -714,11 +727,11 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
             last_sphere_add = true;
             if (!isSphereColliding(last_sphere)){
                 spheres_to_add.push_back(last_sphere);
-                out << "last sphere add : " << last_center << endl;
+                //out << "last sphere add : " << last_center << endl;
             }
         }
         if(last_sphere_add){
-            out << "distance to target :" << (centers[centers.size()-1]-ax.end).norm() << endl;
+            //out << "distance to target :" << (centers[centers.size()-1]-ax.end).norm() << endl;
             return spheres_to_add;
         }
         //out << " radius " << i << " :" << sph_radii[i] << endl;
