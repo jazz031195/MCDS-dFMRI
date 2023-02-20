@@ -28,7 +28,7 @@ def get_nbr_cylinders ():
                 nbr_cylinders = int(line.split(' ')[1][:-1])
     return nbr_cylinders
 
-def get_cylinder_array(file):
+def get_first_cylinder_array(file):
     nbr_cylinders = 50
     cylinder_array = np.zeros((nbr_cylinders,5))
     prev_length = 0
@@ -47,11 +47,32 @@ def get_cylinder_array(file):
 
     return cylinder_array
 
+
+def get_last_cylinder_array(file):
+    nbr_cylinders = 50
+    cylinder_array = np.zeros((nbr_cylinders,5))
+    with open(file) as f:
+        e = 0
+        prev_line = ""
+        line_nbr = 0
+        for line in f.readlines():
+
+            if e< nbr_cylinders:
+
+                if (line_nbr>6 and len(line.split(' ')) <3 and len(prev_line.split(' '))>4):
+                    
+                    cylinder_array[e] = np.array([float(i)*0.001 for i in prev_line.split(' ')[:]])
+                    e = e+1
+            prev_line= line
+            line_nbr = line_nbr+1
+
+    return cylinder_array
+
 def draw_cercles(cylinder_array, swell = False):
     r = []
     fig, ax = plt.subplots(ncols = 2) 
 
-    print(cylinder_array.shape)
+    print(cylinder_array)
 
     for i in range(cylinder_array.shape[0]):
         radius = cylinder_array[i][-2]
@@ -82,9 +103,12 @@ def draw_cercles(cylinder_array, swell = False):
 
 def main():
 
-    file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/_rep_00_gamma_distributed_axon_list.txt"
+    file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/_rep_01_gamma_distributed_axon_list.txt"
 
-    cylinder_array = get_cylinder_array(file)
+    cylinder_array = get_first_cylinder_array(file)
+    draw_cercles(cylinder_array)
+
+    cylinder_array = get_last_cylinder_array(file)
     draw_cercles(cylinder_array)
 
 main()

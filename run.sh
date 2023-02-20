@@ -2,7 +2,7 @@
 # see make_conf_file.py to see the parameters to use
 
 # location : "extra" or "intra"
-declare -a locs=("extra" "intra"); 
+declare -a locs=("intra" "extra"); 
 #state : "active" or "rest"
 declare -a states=("rest" "active");
 #number of time steps
@@ -24,6 +24,7 @@ do
     python3 make_conf_file.py -a $a -i "${icvf[i]}" -c $c2 -x true
     ./MCDC_Simulator_public-master/src/main "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedAxons.conf"
 
+    rm "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/axons/nbr_axons_{$a}_icvf_{${icvf[i]}}_DWI.txt"
     echo "Substrate with icvf of ${icvf[i]} is created !"
     for l in "${locs[@]}";
     do

@@ -70,11 +70,9 @@ bool Sentinel::checkErrors(Walker &walker, const Parameters &params, bool noPLY,
     if( (walker.location != Walker::unknown) && (params.obstacle_permeability <= 0.0) ){
 
         if(walker.initial_location != walker.location){
-            cout << "walker.location : " << walker.location << endl;
-            setCrossingError(uint(walker.in_obj_index));
+            setCrossingError(uint(walker.in_ax_index));
             illegal_count++;
             throw(this->error);
-            cout <<  "illegal_count++" << endl;
         }
     }
 
@@ -97,7 +95,6 @@ void Sentinel::deportationProcess(Walker &walker, unsigned& w, unsigned &t, bool
             cout << endl <<  SH_FG_GRAY <<  "[INFO]   " << SH_DEFAULT << " Sim: " << id << " " <<
                     "Walker "<< w << " labeled as 'stuck' after " << this->bouncings <<
                     " bouncings.\nBacktraking...\nDone" << endl;
-        w--;
         back_tracking = true;
     }
 
@@ -107,7 +104,6 @@ void Sentinel::deportationProcess(Walker &walker, unsigned& w, unsigned &t, bool
             cout << endl <<  SH_FG_GRAY <<  "[INFO]   " << SH_DEFAULT << " Sim: " << id << " " <<
                     "Walker "<< w << " labeled as 'illegal' after crossing obstacle id: " << this->obstacle_id <<
                     "\nBacktraking...\nDone" << endl;
-        w--;
         back_tracking = true;
     }
 

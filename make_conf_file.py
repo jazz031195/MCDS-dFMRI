@@ -33,13 +33,14 @@ def write_conf_file_create_axons(N, T, exp_prefix, icvf , num_axons, c2):
     lines.append("write_traj_file 0")
     lines.append("<obstacle>")
     lines.append("<axon_gamma_packing>")
-    lines.append("alpha 2")
-    lines.append("beta 0.25")
+    lines.append("alpha 5")
+    lines.append("beta 0.1")
     lines.append("icvf "+str(icvf))
     lines.append("num_axons "+str(num_axons))
     lines.append("percentage_dynamic_axons 0.3")
     lines.append("percentage_increase_of_volume 0.01")
     lines.append("c2 "+str(c2))
+    lines.append("tortuous true")
     lines.append("</axon_gamma_packing>")
     lines.append("</obstacle>")
     lines.append("ini_walkers_pos extra")
@@ -79,7 +80,9 @@ def write_conf_file(N, T, activation, exp_prefix, location, axons_list_prefix):
     lines.append("write_txt 1")
     lines.append("write_bin 0")
     lines.append("write_traj_file 0")
+    lines.append("<obstacle>")
     lines.append("axon_list /home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/axons/"+str(axons_list_prefix)+"_gamma_distributed_axon_list.txt")
+    lines.append("</obstacle>")
     lines.append("ini_walkers_pos "+ str(location))
     lines.append("num_process 10")
     lines.append("<END>")
@@ -106,8 +109,7 @@ def get_variables():
     loc = None 
     state = None
     icvf = None
-    k = None
-    concentration = 100000
+    concentration = 1000
     create_substrate_ = "true"
 
     argv = sys.argv[1:]
@@ -147,9 +149,9 @@ def get_variables():
 
     # number of particles is set as a function on the compartment and icvf choices 
     if (loc == "intra") :
-        N = float(icvf)*concentration
+        N = int(float(icvf)*concentration)
     else :
-        N = (1-float(icvf))*concentration
+        N = int((1-float(icvf))*concentration)
 
         
         

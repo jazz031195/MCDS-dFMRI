@@ -38,6 +38,7 @@ public:
     Eigen::Vector3d max_limits;                     /*!< voxel max limits (if any)                                                  */
     
     bool active_state;
+    bool tortuous;
 
     double duration; 
     std::vector<double> tortuosities;
@@ -58,7 +59,7 @@ public:
      *  \param scale scale factor for the values passed. Useful when reading a file.
      *  \brief Initialize everything.
      */
-    AxonGammaDistribution(double, double, unsigned, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius = 0.001, bool active_state = false, double c2 = 1.0);
+    AxonGammaDistribution(double, double, unsigned, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius = 0.001, bool active_state = false, double c2 = 1.0, bool tortuous = false);
      
      /*!
      *  \brief Shows a small histogram of the gamma distribution

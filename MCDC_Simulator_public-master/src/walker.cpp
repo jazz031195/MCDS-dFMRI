@@ -20,6 +20,7 @@ Walker::Walker()
     in_obj_index =-1;
     in_ax_index = -1;
     in_sph_index = -1;
+    in_cyl_index = -1;
 }
 
 Walker::Walker(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax)

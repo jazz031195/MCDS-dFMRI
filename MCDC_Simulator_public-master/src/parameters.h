@@ -85,7 +85,7 @@ public:
     unsigned    gamma_num_obstacles;
     float       min_obstacle_radii;                 /*!< Minimum radii (in um) to be sampled                                        */
     double c2;                                      /*!< for Orientation Density Function of axons (instead of kappa)                                                   */
-
+    bool tortuous = false;
 
     bool subdivision_flag           = false;        /*!< flag to check if we have several voxel subdivision to compute the signal   */
     unsigned number_subdivisions    = 0;            /*!< saves the number of subdivisions for an initialzied voxel (needed)         */
