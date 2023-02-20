@@ -81,6 +81,7 @@ void NeuronDistribution::createSubstrate()
                     Eigen::Vector3d soma_center = {x, y, z};
                     double soma_radius = 5e-3; //mm
 
+                    // If too close to the border, discard
                     if ((x - min_limits_vx[0] <= barrier_tickness + soma_radius) ||
                         (max_limits_vx[0] - x <= barrier_tickness + soma_radius) ||
                         (y - min_limits_vx[1] <= barrier_tickness + soma_radius) ||

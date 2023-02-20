@@ -69,7 +69,7 @@ ParallelMCSimulation::ParallelMCSimulation(Parameters &params)
 ParallelMCSimulation::~ParallelMCSimulation()
 {
     for(unsigned i = 0; i < simulations.size(); i++){
-        delete &simulations[i];
+        delete simulations[i];
     }
 }
 
