@@ -4,16 +4,18 @@ This code allows for the creation of a phantom substrate and the simulation of r
 
 # Make configuration files
 
-To create 3 configurations (conf1, conf2, conf3), run : ./create_configs.sh
+make_conf_file.py can be used to create a configuration file with desired parameters. 
 
-In the MCDC_Simulator_public-master/instructions/demos/ouput folder, a dynamic_cylinder folder is created with the new conf1.txt, conf2.txt and conf3.txt files.
+- a : number of axons
+- t : number of time points
+- l : localisation (intra or extra)
+- s : state (active or rest)
+- i : icvf
+- c : c2 for ODF (= 1 for no crossing fibers)
+- x : creates a substrate if true or reads a substrate from a file if false
 
-# Run simulation on a chosen configuration
-To run the simulation, you must first make modifications in the run.sh file. run.sh has many loops so that the simulation runs for different locations (intra or extra), different states (active or rest), different folder names to save the output data (usually named after the number of molecules chosen), different number of walkers and different configurations (ex : con1, conf2, conf3).
-
-Adjust run.sh to your needs and execute it with ./run.sh.
-
-New folders will be created with your data organised in them.
+# Run simulation 
+To run the simulation, modify the run.sh to adapt the parameters. Then simply ./run.sh.
 
 
  
