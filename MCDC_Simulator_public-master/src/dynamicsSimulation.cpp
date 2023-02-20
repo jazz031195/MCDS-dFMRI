@@ -34,18 +34,18 @@ using namespace sentinels;
 DynamicsSimulation::DynamicsSimulation() {
     plyObstacles_list = nullptr;
     spheres_list      = nullptr;
-    dyn_spheres_list      = nullptr;
+    dyn_spheres_list  = nullptr;
     cylinders_list    = nullptr;
-    dyn_cylinders_list    = nullptr;
-    axons_list    = nullptr;
-    neurons_list    = nullptr;
+    dyn_cylinders_list= nullptr;
+    axons_list        = nullptr;
+    neurons_list      = nullptr;
 
     params.num_walkers = 1; //N
     params.num_steps   = 1; //T
     params.traj_file   = "";
     ini_pos_file       = "";
     completed          = 0;
-    max_simulation_time = 0;
+    max_simulation_time= 0;
 
     params.sim_duration = 1; //secs
 
@@ -79,10 +79,10 @@ DynamicsSimulation::DynamicsSimulation(std::string conf_file) {
     plyObstacles_list = nullptr;
     spheres_list      = nullptr;
     cylinders_list    = nullptr;
-    dyn_spheres_list      = nullptr;
-    dyn_cylinders_list    = nullptr;
-    axons_list    = nullptr;
-    neurons_list    = nullptr;
+    dyn_spheres_list  = nullptr;
+    dyn_cylinders_list= nullptr;
+    axons_list        = nullptr;
+    neurons_list      = nullptr;
 
 
     completed = 0;
@@ -115,10 +115,10 @@ DynamicsSimulation::DynamicsSimulation(Parameters& params_) {
     plyObstacles_list = nullptr;
     spheres_list      = nullptr;
     cylinders_list    = nullptr;
-    dyn_spheres_list      = nullptr;
-    dyn_cylinders_list    = nullptr;
-    axons_list    = nullptr;
-    neurons_list    = nullptr;
+    dyn_spheres_list  = nullptr;
+    dyn_cylinders_list= nullptr;
+    axons_list        = nullptr;
+    neurons_list      = nullptr;
 
 
     params = params_;
@@ -1043,6 +1043,7 @@ bool DynamicsSimulation::isInsideNeurons(Vector3d &position, int &neuron_id, dou
         if (isinside)
         {
             neuron_id = i;
+            intra_tries++;
             return true;
             break;
         }

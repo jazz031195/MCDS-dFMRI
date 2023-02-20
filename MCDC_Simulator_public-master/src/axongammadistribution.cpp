@@ -278,7 +278,7 @@ double AxonGammaDistribution::computeICVF(std::vector<Axon> &axons, Vector3d &mi
     if (axons.size() == 0)
         return 0;
 
-    double AreaV = (max_limits[0] - min_limits[0]) * (max_limits[1] - min_limits[1])*(max_limits[2] - min_limits[2]);
+    double AreaV = (max_limits[0] - min_limits[0]) * (max_limits[1] - min_limits[1]) * (max_limits[2] - min_limits[2]);
 
     double AreaC = 0;
 

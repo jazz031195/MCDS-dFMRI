@@ -4,8 +4,8 @@ import numpy as np
 
 with open('/home/localadmin/Documents/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_neurons_list.txt') as f:
     lines = f.readlines()
-    fig = plt.figure()
-    ax = plt.axes(projection='3d')
+    fig   = plt.figure()
+    ax    = plt.axes(projection='3d')
 
     for i in range(len(lines)):
         coords = lines[i].split(' ')

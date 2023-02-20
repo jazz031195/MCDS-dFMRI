@@ -110,7 +110,6 @@ void Axon::set_spheres(std::vector<Dynamic_Sphere> spheres_to_add, int axon_id){
     }
     // create projections
     add_projection(axon_id);
-
 }
 
 bool Axon::isNearAxon(Vector3d &position,  double distance_to_be_inside){
@@ -582,6 +581,34 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
         return false;   
     }
 
+}
+
+double Axon::volumeAxon()
+{
+    double volume = 0;
+    double tortuosity;
+    double ax_length = 0;
+    double mean_rad  = 0;
+    if (spheres.size() > 0)
+    {
+        for (uint j = 0; j < spheres.size(); j++){
+            if (j > 0){
+                // Length between two adjacent spheres' centers
+                double l = (spheres[j-1].center - spheres[j].center).norm();
+                ax_length += l;
+            }
+            mean_rad += spheres[j].radius;
+        }
+        mean_rad   = mean_rad/spheres.size();
+        tortuosity = ax_length/((this->begin - this->end).norm());
+        volume     = M_PI * mean_rad * mean_rad * ax_length;
+    }
+    else
+    {
+        //TODO : throw an error
+    }
+    
+    return volume;
 }
 
 

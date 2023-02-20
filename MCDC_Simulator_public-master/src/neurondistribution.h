@@ -64,7 +64,7 @@ private:
      *  \param 
      *  \param 
     */
-    double computeICVF(std::vector<Axon> &axons, Eigen::Vector3d &min_limits, Eigen::Vector3d &max_limits, int &num_no_repeat);
+    double computeICVF(std::vector<Neuron> &neurons, Eigen::Vector3d &min_limits, Eigen::Vector3d &max_limits);
     void computeMinimalSize(std::vector<double> radiis, double icvf_, Eigen::Vector3d& l);
 
 

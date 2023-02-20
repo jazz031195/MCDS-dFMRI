@@ -400,7 +400,7 @@ void ParallelMCSimulation::jointResults()
         icvf+=           simulations[i]->dynamicsEngine->num_simulated_walkers*simulations[i]->dynamicsEngine->icvf;
     }
 
-    icvf/= float(this->total_sim_particles);
+    icvf /= float(this->total_sim_particles);
 
     if(params.custom_sampling_area == false and params.voxels_list.size()>0){
         for(auto i = 0; i<3;i++){
@@ -854,7 +854,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
         for( std::string line; getline( in, line ); ){
             
             std::vector<std::string> jkr = _split_(line,' ');
-            int ax_id = -1;
+            int ax_id;
             if(jkr.size() == 5){
                 x = stod(jkr[0]);
                 y = stod(jkr[1]);
@@ -866,7 +866,8 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 cout << "adding sphere,  min radius :" << sphere_.min_radius <<", max radius :" << sphere_.max_radius <<", radius :" << sphere_.radius << ", swell : " << sphere_.swell << endl;
             
             }
-            if(jkr.size() == 2){
+
+            if(jkr.size() == 3 ){
                 ax_id = stod(jkr[1]);
                 Eigen::Vector3d begin = {min_limits, min_limits, min_limits};
                 Eigen::Vector3d end = {max_limits, max_limits, max_limits};
@@ -884,6 +885,116 @@ void ParallelMCSimulation::addObstaclesFromFiles()
         params.volume_inc_perc = volume_inc_perc;
         params.gamma_icvf = icvf;
         params.dyn_perc = dyn_perc;
+
+        in.close();
+    }
+
+
+    // Read neurons from file
+    for(unsigned i = 0; i < params.neurons_files.size(); i++){
+
+        std::ifstream in(params.neurons_files[i]);
+
+        if(!in){
+            std::cout <<  "[ERROR] Unable to open:" << params.neurons_files[i] << std::endl;
+            return;
+        }
+        unsigned enum_ = 1;
+
+        bool first = true;
+
+        for( std::string line; getline( in, line ); )
+        {
+            if(first) {
+                first  = false;
+                enum_ += 1;
+                continue;
+                }
+            if (enum_ == 2 || enum_ == 3 || enum_ == 4 || enum_ == 5 || enum_ == 6){
+                enum_ += 1;
+                continue;
+            }
+
+            std::vector<std::string> jkr = _split_(line,' ');
+            if (jkr.size() != 5 && jkr.size() != 2){
+                std::cout << jkr.size() <<  " elements per line" << std::endl;
+                std::cout << "wrong number of elements per line in file" << std::endl;
+            }
+            break;
+        }
+        in.close();
+
+        in.open(params.neurons_files[i]);
+
+        double x,y,z,r;
+        double scale;
+        bool s;
+        double volume_inc_perc, dyn_perc, icvf;
+        double max_limits, min_limits;
+
+        in >> scale;
+        in >> volume_inc_perc;
+        in >> dyn_perc;
+        in >> icvf;
+        in >> min_limits;
+        in >> max_limits;
+
+        std::vector<Dynamic_Sphere> spheres_ ;
+        std::vector<Axon> axons_ ;
+        Dynamic_Sphere sphere_;
+        Dynamic_Sphere soma;
+        string part;
+        int id;
+
+        for( std::string line; getline( in, line ); ){
+            
+            std::vector<std::string> jkr = _split_(line,' ');
+            if(jkr.size() == 5){
+                x = stod(jkr[0]);
+                y = stod(jkr[1]);
+                z = stod(jkr[2]);
+                r = stod(jkr[3]);
+                s = stod(jkr[4]);
+                sphere_ = Dynamic_Sphere(Eigen::Vector3d(x,y,z), r, volume_inc_perc, s, id, scale, params.active_state);
+                spheres_.push_back(sphere_);
+                cout << "adding sphere,  min radius :" << sphere_.min_radius <<", max radius :" << sphere_.max_radius <<", radius :" << sphere_.radius << ", swell : " << sphere_.swell << endl;
+            
+            }
+            if(jkr.size() == 2){
+                part = jkr[0];
+                id = stod(jkr[1]);
+
+                // If flag "soma", create a soma
+                if( part.find("Soma") != std::string::npos && spheres_.size() == 1)
+                {
+                    soma = spheres_[0];
+                    spheres_.clear();
+                }
+                else if( part.find("Dendrite") != std::string::npos && spheres_.size() > 0)
+                {
+                    Eigen::Vector3d begin = {min_limits, min_limits, min_limits};
+                    Eigen::Vector3d end   = {max_limits, max_limits, max_limits};
+                    Axon axon (r, begin, end, volume_inc_perc, params.active_state, s, scale);
+                    axon.set_spheres(spheres_, id);
+                    spheres_.clear();
+                    axons_.push_back(axon);
+                    cout << "adding axon: "  << id << ", radius: " << axon.radius << endl;
+                }
+                else if( part.find("Neuron") != std::string::npos && axons_.size() > 0)
+                {
+                    Neuron neuron(axons_, soma);
+                    neurons_list.push_back(neuron);
+                    axons_.clear();
+                    cout << "adding neuron: "  << id << ", nb_dendrites: " << neuron.nb_dendrites << endl;
+                }
+            }
+        }
+
+        params.max_limits = Eigen::Vector3d(max_limits, max_limits, max_limits);
+        params.min_limits = Eigen::Vector3d(min_limits, min_limits, min_limits);
+        params.volume_inc_perc = volume_inc_perc;
+        params.gamma_icvf      = icvf;
+        params.dyn_perc        = dyn_perc;
 
         in.close();
     }

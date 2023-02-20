@@ -26,13 +26,8 @@ Neuron::Neuron()
     // Generate int number in [lb, ub]
     nb_dendrites = dist_dendrites(rng);
 
-    ub = 5; // upper bound for span_radius 
-    lb = 2; // lower bound for span_radius 
-    uniform_int_distribution<mt19937::result_type> dist_span_radius(lb, ub);
-
-    // Generate int number in [lb, ub], in [mm]
-    span_radius  = dist_span_radius(rng);
-    span_radius /= 10;
+    // Create a random span radius and set its value to this
+    generateSpanRadius();
 
 }
 
@@ -43,8 +38,9 @@ Neuron::~Neuron()
 
 Neuron::Neuron(vector<Axon> dendrites_, Dynamic_Sphere soma_) : Neuron()
 {
-    dendrites = dendrites_;          
-    soma = soma_;
+    dendrites    = dendrites_;     
+    nb_dendrites = dendrites_.size();
+    soma         = soma_;
 }
 
 Neuron::Neuron(Vector3d soma_center, double soma_radius=5e-3) : Neuron()
@@ -54,8 +50,9 @@ Neuron::Neuron(Vector3d soma_center, double soma_radius=5e-3) : Neuron()
 
 Neuron::Neuron(vector<Axon> dendrites_, Vector3d soma_center, double soma_radius=5e-3) : Neuron()
 {
-    dendrites = dendrites_;          
-    soma      = Dynamic_Sphere(soma_center, soma_radius);
+    dendrites    = dendrites_; 
+    nb_dendrites = dendrites_.size();        
+    soma         = Dynamic_Sphere(soma_center, soma_radius);
 }
 
 Neuron::Neuron(const Neuron &neuron)
@@ -291,3 +288,23 @@ tuple<string, int, int> Neuron::closest_sphere_dichotomy(Walker &walker, double 
         return {neuron_part, part_id, 0};
     }
 } 
+
+
+void Neuron::set_axons(std::vector<Axon> axons_to_add, int axon_id)
+{
+    if (axons_to_add.size() != 0)
+    {
+        dendrites = axons_to_add;
+    }
+}
+
+void Neuron::generateSpanRadius(int lower_bound, int upper_bound)
+{
+    random_device dev;
+    mt19937 rng(dev());
+    uniform_int_distribution<mt19937::result_type> dist_span_radius(lower_bound, upper_bound);
+
+    // Generate int number in [lb, ub], in [mm]
+    span_radius  = dist_span_radius(rng);
+    span_radius /= 10;
+}

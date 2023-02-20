@@ -58,7 +58,8 @@ public:
     /* Find the closest sphere between a walker and a neuron */
     std::tuple<std::string, int, int> closest_sphere_dichotomy(Walker &walker, double &step_lenght, double barrier_tickness);
     bool intersection_sphere_vector(double &intercept1, double &intercept2, Dynamic_Sphere &s, Eigen::Vector3d &step_dir, double &step_length, Eigen::Vector3d &traj_orig, double &c);
-
+    void set_axons(std::vector<Axon> axons, int ax_id);
+    void generateSpanRadius(int lower_bound=2, int upper_bound=5);
 
 };
 

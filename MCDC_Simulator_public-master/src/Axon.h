@@ -33,6 +33,7 @@ public:
     Eigen::Vector3d end;
     double volume_inc_perc;
     bool active_state;
+    double tortuosity; /* Total length of an axon divided by the distance between begin and end (as if it was a straight cylinder)*/
     Projections projections;
     Projections projections_max;
 
@@ -45,7 +46,7 @@ public:
     ~Axon();
 
 
-    Axon(double min_radius_,  Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , double scale):min_radius(min_radius_*scale), begin(begin_*scale),end(end_*scale),volume_inc_perc(volume_inc_perc_), active_state(active_state_), swell(swell_){
+    Axon(double min_radius_,  Eigen::Vector3d begin_, Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , double scale):min_radius(min_radius_*scale), begin(begin_*scale),end(end_*scale),volume_inc_perc(volume_inc_perc_), active_state(active_state_), swell(swell_){
 
         radius = min_radius;
         spheres.clear();
@@ -89,6 +90,8 @@ public:
     bool isNearAxon(Eigen::Vector3d &position,  double distance_to_be_inside);
     bool isPosInsideAxon(Eigen::Vector3d &position,  double distance_to_be_inside, bool swell_);
     int closest_sphere_dichotomy(Walker &walker, double &step_lenght);
+    /* Calculate the volume of the current axon and update its tortuosity */
+    double volumeAxon();
 
 };
 

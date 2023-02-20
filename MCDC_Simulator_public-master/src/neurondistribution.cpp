@@ -105,14 +105,8 @@ void NeuronDistribution::createSubstrate()
                     
                 }
 
-                // int dummy;
-                // double icvf_current = computeICVF(spheres,min_limits_vx, max_limits_vx,dummy);
-                // if(icvf_current > best_icvf ){
-                //     best_icvf = icvf_current;
-                //     best_spheres.clear();
-                //     best_spheres = spheres;
-                //     best_max_limits = max_limits;
-                // }
+                icvf = computeICVF(neurons, min_limits_vx, max_limits_vx);
+
             } // end for spheres
 
             // if(this->icvf - best_icvf  < 0.0005){
@@ -205,26 +199,39 @@ void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
 
 void NeuronDistribution::printSubstrate(ostream &out)
 {
-    out << 1e-3 << endl;
+    out << 1 << endl; //scale
+    out << 0 << endl; //volume_inc_perc
+    out << 0 << endl; //dyn_perc
     out << icvf << endl;
+    out << 0 << endl; //min_limits [mm]
+    out << 0.1 << endl; //max_limits [mm]
 
     for (unsigned i = 0; i < neurons.size(); i++)
     {
-        out << neurons[i].soma.center[0] << " " << neurons[i].soma.center[1] << " "
+        // Print for soma : x y z r bool_active
+        // bool_active = 1 if the sphere can be activated (swollen)
+        out << neurons[i].soma.center[0] << " " 
+        << neurons[i].soma.center[1] << " "
         << neurons[i].soma.center[2] << " "
-        << neurons[i].soma.radius << endl;
+        << neurons[i].soma.radius    <<  " "
+        << 0 << endl; //bool_active = false for now
+        out << "Soma " + to_string(i) << endl;
 
         for (unsigned j = 0; j < neurons[i].dendrites.size(); j++)
         {
             for (int k = 0; k < neurons[i].dendrites[j].spheres.size(); k++)
             {
+                // Print for each dendrite, each sphere
                 out << neurons[i].dendrites[j].spheres[k].center[0] << " "
                 << neurons[i].dendrites[j].spheres[k].center[1] << " "
                 << neurons[i].dendrites[j].spheres[k].center[2] << " "
                 << neurons[i].dendrites[j].spheres[k].radius << " "
-                << endl;
+                << 0 << endl; //bool_active = false for now
             }
+            out << "Dendrite " + to_string(j) << endl;
+
         }
+        out << "Neuron " + to_string(i) << endl;
     }
 }
 
@@ -241,3 +248,27 @@ bool NeuronDistribution::isInVoxel(Eigen::Vector3d pos, double distance_to_borde
     }
     return true;   
 }
+
+double NeuronDistribution::computeICVF(vector<Neuron> &neurons, Vector3d &min_limits, Vector3d &max_limits)
+{
+
+    if (neurons.size() == 0)
+        return 0;
+
+    double VolumeVoxel = (max_limits[0] - min_limits[0]) * (max_limits[1] - min_limits[1]) * (max_limits[2] - min_limits[2]);
+    double VolumeNeuron = 0;
+   
+    for (uint i = 0; i < neurons.size(); i++)
+    {
+        // Calculate the volume of the soma
+        VolumeNeuron += 4/3*M_PI*pow(neurons[i].soma.radius, 3);
+
+        // Calculate the cylindrical volume of each dendrite
+        for (uint j = 0; j < neurons[i].nb_dendrites; j++)
+        {
+            VolumeNeuron += neurons[i].dendrites[j].volumeAxon();
+        }      
+    }
+    return VolumeNeuron / VolumeVoxel;
+}
+

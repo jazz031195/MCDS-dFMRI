@@ -68,13 +68,13 @@ MCSimulation::MCSimulation(std::string config_file)
 MCSimulation::MCSimulation(Parameters& params_)
 {
     plyObstacles_list = nullptr;
-    dynamicsEngine = nullptr;
-    dataSynth      = nullptr;
-    sphere_list    = nullptr;
-    cylinder_list = nullptr;
+    dynamicsEngine    = nullptr;
+    dataSynth         = nullptr;
+    sphere_list       = nullptr;
+    cylinder_list     = nullptr;
     dyn_cylinder_list = nullptr;
-    dyn_sphere_list = nullptr;
-    axon_list= nullptr;
+    dyn_sphere_list   = nullptr;
+    axon_list         = nullptr;
 
 
     params = params_;
@@ -150,15 +150,11 @@ void MCSimulation::iniObstacles()
 
 void MCSimulation::addObstacles()
 {
-
     this->dynamicsEngine->cylinders_list = this->cylinder_list;
     this->dynamicsEngine->spheres_list   = this->sphere_list;
-
     this->dynamicsEngine->dyn_cylinders_list = this->dyn_cylinder_list;
-    //this->dynamicsEngine->dyn_spheres_list = this->dyn_sphere_list;
     this->dynamicsEngine->axons_list = this->axon_list;
     this->dynamicsEngine->neurons_list = this->neuron_list;
-
 }
 
 
