@@ -99,8 +99,8 @@ public:
     bool log_phase_shift = false;                   /*!< flag, true to save the final phase shift distribution                      */
     bool log_opp         = false;                   /*!< flag, true to save one per process output                                  */
     bool discard_stucks  = true;                    /*!< flag, true to discard posible stuck particles (max bouncing reached)       */
-    bool discard_illegals = true;                   /*!< flag, true to discard possible illegal  crossings, Trump by default.       */
-    bool log_propagator = false;                    /*!< flag, true saves the propagator for a given set of directions and times    */
+    bool discard_illegals= true;                   /*!< flag, true to discard possible illegal  crossings, Trump by default.       */
+    bool log_propagator  = false;                    /*!< flag, true saves the propagator for a given set of directions and times    */
 
     Eigen::Vector3d min_sampling_area;              /*!< Min defining point to delimiter the uniform sampling of walkers            */
     Eigen::Vector3d max_sampling_area;              /*!< Max defining point to delimiter the uniform sampling of walkers            */

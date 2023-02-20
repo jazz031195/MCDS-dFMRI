@@ -16,7 +16,6 @@ NeuronDistribution::NeuronDistribution(unsigned num_obstacles_, double icvf_, Ei
     projections_x.clear();
     projections_y.clear();
     projections_z.clear();
-    //for checking collision
     
     string message = "neurons : " + std::to_string(this->num_obstacles) + " \n";
     SimErrno::info(message, std::cout);
@@ -68,6 +67,7 @@ void NeuronDistribution::createSubstrate()
 
         for(uint t = 0 ;  t < repetition; t++){
             neurons.clear();
+            int nb_neurons = 0;
             for(unsigned i = 0 ; i < num_obstacles; i++){
                 unsigned stuck = 0;
                 while(++stuck <= 1000){
@@ -91,18 +91,14 @@ void NeuronDistribution::createSubstrate()
                         {
                             continue;
                         } 
-                    Neuron neuron(soma_center, soma_radius);
-                    growDendrites(neuron, i);
-
-                    bool collision = false;
-                    //checkForCollition(neuron, min_limits_vx, max_limits_vx, neurons_to_add, min_distance);
-
-                    if(!collision){
+                    if (!isSphereColliding(soma_center, soma_radius))
+                    {
+                        Neuron neuron(soma_center, soma_radius);
+                        growDendrites(neuron, i); 
                         neurons.push_back(neuron);
-                        achieved = true;
+                        nb_neurons++;
                         break;
-                    }
-                    
+                    }         
                 }
 
                 icvf = computeICVF(neurons, min_limits_vx, max_limits_vx);
@@ -167,7 +163,10 @@ void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
             double sphere_radius = 0.5e-3;
             // If the vector is not already contained in start_dendrites, add it. 
             // Otherwise, decrement i and do one more round
-            if((i != 0) && std::count(start_dendrites.begin(), start_dendrites.end(), dendrite_start) && (!isInVoxel(dendrite_start, sphere_radius + barrier_tickness))){ i--; tries++; }
+            if((i != 0) && 
+               std::count(start_dendrites.begin(), start_dendrites.end(), dendrite_start) && 
+               (!isInVoxel(dendrite_start, sphere_radius + barrier_tickness)) &&
+               (isSphereColliding(dendrite_start, sphere_radius))){ i--; tries++; }
             else
             {
                 start_dendrites.push_back(dendrite_start);
@@ -182,7 +181,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
                 for(int j=0; j < nb_spheres; ++j)
                 {
                     Eigen::Vector3d center = j*dendrite_direction*sphere_radius/4 + dendrite_start;
-                    if (isInVoxel(center, sphere_radius + barrier_tickness))
+                    if (isInVoxel(center, sphere_radius + barrier_tickness) && !isSphereColliding(center, sphere_radius))
                     {
                         Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, 0);
                         spheres_to_add.push_back(sphere_to_add);
@@ -195,6 +194,35 @@ void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
             }
         }
     } 
+}
+
+bool NeuronDistribution::isSphereColliding(Dynamic_Sphere sph)
+{
+    Vector3d position = sph.center;
+    double distance_to_be_inside = sph.max_radius - 2 * barrier_tickness;
+
+    for (unsigned i = 0; i < neurons.size() ; i++){
+        bool isinside = neurons[i].isPosInsideNeuron(position, distance_to_be_inside, false);
+        if (isinside){
+            return true;
+            break;
+        }
+    }
+    return false;
+}
+
+bool NeuronDistribution::isSphereColliding(Vector3d sphere_center, double sphere_radius)
+{
+    double distance_to_be_inside = sphere_radius - 2 * barrier_tickness;
+
+    for (unsigned i = 0; i < neurons.size() ; i++){
+        bool isinside = neurons[i].isPosInsideNeuron(sphere_center, distance_to_be_inside, false);
+        if (isinside){
+            return true;
+            break;
+        }
+    }
+    return false;
 }
 
 void NeuronDistribution::printSubstrate(ostream &out)
@@ -271,4 +299,3 @@ double NeuronDistribution::computeICVF(vector<Neuron> &neurons, Vector3d &min_li
     }
     return VolumeNeuron / VolumeVoxel;
 }
-

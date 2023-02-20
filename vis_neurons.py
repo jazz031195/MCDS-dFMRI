@@ -9,18 +9,19 @@ with open('/home/localadmin/Documents/MCDS-dFMRI/MCDC_Simulator_public-master/in
 
     for i in range(len(lines)):
         coords = lines[i].split(' ')
+        # If it is the soma, plot it in any case
+        if "Soma" in coords[0]:
+            coords = lines[i-1].split(' ')
+            # ax.scatter3D(float(coords[0]), float(coords[1]), float(coords[2]), s = 4/3*np.pi*float(coords[3])**3*1000)
+            # draw sphere
+            u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+            x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
+            y = np.sin(u)*np.sin(v)*float(coords[3]) + float(coords[1])
+            z = np.cos(v)*float(coords[3]) + float(coords[2])
+            ax.plot_wireframe(x, y, z, color="r")
         if len(coords) > 2:
-            # If it is the soma, plot it in any case
-            if i==2:
-                # ax.scatter3D(float(coords[0]), float(coords[1]), float(coords[2]), s = 4/3*np.pi*float(coords[3])**3*1000)
-                # draw sphere
-                u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
-                x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
-                y = np.sin(u)*np.sin(v)*float(coords[3]) + float(coords[1])
-                z = np.cos(v)*float(coords[3]) + float(coords[2])
-                ax.plot_wireframe(x, y, z, color="r")
             # Plot only one sphere out of four for the dendrites (otherwise, too expensive)
-            a = 1#random.randint(1, 4)
+            a = random.randint(1, 4)
             if a==1:
                 u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
                 x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])

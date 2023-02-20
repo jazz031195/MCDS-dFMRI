@@ -16,6 +16,7 @@
 #include <iostream>
 #include "Neuron.h"
 #include "dynamic_sphere.h"
+#include <tuple>
 
 
 class NeuronDistribution 
@@ -50,7 +51,8 @@ public:
      *  \param out ostream where to write the info.
     */
     void printSubstrate(std::ostream& out);
-    bool isSphereColliding(Dynamic_Sphere sph, double distance_to_be_inside, int axon_id, int sph_id, ostream& out);
+    bool isSphereColliding(Dynamic_Sphere sph);
+    bool isSphereColliding(Eigen::Vector3d sphere_center, double sphere_radius);
     std::vector<projection_pt> find_collisions(projection_pt proj_on_axis_min, projection_pt proj_on_axis_max,std::vector<projection_pt> projections_on_axis, ostream& out);
     bool isColliding(Axon ax,  double distance_to_be_inside, int axon_id, ostream& out);
     bool search_for_sphere(std::vector<projection_pt> spheres_, projection_pt s);

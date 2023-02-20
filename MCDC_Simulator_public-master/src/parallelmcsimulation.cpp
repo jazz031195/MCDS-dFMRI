@@ -970,6 +970,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                     soma = spheres_[0];
                     spheres_.clear();
                 }
+                // If dendrite, create it from spheres_ and store it into axons_
                 else if( part.find("Dendrite") != std::string::npos && spheres_.size() > 0)
                 {
                     Eigen::Vector3d begin = {min_limits, min_limits, min_limits};
@@ -980,6 +981,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                     axons_.push_back(axon);
                     cout << "adding axon: "  << id << ", radius: " << axon.radius << endl;
                 }
+                // If neuron, create it from soma and axons
                 else if( part.find("Neuron") != std::string::npos && axons_.size() > 0)
                 {
                     Neuron neuron(axons_, soma);

@@ -559,7 +559,5 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
     // create axon with 4 spheres in between each center
     fill_spheres_in_between(ax, centers, spheres_to_add, sph_radii);
 
-
     return spheres_to_add;
-
 }   
