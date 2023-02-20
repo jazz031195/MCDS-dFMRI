@@ -169,7 +169,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
             z = z/normalization_factor*neuron.soma.radius + neuron.soma.center[2];
 
             Eigen::Vector3d dendrite_start(x, y, z);
-            // Radius of each dendrite sphere
+            // Radius of each dendrite sphere [mm]
             double sphere_radius = 0.5e-3;
             // If the vector is not already contained in start_dendrites, add it. 
             // Otherwise, decrement i and do one more round
@@ -179,7 +179,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
                 start_dendrites.push_back(dendrite_start);
                 Eigen::Vector3d dendrite_direction = dendrite_start - neuron.soma.center;
                 dendrite_direction.normalize();
-                int nb_spheres = neuron.span_radius / (4*sphere_radius); //Let's assume that dendrites have a radius of 0.5microns so far
+                int nb_spheres = neuron.span_radius / (sphere_radius/4); //Let's assume that dendrites have a radius of 0.5microns so far
                 
                 Eigen::Vector3d begin;
                 Axon dendrite(sphere_radius, begin, begin, 0, false, false , 1);
@@ -233,10 +233,10 @@ bool NeuronDistribution::isInVoxel(Eigen::Vector3d pos, double distance_to_borde
     Eigen::Vector3d new_min_limits_vx = {min_limits_vx[0] + distance_to_border, min_limits_vx[1] + distance_to_border, min_limits_vx[2] + distance_to_border};
     Eigen::Vector3d new_max_limits_vx = {max_limits_vx[0] - distance_to_border, max_limits_vx[1] - distance_to_border, max_limits_vx[2] - distance_to_border};
 
-    if ((pos[0]-new_min_limits_vx[0])<0 || (pos[1]-new_min_limits_vx[1])<0 ){
+    if ((pos[0]-new_min_limits_vx[0])<0 || (pos[1]-new_min_limits_vx[1])<0 || (pos[2]-new_min_limits_vx[2])<0){
         return false;
     }
-    else if ((pos[0]-new_max_limits_vx[0])>0 || (pos[1]-new_max_limits_vx[1])>0 ) {
+    else if ((pos[0]-new_max_limits_vx[0])>0 || (pos[1]-new_max_limits_vx[1])>0 || (pos[2]-new_max_limits_vx[2])>0) {
         return false;
     }
     return true;   

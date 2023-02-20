@@ -31,8 +31,8 @@ Neuron::Neuron()
     uniform_int_distribution<mt19937::result_type> dist_span_radius(lb, ub);
 
     // Generate int number in [lb, ub], in [mm]
-    span_radius = dist_span_radius(rng);
-    span_radius /=10;
+    span_radius  = dist_span_radius(rng);
+    span_radius /= 10;
 
 }
 
@@ -55,23 +55,23 @@ Neuron::Neuron(Vector3d soma_center, double soma_radius=5e-3) : Neuron()
 Neuron::Neuron(vector<Axon> dendrites_, Vector3d soma_center, double soma_radius=5e-3) : Neuron()
 {
     dendrites = dendrites_;          
-    soma = Dynamic_Sphere(soma_center, soma_radius);
+    soma      = Dynamic_Sphere(soma_center, soma_radius);
 }
 
 Neuron::Neuron(const Neuron &neuron)
 {
-    id = nb_neurons++;
-    dendrites = neuron.dendrites;           
-    soma = neuron.soma;
+    id           = nb_neurons++;
+    dendrites    = neuron.dendrites;           
+    soma         = neuron.soma;
     nb_dendrites = neuron.nb_dendrites;
-    span_radius = neuron.span_radius;
+    span_radius  = neuron.span_radius;
 }
 
 double Neuron::minDistance(Walker &w)
 {
     vector<double> distances;
     distances.clear();
-    distances = Distances_to_Spheres(w);
+    distances  = Distances_to_Spheres(w);
     double min = *min_element(begin(distances), end(distances ));
 
     return min;
