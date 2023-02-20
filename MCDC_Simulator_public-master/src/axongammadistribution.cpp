@@ -10,7 +10,7 @@ using namespace std;
 using namespace Eigen;
 using namespace std::chrono;
 
-AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc_perc_, unsigned num_ax, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, float min_radius, bool active_state_, double c2_)
+AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc_perc_, unsigned num_ax, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, float min_radius, bool active_state_, double c2_, bool tortuous_)
 {
     dyn_perc = dyn_perc_;
     volume_inc_perc = volume_inc_perc_;
@@ -27,6 +27,7 @@ AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc
     duration = 0.0;
     c2 = c2_;
     tortuosities.clear();
+    tortuous = tortuous_;
 
 
 }
@@ -326,7 +327,6 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
 
     // TODO cambiar a INFO
-    int perc_;
     icvf_current = best_icvf;
 
     auto stop = high_resolution_clock::now();
@@ -336,17 +336,15 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
     out <<"icvf:"<< icvf_current << "voxel size: "<< max_limits[0] << endl;
 
-    message = "Percentage of axons selected: " + to_string(double(perc_) / radiis.size() * 100.0) + "%,\nICVF achieved: " + to_string(icvf_current * 100) + "  (" + to_string(int((icvf_current / icvf * 100))) + "% of the desired icvf)\n";
+    message = "ICVF achieved: " + to_string(icvf_current * 100) + "  (" + to_string(int((icvf_current / icvf * 100))) + "% of the desired icvf)\n";
     SimErrno::info(message, cout);
-    message = "number of axons :  " + to_string(axons.size()) +"\n";
-    SimErrno::info(message, cout);
-
 
 }
 
 void AxonGammaDistribution::printSubstrate(ostream &out)
 {
-    out << 1e-3 << endl;
+    double scale = 0.001;
+    out << scale << endl;
     out << volume_inc_perc << endl;
     out << dyn_perc << endl;
     out << icvf_current << endl;
@@ -356,7 +354,7 @@ void AxonGammaDistribution::printSubstrate(ostream &out)
     for (unsigned i = 0; i < axons.size(); i++)
     {
         for (unsigned s = 0; s < axons[i].spheres.size(); s++){
-            out << axons[i].spheres[s].center[0]*1e3 << " " << axons[i].spheres[s].center[1]*1e3 << " " << axons[i].spheres[s].center[2]*1e3 << " " << axons[i].spheres[s].radius*1e3 << " "<<axons[i].spheres[s].swell << endl;
+            out << axons[i].spheres[s].center[0]/scale << " " << axons[i].spheres[s].center[1]/scale << " " << axons[i].spheres[s].center[2]/scale << " " << axons[i].spheres[s].min_radius/scale << " "<<axons[i].spheres[s].swell << endl;
         }
         out << "Axon: " << i << " tortuosity:"<< tortuosities[i] << endl;
     }
@@ -417,10 +415,6 @@ double AxonGammaDistribution::computeICVF(std::vector<Axon> &axons, Vector3d &mi
 
             AreaC += M_PI * mean_rad * mean_rad * ax_length;
         }
-        else{
-            double rad = axons[i].radius;
-            AreaC += M_PI *rad * rad * ax_length;
-        }
         
         num_no_repeat++;
     }
@@ -436,21 +430,25 @@ std::tuple<double, double>  phi_theta_to_target (Eigen::Vector3d prev_pos, Eigen
 
     */
     Eigen::Vector3d vector_to_target = {end[0] - new_pos[0], end[1] - new_pos[1], end[2] - new_pos[2]};
-    vector_to_target = vector_to_target.normalized();
+    //vector_to_target = vector_to_target.normalized();
     double phi_to_target;
+    double theta_to_target;
+
     if (vector_to_target[0] != 0){
-        phi_to_target = atan(vector_to_target[1]/vector_to_target[0]);
+        theta_to_target = atan(vector_to_target[1]/vector_to_target[0]);
+    }
+    else if (vector_to_target[0] == 0 && vector_to_target[1] == 0){
+        theta_to_target = 0;
+    }
+    else if (vector_to_target[0] == 0){
+        theta_to_target = M_PI/2;
+    }
+
+    if (vector_to_target[2] != 0){
+        phi_to_target = atan(sqrt(vector_to_target[0]*vector_to_target[0]+vector_to_target[1]*vector_to_target[1])/vector_to_target[2]);
     }
     else{
         phi_to_target = M_PI/2;
-    }
-
-    double theta_to_target;
-    if (vector_to_target[2] != 0){
-        theta_to_target = atan(sqrt(vector_to_target[0]*vector_to_target[0]+vector_to_target[1]*vector_to_target[1])/vector_to_target[2]);
-    }
-    else{
-        theta_to_target = M_PI/2;
     }
     return std::make_tuple(phi_to_target, theta_to_target);
 }
@@ -482,7 +480,6 @@ bool AxonGammaDistribution::isSphereColliding(Dynamic_Sphere sph){
             return true;
             break;
         }
-
     }
     return false;
 }
@@ -509,11 +506,27 @@ bool AxonGammaDistribution::find_next_center(Axon ax, Dynamic_Sphere& s, double 
 
     while(!achieved && tries < max_tries){
         tie(phi_to_target, theta_to_target) = phi_theta_to_target (prev_pos, new_pos, ax.end,  out);
-        std::normal_distribution<float> phi_dist (phi_to_target/M_PI, 0.1); 
-        std::normal_distribution<float> theta_dist (theta_to_target/M_PI, 0.1); 
         //while (angle_between >= M_PI/3){
-        phi = phi_dist(gen)*M_PI;
-        theta = theta_dist(gen)*M_PI;
+
+        if (!tortuous){
+            phi = phi_to_target;
+            out << "phi :" << phi << endl;
+            theta = theta_to_target;
+            out << "theta :" << theta << endl;
+        }
+        else{
+            std::normal_distribution<float> phi_dist (phi_to_target/M_PI, 0.05); 
+            std::normal_distribution<float> theta_dist (theta_to_target/M_PI, 0.05); 
+            phi = phi_dist(gen)*M_PI;
+            theta = theta_dist(gen)*M_PI;
+
+            if(phi > M_PI/4){
+                phi = M_PI/4;
+            }
+            else if (phi < -M_PI/4){
+                phi = -M_PI/4;
+            }
+        }
 
 
         delta_x = dist_*cos(phi)*sin(theta);

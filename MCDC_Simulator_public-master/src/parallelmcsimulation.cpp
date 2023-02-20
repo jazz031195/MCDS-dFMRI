@@ -166,9 +166,7 @@ void ParallelMCSimulation::initializeUnitSimulations()
     specialInitializations();
 
     // The number of walker N devided between all the processes
-
     unsigned N_per_sim = params.num_walkers/params.num_proc;
-    std::vector<Axon> axons_ ;
 
     for(unsigned i = 0; i < params.num_proc-1; i++){
 
@@ -858,7 +856,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 s = stod(jkr[4]);
                 sphere_ = Dynamic_Sphere(Eigen::Vector3d(x,y,z), r, volume_inc_perc, s, ax_id, scale, params.active_state);
                 spheres_.push_back(sphere_);
-                cout << "adding sphere,  min radius :" << sphere_.min_radius <<", max radius :" << sphere_.max_radius <<", radius :" << sphere_.radius << ", swell : " << sphere_.swell << endl;
+                //cout << "adding sphere,  min radius :" << sphere_.min_radius <<", max radius :" << sphere_.max_radius <<", radius :" << sphere_.radius << ", swell : " << sphere_.swell << endl;
             
             }
 
@@ -1111,7 +1109,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
         SimErrno::info(message,cout);
 
         AxonGammaDistribution gamma_dist(params.dyn_perc, params.volume_inc_perc,  params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
-                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii, params.active_state, params.c2);
+                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii, params.active_state, params.c2, params.tortuous);
 
 
         gamma_dist.displayGammaDistribution();
@@ -1146,10 +1144,6 @@ void ParallelMCSimulation::addObstacleConfigurations()
         gamma_dist.printSubstrate(out_);
 
         this->axons_list = gamma_dist.axons;
-        message = "axons : " + std::to_string(this->axons_list.size()) + " \n";
-        SimErrno::info(message,cout);
-
-
 
         //for (unsigned i=0; i< axons_list.size(); ++i){
         //    for (unsigned s=0; s< this->axons_list[i].spheres.size(); ++s){
