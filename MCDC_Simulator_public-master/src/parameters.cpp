@@ -684,6 +684,16 @@ void Parameters::readGammaParams(ifstream &in)
         else if(str_dist(tmp,"num_axons") <= 1){
             in >> gamma_num_obstacles;
         }
+        else if(str_dist(tmp,"tortuous") <= 1){
+            string tortuous_str;
+            in >> tortuous_str;
+            if(tortuous_str.compare("false")== 0){
+                tortuous = false;
+            }
+            else if (tortuous_str.compare("true")== 0){
+                tortuous = true;
+            }
+        }
         else if(str_dist(tmp,"num_spheres") <= 1){
             in >> gamma_num_obstacles;
         }
@@ -704,6 +714,10 @@ void Parameters::readGammaParams(ifstream &in)
         }
         else if(str_dist(tmp,"icvf") <= 1){
             in >> gamma_icvf;
+
+        }
+        else if(str_dist(tmp,"c2") <= 1){
+            in >> c2;
 
         }
 

@@ -38,7 +38,11 @@ public:
     Eigen::Vector3d max_limits;                     /*!< voxel max limits (if any)                                                  */
     
     bool active_state;
+    bool tortuous;
 
+    double duration; 
+    std::vector<double> tortuosities;
+    double c2;                                      /*!< ODF                                               */
     /*!
      *  \param P_ Cylinder origin
      *  \param Q_ cylinder direction.
@@ -55,7 +59,7 @@ public:
      *  \param scale scale factor for the values passed. Useful when reading a file.
      *  \brief Initialize everything.
      */
-    AxonGammaDistribution(double, double, unsigned, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius = 0.001, bool active_state = false);
+    AxonGammaDistribution(double, double, unsigned, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius = 0.001, bool active_state = false, double c2 = 1.0, bool tortuous = false);
      
      /*!
      *  \brief Shows a small histogram of the gamma distribution
@@ -74,10 +78,12 @@ public:
     void printSubstrate(std::ostream& out);
     std::vector<Dynamic_Sphere> GrowAxon(Axon ax, double distance_to_be_inside, int axon_id,  ostream& out);
     bool check_borders(Eigen::Vector3d pos, double distance_to_border);
-    bool isSphereColliding(Dynamic_Sphere sph,  ostream& out);
-    bool find_next_center(Axon ax, std::vector<double>& distances, double dist_,std::vector<double>& sph_radii, double& rad, Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, std::vector<Eigen::Vector3d>& centers, int axon_id, ostream& out);
+    bool isSphereColliding(Dynamic_Sphere sph);
+    bool find_next_center(Axon ax, Dynamic_Sphere& s, double dist_, double& rad, Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, int axon_id, ostream& out);
     void fiber_collapse(Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, std::vector<Eigen::Vector3d>& centers, int& fibre_collapsed_nbr, ostream& out);
-    void fill_spheres_in_between(Axon ax, std::vector<Eigen::Vector3d>& centers, std::vector<Dynamic_Sphere>& spheres_to_add, std::vector<double>& sph_radii);
+    bool fill_spheres_in_between(Axon ax, Dynamic_Sphere& added_sphere, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii, ostream& out);
+    void shrink_sphere_rad(double& rad, double axon_rad, double& shrink_perc, ostream& out);
+    void find_target_point (double c2, double radius, Eigen::Vector3d& initial_point , Eigen::Vector3d& target_point);
 
 private:
 

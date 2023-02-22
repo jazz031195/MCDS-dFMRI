@@ -1,51 +1,44 @@
 #!/bin/bash -l
+# see make_conf_file.py to see the parameters to use
 
 simulator_path="build/MC-DC_Simulator"
 mcdc_dir="MCDC_Simulator_public-master"
 
 # location : "extra" or "intra"
-declare -a locs=("extra"); 
+declare -a locs=("intra" "extra"); 
 #state : "active" or "rest"
-declare -a states=("rest");
-# name of folder to save data to
-declare -a folders=("N_10_6_");
-# number of molecules (later adjusted to location)
-declare -a N=(1000000);
-#name of configuration file
-declare -a confs=("conf1");
+declare -a states=("rest" "active");
+#number of time steps
+T="1000";
+#c2
+c2="1";
+# nbr of axons
+a="50";
+# icvf
+declare -a icvf=("0.5" "0.55" "0.6" "0.65");
 
-icvf=$(echo "0.7"|bc)
-
-for (( i=0; i<${#N[@]}; i++ ));
+cd "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/" || exit 
+# compiles code
+./MCDC_Simulator_public-master/compile.sh
+for (( i=0; i<${#icvf[@]}; i++ ));
 do
-    for conf in "${confs[@]}"
+    echo "Starting creation of substrate with icvf of ${icvf[i]} ... "
+    # run code to create axons list file
+    python3 make_conf_file.py -a $a -i "${icvf[i]}" -c $c2 -x true
+    ./MCDC_Simulator_public-master/src/main "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedAxons.conf"
+
+    rm "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/axons/nbr_axons_{$a}_icvf_{${icvf[i]}}_DWI.txt"
+    echo "Substrate with icvf of ${icvf[i]} is created !"
+    for l in "${locs[@]}";
     do
-        for l in "${locs[@]}";
+        for s in "${states[@]}";
         do
-
-            n=${N[i]};
-            if [[ $l == "extra" ]];then
-
-                n=$(echo "(1-$icvf) * $n"|bc);
-
-            else
-                n=$(echo "$icvf * $n"|bc);
-
-            fi
-            n=${n%.*};
-
-          
-            f=${folders[i]};
-            for s in "${states[@]}"
-            do
-                echo "loc: $l, num_walkers : $n, conf : $conf, state : $s, folder : $f is starting"
-                
-                python3 make_conf_file.py -l "$l" -n "$n" -c "$conf" -s "$s" -f "$f"
-                $simulator_path "$mcdc_dir/docs/conf_file_examples/gammaDistributedCylinders.conf"
-
-                echo "loc: $l, num_walkers : $n, conf : $conf, state : $s, folder : $f is done"
-                
-            done
+            echo "Starting simulation in $l and in $s state ... "
+            # run simulation on parameters of interest 
+            python3 make_conf_file.py -a $a -i "${icvf[i]}" -c $c2 -s "$s" -l "$l" -t $T -x false
+            $simulator_path "$mcdc_dir/docs/conf_file_examples/gammaDistributedAxons.conf"
+            
+            echo "Simulation in $l and in $s state is finished !"
         done
     done
 done

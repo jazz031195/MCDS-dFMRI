@@ -54,9 +54,11 @@ public:
 
     int in_ply_index;                                               /*!< Auxiliar index to save if the walker was inside a convex ply object    */
 
-    int in_sph_index;  
+    int in_sph_index;                                                /*!< Auxiliar index to save if the walker was inside a sphere               */
     
-    int in_ax_index;                                               /*!< Auxiliar index to save if the walker was inside a sphere               */
+    int in_ax_index;
+
+    int in_cyl_index;                                               /*!< Auxiliar index to save if the walker was inside a cylinder              */
     
     int in_neuron_index;                                               /*!< Auxiliar index to save if the walker was inside a neuron               */
 

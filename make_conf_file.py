@@ -1,6 +1,5 @@
-# To compare ADC between multiple DWI files with varying N values
-
 from pathlib import Path
+import os
 import sys
 import getopt
 
@@ -9,99 +8,49 @@ dynamic_cylinders = mcdc_dir / "instructions/demos/output/dynamic_cylinders"
 conf_file_examples = mcdc_dir / "docs/conf_file_examples"
 scheme_files = mcdc_dir / "docs/scheme_files"
 
-def get_variables():
-    N = None 
-    conf = None 
-    loc = None 
-    state = None
-    folder = None
-    create_substrate = 0
+def write_conf_file_create_axons(N, T, exp_prefix, icvf , num_axons, c2):
+    """
+    Overwrites the configuration file gammaDistributedAxons.conf with the desired parameters
+    Should be used in case we want to grow axons in a new substrate
+    N : number of water particles
+    T : number of time steps in simulation
+    exp_prefix : name of file
+    icvf : Intracompartement volume fraction
+    num_axons : number of axons
+    c2 : measure of ODF 
+    location : can be intra or extra
 
-    argv = sys.argv[1:]
-  
-    try:
-        opts, args = getopt.getopt(argv, ":n:c:l:s:f:d:")
-      
-    except:
-        print("Error")
-  
-    for opt, arg in opts:
-        if opt in ['-n']:
-            N = arg
-        elif opt in ['-c']:
-            conf = arg
-        elif opt in ['-l']:
-            loc = arg
-        elif opt in ['-s']:
-            state = arg
-        elif opt in ['-f']:
-            folder = arg
-        elif opt in ['-d']:
-            create_substrate = int(arg)
-        
-        if create_substrate == 1:
-            create_substrate = True
-        else :
-            create_substrate = False
+    """
+    
+    lines =[]; 
+    lines.append("N "+ str(N))
+    lines.append("T "+ str(T))
+    lines.append("duration 0.067")
+    lines.append("diffusivity 2.5e-9")
+    lines.append("active_state false")
+    lines.append("exp_prefix /home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/axons/" +exp_prefix)
+    lines.append("scheme_file /home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/scheme_files/PGSE_sample_scheme_new.scheme")
+    lines.append("scale_from_stu 1")
+    lines.append("write_txt 1")
+    lines.append("write_bin 0")
+    lines.append("write_traj_file 0")
+    lines.append("<obstacle>")
+    lines.append("<axon_gamma_packing>")
+    lines.append("alpha 5")
+    lines.append("beta 0.1")
+    lines.append("icvf "+str(icvf))
+    lines.append("num_axons "+str(num_axons))
+    lines.append("percentage_dynamic_axons 0.3")
+    lines.append("percentage_increase_of_volume 0.01")
+    lines.append("c2 "+str(c2))
+    lines.append("tortuous true")
+    lines.append("</axon_gamma_packing>")
+    lines.append("</obstacle>")
+    lines.append("ini_walkers_pos extra")
+    lines.append("num_process 10")
+    lines.append("<END>")
 
-        
-        
-    return N, conf, loc, folder, state, create_substrate
-        
-      
-
-def create_lines(N, conf, loc, folder, state, create_substrate):
-    if create_substrate:
-        conf_file = conf_file_examples / "create_substrate.conf"
-
-    else:
-        conf_file = conf_file_examples / "read_from_substrate.conf"
-
-
-    if state == "rest":
-        active_state = "false"
-    elif state == "active":
-        active_state = "true"
-
-    new_lines =[] 
-    with open(conf_file) as f:
-        for line in f.readlines():
-            e = line.split(' ')
-            if e[0] == "N":
-                l = f"N {N}"
-            elif e[0] == "active_state":
-                l = f"active_state {active_state}"
-            elif e[0] == "exp_prefix":
-                if not create_substrate:
-                    prefix = dynamic_cylinders / state / loc / folder / conf
-                else:
-                    prefix = dynamic_cylinders
-                if not prefix.exists():
-                    prefix.mkdir()
-                l = f"exp_prefix {prefix / 'dyn_cylinder'}"
-
-            # Make sure to have a compatible path also for scheme_file
-            elif e[0] == "scheme_file":
-                l = f"scheme_file {scheme_files / Path(e[1]).name}"
-           
-            elif e[0] == "ini_walkers_pos":
-                l = f"ini_walkers_pos {loc}"
-            
-            elif e[0] == "dyn_cylinders_list":
-                if not create_substrate:
-                    l = f"dyn_cylinder_list {dynamic_cylinders / conf}.txt"
-                else :
-                    l = line
-            else :
-                l = line
-
-            new_lines.append(l)
-
-    return new_lines
-
-def write_conf_file(lines):
-
-    name = conf_file_examples / "gammaDistributedCylinders.conf"
+    name = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedAxons.conf"
 
     f = open(name, "w")
     for l in lines :
@@ -109,6 +58,114 @@ def write_conf_file(lines):
         f.write("\n")
     f.close()
 
-N, conf, loc, folder, state, create_substrate = get_variables()
-lines = create_lines(N, conf, loc, folder, state, create_substrate)
-write_conf_file(lines)
+def write_conf_file(N, T, activation, exp_prefix, location, axons_list_prefix):
+
+    """
+    Overwrites the configuration file gammaDistributedAxons.conf with the desired parameters
+    Should be used in case we want to use a substrate from an existing file
+    N : number of water particles
+    T : number of time steps in simulation
+    activation : can be active (axons swell) or rest
+    exp_prefix : name of file
+    location : can be intra or extra
+    axons_list_prefix : name of file with list of axons
+
+    """
+    lines =[]; 
+    lines.append("N "+ str(N))
+    lines.append("T "+ str(T))
+    lines.append("duration 0.067")
+    lines.append("diffusivity 2.5e-9")
+    lines.append("active_state " + str(activation))
+    lines.append("exp_prefix /home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/axons/" +exp_prefix)
+    lines.append("scheme_file /home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/scheme_files/PGSE_sample_scheme_new.scheme")
+    lines.append("scale_from_stu 1")
+    lines.append("write_txt 1")
+    lines.append("write_bin 0")
+    lines.append("write_traj_file 0")
+    lines.append("<obstacle>")
+    lines.append("axon_list /home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/axons/"+str(axons_list_prefix)+"_gamma_distributed_axon_list.txt")
+    lines.append("</obstacle>")
+    lines.append("ini_walkers_pos "+ str(location))
+    lines.append("num_process 10")
+    lines.append("<END>")
+
+    name = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedAxons.conf"
+
+    f = open(name, "w")
+    for l in lines :
+        f.write(str(l))
+        f.write("\n")
+    f.close()
+
+
+
+def get_variables():
+
+    """
+    Obtains variables through input in bash script
+
+    """
+
+    nbr_axons  = None
+    T = 1000
+    loc = None 
+    state = None
+    icvf = None
+    concentration = 1000
+    create_substrate_ = "true"
+
+    argv = sys.argv[1:]
+  
+    try:
+        opts, args = getopt.getopt(argv, ":a:t:l:s:i:c:x:")
+      
+    except:
+        print("Error")
+  
+    for opt, arg in opts:
+        if opt in ['-a']:
+            # number of axons 
+            nbr_axons = arg
+        elif opt in ['-t']:
+            # time   
+            T = arg
+        elif opt in ['-l']:
+            # location : extra or intra 
+            loc = arg
+        elif opt in ['-s']:
+            # state : active or rest
+            state = arg
+        elif opt in ['-i']:
+            # icvf 
+            icvf = arg
+        elif opt in ['-c']:
+            # c2 
+            c2 = float(arg)
+        elif opt in ['-x']:
+            create_substrate_ = arg
+        
+    if (create_substrate_ == "true"):
+        create_substrate = True
+    elif (create_substrate_ == "false"):
+        create_substrate = False
+
+    # number of particles is set as a function on the compartment and icvf choices 
+    if (loc == "intra") :
+        N = int(float(icvf)*concentration)
+    else :
+        N = int((1-float(icvf))*concentration)
+
+        
+        
+    return N, nbr_axons, T, loc, state,icvf, create_substrate, c2
+        
+      
+
+N, nbr_axons, T, location, activation, icvf, create_substrate, c2 = get_variables()
+axons_list_prefix = "nbr_axons_"+str(nbr_axons)+"_icvf_"+str(icvf)
+if(create_substrate):
+    write_conf_file_create_axons(1, 1, axons_list_prefix, icvf , nbr_axons, c2)
+else:
+    exp_prefix = "nbr_axons_"+str(nbr_axons)+"_"+str(location)+"_"+str(activation)+"_icvf_"+str(icvf)
+    write_conf_file(N, T, activation, exp_prefix, location, axons_list_prefix)
