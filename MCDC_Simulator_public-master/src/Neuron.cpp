@@ -128,10 +128,11 @@ bool Neuron::isPosInsideNeuron(Eigen::Vector3d &position,  double distance_to_be
     string neuron_part; // "soma", "dendrite" or "none"
     int part_id; // id of the soma or dendrite. -1 if not in neuron
     tie(neuron_part, part_id) = isNearNeuron(position, distance_to_be_inside);
+    std::vector<int> sphere_ids;
     if(!(neuron_part=="none")){
         if (neuron_part=="dendrite")
         {
-            if (dendrites[part_id].isPosInsideAxon(position, distance_to_be_inside, false))
+            if (dendrites[part_id].isPosInsideAxon(position, distance_to_be_inside, false, sphere_ids))
             {
                 return true;
             } 

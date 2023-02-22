@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import random
 import numpy as np
 
-with open('/home/localadmin/Documents/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_neurons_list.txt') as f:
+with open('/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_neurons_list.txt') as f:
     lines = f.readlines()
     fig   = plt.figure()
     ax    = plt.axes(projection='3d')
