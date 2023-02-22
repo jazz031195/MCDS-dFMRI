@@ -87,7 +87,7 @@ void DynCylinderGammaDistribution::createGammaSubstrate()
     std::uniform_real_distribution<double> udist(0, 1);
     std::vector<double> radiis(num_obstacles, 0);
 
-    int number_swelling_cylinders = int(num_obstacles * dyn_perc);
+    const size_t number_swelling_cylinders = num_obstacles * dyn_perc;
     //std::vector<int> swell_cyl_id(number_swelling_cylinders, 0);
     std::vector<bool> bool_swell_cyl_id(number_swelling_cylinders, false);
 

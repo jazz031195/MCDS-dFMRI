@@ -224,7 +224,7 @@ void GradientWaveform::getDWISignal()
     steps_log.resize(3,unsigned(T+1));
     phase_shift.resize(num_rep);
 
-    for (int w = 0; w < N; w++)
+    for (uint w = 0; w < N; w++)
     {
         trajectory.readCurrentWalkersTrajectory(steps_log);
         for (uint t = 1; t <= uint(trajectory.T); t++)

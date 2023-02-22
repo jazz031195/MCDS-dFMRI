@@ -46,7 +46,13 @@ public:
     ~Axon();
 
 
-    Axon(double min_radius_,  Eigen::Vector3d begin_, Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , double scale):min_radius(min_radius_*scale), begin(begin_*scale),end(end_*scale),volume_inc_perc(volume_inc_perc_), active_state(active_state_), swell(swell_){
+    Axon(double min_radius_,  Eigen::Vector3d begin_, Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , double scale):
+    min_radius(min_radius_*scale), 
+    swell(swell_), 
+    begin(begin_*scale),
+    end(end_*scale),
+    volume_inc_perc(volume_inc_perc_), 
+    active_state(active_state_){
 
         radius = min_radius;
         spheres.clear();

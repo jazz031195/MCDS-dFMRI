@@ -19,8 +19,8 @@ Neuron::Neuron()
     random_device dev;
     mt19937 rng(dev());
 
-    int ub = 10; // upper bound for nb_dendrites
-    int lb = 5; // lower bound for nb_dendrites
+    constexpr uint8_t ub = 10; // upper bound for nb_dendrites
+    constexpr uint8_t lb = 5; // lower bound for nb_dendrites
 
     uniform_int_distribution<mt19937::result_type> dist_dendrites(lb, ub);
     // Generate int number in [lb, ub]
@@ -39,6 +39,7 @@ Neuron::~Neuron()
 Neuron::Neuron(vector<Axon> dendrites_, Dynamic_Sphere soma_) : Neuron()
 {
     dendrites    = dendrites_;     
+    assert(dendrites_.size() < std::numeric_limits<decltype(nb_dendrites)>::max());
     nb_dendrites = dendrites_.size();
     soma         = soma_;
 }
@@ -104,9 +105,9 @@ vector<double> Neuron::Distances_to_Spheres(Vector3d pos)
     distances.push_back(distance_to_sphere);
 
     // Then iterate through dendrites
-    for (unsigned i=0; i < nb_dendrites; ++i)
+    for (uint8_t i=0; i < nb_dendrites; ++i)
     {
-        for (unsigned j=0; j < dendrites[i].spheres.size(); ++j)
+        for (size_t j=0; j < dendrites[i].spheres.size(); ++j)
         {       
             Vector3d m = pos - dendrites[i].spheres[j].center;
             double distance_to_sphere = m.norm() - dendrites[i].spheres[j].radius;
@@ -120,10 +121,7 @@ bool Neuron::isPosInsideNeuron(Eigen::Vector3d &position,  double distance_to_be
     // when checking collision with walker -> check with normal radius
     // when checking with collisions of other neurons -> check with max_radius so there is room for swelling
     vector<vector<Projections::projection_pt>> coliding_projs;
-    bool colliding_all_axes;
     Dynamic_Sphere sphere_ ;
-    double rad;
-    double rad_;
     // if position is in box with axon inside
     string neuron_part; // "soma", "dendrite" or "none"
     int part_id; // id of the soma or dendrite. -1 if not in neuron
@@ -163,10 +161,10 @@ tuple<string, int> Neuron::isNearNeuron(Vector3d &position,  double distance_to_
     if (count_isnear == 3){return tuple<string, int>{"soma", soma.id};}
     
     // Check each dendrite's box
-    for (unsigned int i=0 ; i < nb_dendrites ; ++i)
+    for (uint8_t i=0 ; i < nb_dendrites ; ++i)
     {
         count_isnear = 0;
-        for (unsigned int axis=0 ; axis < 3 ; ++axis)
+        for (uint8_t axis=0 ; axis < 3 ; ++axis)
         {
             Vector2d axis_limits = dendrites[i].projections.axon_projections[axis];
 
@@ -194,7 +192,7 @@ bool Neuron::checkCollision(Walker &walker, Eigen::Vector3d &step_dir, double &s
         return true;
     } 
     // Check if collision with dendrites
-    for(int i=0 ; i < nb_dendrites ; ++i)
+    for(uint8_t i=0 ; i < nb_dendrites ; ++i)
     {
         if(dendrites[i].checkCollision(walker, step_dir, step_lenght, colision))
         {
@@ -255,8 +253,6 @@ tuple<string, int, int> Neuron::closest_sphere_dichotomy(Walker &walker, double 
         int number_spheres = dendrites[part_id].spheres.size();
         int i=0;
         int i_last = number_spheres-1;
-        bool stop = false;
-        int count= 0;
         int half_way;
         double first_distance;
         double last_distance;
@@ -273,21 +269,15 @@ tuple<string, int, int> Neuron::closest_sphere_dichotomy(Walker &walker, double 
             {
                 i = half_way;
             } 
-            count += 1;
         }
         if (first_distance < last_distance)
-        {
             return {neuron_part, part_id, i};
-        }
-        else
-        {
-            return {neuron_part, part_id, i_last};
-        }  
+
+        return {neuron_part, part_id, i_last};
     }
-    else if (neuron_part == "soma")
-    {
+    if (neuron_part == "soma")
         return {neuron_part, part_id, 0};
-    }
+    return {"none", -1, -1}; //TODO: to check
 } 
 
 

@@ -60,7 +60,7 @@ void NeuronDistribution::createSubstrate()
 
     uint adjustments = 0;
      // We increease 1% the total area. (Is prefered to fit all the spheres than achieve a perfect ICVF.)
-    double adj_increase = icvf*0.01;
+    // double adj_increase = icvf*0.01;
     while(!achieved){
 
         // double target_icvf = this->icvf+adjustments*adj_increase;
@@ -135,7 +135,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
     std::normal_distribution<double> distribution(0.0, 1.0);
     int max_tries = 10000;
 
-    for(int i = 0; i < neuron.nb_dendrites; ++i)
+    for(uint8_t i = 0; i < neuron.nb_dendrites; ++i)
     {   
         int tries = 0;
 
@@ -243,9 +243,9 @@ void NeuronDistribution::printSubstrate(ostream &out)
         << 0 << endl; //bool_active = false for now
         out << "Soma " + to_string(i) << endl;
 
-        for (unsigned j = 0; j < neurons[i].dendrites.size(); j++)
+        for (size_t j = 0; j < neurons[i].dendrites.size(); j++)
         {
-            for (int k = 0; k < neurons[i].dendrites[j].spheres.size(); k++)
+            for (size_t k = 0; k < neurons[i].dendrites[j].spheres.size(); k++)
             {
                 // Print for each dendrite, each sphere
                 out << neurons[i].dendrites[j].spheres[k].center[0] << " "
@@ -284,13 +284,13 @@ double NeuronDistribution::computeICVF(vector<Neuron> &neurons, Vector3d &min_li
     double VolumeVoxel = (max_limits[0] - min_limits[0]) * (max_limits[1] - min_limits[1]) * (max_limits[2] - min_limits[2]);
     double VolumeNeuron = 0;
    
-    for (uint i = 0; i < neurons.size(); i++)
+    for (size_t i = 0; i < neurons.size(); i++)
     {
         // Calculate the volume of the soma
         VolumeNeuron += 4/3*M_PI*pow(neurons[i].soma.radius, 3);
 
         // Calculate the cylindrical volume of each dendrite
-        for (uint j = 0; j < neurons[i].nb_dendrites; j++)
+        for (uint8_t j = 0; j < neurons[i].nb_dendrites; j++)
         {
             VolumeNeuron += neurons[i].dendrites[j].volumeAxon();
         }      

@@ -169,7 +169,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
     std::uniform_real_distribution<double> udist(0, 1);
     std::vector<double> radiis(num_obstacles, 0);
 
-    int number_swelling_axons = int(num_obstacles * dyn_perc);
+    size_t number_swelling_axons = num_obstacles * dyn_perc;
     std::vector<bool> bool_swell_ax_id(num_obstacles, false);
 
     bool achieved = false;
@@ -182,7 +182,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
     cout << " Growing axons " << endl;
 
     // create list bools that show whether an axon has the potential to swell
-    for (unsigned i = 0; i < number_swelling_axons; ++i)
+    for (size_t i = 0; i < number_swelling_axons; ++i)
     {
         int random_id = rand() % num_obstacles;
         if (i > 0)
@@ -394,7 +394,6 @@ double AxonGammaDistribution::computeICVF(std::vector<Axon> &axons, Vector3d &mi
         double ax_length = 0;
 
         double mean_rad= 0;
-        double rads  =0 ;
 
         if (axons[i].spheres.size() > 0){
 
@@ -471,7 +470,6 @@ bool AxonGammaDistribution::isSphereColliding(Dynamic_Sphere sph){
     
     Vector3d position = sph.center;
     double distance_to_be_inside = 10* barrier_tickness + sph.max_radius;
-    int ax_id;
     std::vector<int> col_sphere_ids;
 
     for (unsigned i = 0; i < axons.size() ; i++){
@@ -492,7 +490,6 @@ bool AxonGammaDistribution::find_next_center(Axon ax, Dynamic_Sphere& s, double 
     bool achieved = false;
     int tries = 0;
     int max_tries = 50000;
-    int sphere_id = 0;
     Eigen::Vector3d pos_;
 
     std::random_device rd;
@@ -569,14 +566,14 @@ bool AxonGammaDistribution::find_next_center(Axon ax, Dynamic_Sphere& s, double 
     return false;
 }
 
-void AxonGammaDistribution::fiber_collapse(Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, std::vector<Eigen::Vector3d>& centers, int& fibre_collapsed_nbr, ostream& out){
-    int n = centers.size();
-    int nbr_discarded_centers = (fibre_collapsed_nbr+1)*4;
+void AxonGammaDistribution::fiber_collapse(Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, std::vector<Eigen::Vector3d>& centers, uint& fibre_collapsed_nbr, ostream& out){
+    const size_t n = centers.size();
+    uint nbr_discarded_centers = (fibre_collapsed_nbr+1)*4;
     Eigen::Vector3d p = {centers[n-nbr_discarded_centers-1][0], centers[n-nbr_discarded_centers-1][1],centers[n-nbr_discarded_centers-1][2]};
     new_pos = p;
     Eigen::Vector3d p2 ={centers[n-nbr_discarded_centers-5][0], centers[n-nbr_discarded_centers-5][1],centers[n-nbr_discarded_centers-5][2]};
     prev_pos = p2;
-    for (unsigned j=0; j< nbr_discarded_centers; ++j){
+    for (size_t j=0; j< nbr_discarded_centers; ++j){
         centers.pop_back();
     }
     fibre_collapsed_nbr += 1;
@@ -627,7 +624,7 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
     std::vector<Eigen::Vector3d> centers;
     // add first position to the list of centers
     Eigen::Vector3d new_pos = ax.begin;
-    int max_fibre_collapse = 5;
+    constexpr uint8_t max_fibre_collapse = 5;
     double max_shrinking = 0.7;
     std::vector<double> sph_radii;
     double rad = ax.radius;
@@ -641,7 +638,7 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
     std::vector<Dynamic_Sphere> spheres_to_add;
 
     bool stop_fibre_collapsing = false;
-    int fibre_collapsed_nbr = 0;
+    uint fibre_collapsed_nbr = 0;
     double shrink_perc = 0.0;
 
     if(isSphereColliding(s1)) {
@@ -714,8 +711,8 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon ax, double dist
             //out << "sphere at : " << centers[i] << endl;
         }
         else if (!last_sphere_add){
-            double dist_i_1= abs((centers[i-1] - max_limits).norm());
-            double dist_i = abs((centers[i] - max_limits).norm());
+            // double dist_i_1= abs((centers[i-1] - max_limits).norm());
+            // double dist_i = abs((centers[i] - max_limits).norm());
             Eigen::Vector3d vector = (centers[i] - centers[i-1]).normalized();
             // centers[i-1][2] + lambda*vector[2] = max_limits[2]
             double lambda_ = (max_limits[2]-centers[i-1][2])/vector[2];

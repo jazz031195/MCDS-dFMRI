@@ -238,7 +238,7 @@ void PGSESequence::update_phase_shift(double dt, double dt_last, Walker walker)
 
     double dos_pi = 2.0*M_PI;
 
-    for(int s=0; s < num_rep ;s++){
+    for(uint s=0; s < num_rep ;s++){
         getGradImpulse(s,dt,dt_last,Gdt);
         double val = giro*(Gdt[0]*xt[0]+Gdt[1]*xt[1]+Gdt[2]*xt[2]);
         val = fmod(val,dos_pi);
@@ -269,7 +269,7 @@ void PGSESequence::update_phase_shift(double time_step, Eigen::Matrix3Xd traject
             dt      = time_step*(t);
         }
 
-        for(int s=0; s < num_rep ;s++){
+        for(uint s=0; s < num_rep ;s++){
 
             getGradImpulse(s,dt,dt_last,Gdt);
             double val = giro*(Gdt[0]*xt[0]+Gdt[1]*xt[1]+Gdt[2]*xt[2]);
@@ -494,7 +494,7 @@ void PGSESequence::getDWISignal()
             xt[1] = steps_log(1,t) - steps_log(1,0);
             xt[2] = steps_log(2,t) - steps_log(2,0);
 
-            for(int s=0; s < num_rep ;s++)
+            for(uint s=0; s < num_rep ;s++)
             {
                 getGradImpulse(s,dt,dt_last,Gdt);
                 double val = giro*(Gdt[0]*xt[0]+Gdt[1]*xt[1]+Gdt[2]*xt[2]);

@@ -28,7 +28,7 @@ public:
 
     std::vector<double> phase_shift;            /*!< auxiliar phase shift for signal computations.                              */
 
-    int num_rep;                                /*!< number of repetitions                         .                            */
+    uint num_rep;                               /*!< number of repetitions                         .                            */
 
     bool save_phase_shift;                      /*!< flag, if true, saves the pahse shift distribution.                         */
 

@@ -62,7 +62,6 @@ void Parameters::readSchemeFile(std::string conf_file_path)
         cout << "[ERROR] Configuration file" << endl;
         return;
     }
-    bool walkers_ini = false;
     string tmp="";
     while((in >> tmp) && (str_dist(tmp,"<END>") >= 2) ){
 
@@ -70,7 +69,6 @@ void Parameters::readSchemeFile(std::string conf_file_path)
 
         if(str_dist(tmp,"n") == 0){
             in >> num_walkers;
-            walkers_ini = true;
         }
 
         else if(str_dist(tmp,"t") == 0){

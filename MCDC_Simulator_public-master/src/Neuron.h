@@ -25,7 +25,7 @@ class Neuron : public Obstacle
 public:
 
     static int nb_neurons;                  /* Number of neurons in the simulation*/
-    int nb_dendrites;                       /* Number of dendrites */
+    uint8_t nb_dendrites;                   /* Number of dendrites */
     double span_radius;                     /* Radius [mm] inside which all the dendrites are contained */
     std::vector<Axon> dendrites;            /* Contains all the dendrites of the neuron*/
     Dynamic_Sphere soma;                            /* Soma of the neuron */

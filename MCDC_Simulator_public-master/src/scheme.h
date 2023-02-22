@@ -17,7 +17,7 @@ public:
     std::string scheme_file; /*!< Scheme file path                      */
     std::string header;      /*!< Header on the scheme_file             */
     std::string type;        /*!< Sequence type (PGSE only so far)      */
-    int num_rep;             /*!< Number of gradients                   */
+    uint num_rep;            /*!< Number of gradients                   */
 
     float duration;          /*!< time duration (wavefroms)             */
     float T;                 /*!< number of time steps (wavefroms)      */

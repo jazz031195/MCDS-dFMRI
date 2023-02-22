@@ -852,7 +852,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
         for( std::string line; getline( in, line ); ){
             
             std::vector<std::string> jkr = _split_(line,' ');
-            int ax_id;
+            int ax_id=0;
             if(jkr.size() == 5){
                 x = stod(jkr[0]);
                 y = stod(jkr[1]);

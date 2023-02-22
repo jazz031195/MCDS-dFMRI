@@ -701,7 +701,6 @@ bool SimErrno::checkDynCylindersListFile(Parameters &params)
 bool SimErrno::checkAxonsListFile(Parameters &params)
 {
     for(unsigned i = 0; i < params.axons_files.size(); i++){
-        bool z_flag = false;
         ifstream in(params.axons_files[i]);
 
         if(!in){

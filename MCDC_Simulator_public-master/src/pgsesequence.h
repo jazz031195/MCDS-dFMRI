@@ -28,7 +28,7 @@ public:
 
     double TE;           /*!< Time Echo.                                        */
 
-    int T;               /*!< num bins (time steps)                             */
+    uint T;               /*!< num bins (time steps)                             */
 
     double dyn_duration; /*!< simulation duration (miliseconds)                 */
 

@@ -106,7 +106,7 @@ void SimulableSequence::initializeSubdivisionSignals(){
 
 void SimulableSequence::initializeIntraExtraSignals()
 {
-    for(auto i =0; i < num_rep; i++){
+    for(uint i =0; i < num_rep; i++){
         this->DWI_intra.push_back(0);
         this->DWI_extra.push_back(0);
     }
