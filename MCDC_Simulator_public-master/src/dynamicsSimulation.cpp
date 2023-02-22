@@ -1224,7 +1224,6 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
         if(finalPositionCheck()){
             back_tracking=true;
             sentinela.illegal_count++;
-            w--;
         }
         
 

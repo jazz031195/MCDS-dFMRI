@@ -100,10 +100,8 @@ void NeuronDistribution::createSubstrate()
                         break;
                     }         
                 }
-
-                icvf = computeICVF(neurons, min_limits_vx, max_limits_vx);
-
-            } // end for spheres
+            } // end for neurons
+            icvf = computeICVF(neurons, min_limits_vx, max_limits_vx);
 
             // if(this->icvf - best_icvf  < 0.0005){
             //     achieved = true;
