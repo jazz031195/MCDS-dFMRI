@@ -1080,7 +1080,7 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
 
     //Alias of the step length, may vary when the time step is dynamic.
     double l = step_lenght;
-    bool back_tracking;
+    bool back_tracking = false;
 
     /*********************   WARNING  **********************/
     /*                                                     */
@@ -1343,11 +1343,11 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
                 walker.next_direction = {0,0,0};
             }
         }
-
+    /*
         int cyl_id,  ply_id, sph_id, ax_id;
         Vector3d O;
         walker.getVoxelPosition(O);
-        if (!walker.status == Walker::bouncing){
+        if (!(walker.status == Walker::bouncing)){
             bool isintra = isInIntra(O, cyl_id,  ply_id, sph_id, ax_id, barrier_tickness);
             if(isintra){
                 walker.in_ax_index = ax_id;
@@ -1357,7 +1357,7 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
                 walker.location = Walker::extra;
             }
         }
-        
+    */
         sentinela.checkErrors(walker,params,((*plyObstacles_list).size() == 0),bouncing_count);
 
     }while(bounced);
@@ -1423,11 +1423,13 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
     }
 
     //For each Axon Obstacle
-    if (walker.location== Walker::intra){
+    
+    if (walker.location== Walker::intra && (*axons_list).size()>0){
         (*axons_list)[walker.in_ax_index].checkCollision(walker,bounced_step,tmax,colision_tmp);
         handleCollisions(colision,colision_tmp,max_collision_distance,walker.in_ax_index);
     }
     else {
+    
         for(unsigned int i = 0 ; i < walker.axons_collision_sphere.small_sphere_list_end; i++ )
         {
             unsigned index = walker.axons_collision_sphere.collision_list->at(i);

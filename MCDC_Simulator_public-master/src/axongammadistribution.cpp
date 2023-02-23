@@ -526,6 +526,8 @@ bool AxonGammaDistribution::find_next_center(Axon ax, Dynamic_Sphere& s, double 
             else if (phi < -M_PI/4){
                 phi = -M_PI/4;
             }
+            out << "theta :" << theta/M_PI << endl;
+            out << "phi :" << phi/M_PI << endl;
         }
 
 

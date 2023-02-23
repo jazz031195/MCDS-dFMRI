@@ -400,6 +400,15 @@ Vector3d find_nearest_point_on_skeleton(Vector3d collision_point, Vector3d spher
     return point;
 }
 
+bool check_negatif(vector<double> list){
+    for (unsigned i=0 ; i< list.size(); ++i){
+        if (list[i] < 1e-10){
+            return true;
+            break;        
+        }
+    }
+    return false;
+}
 
 bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, Collision &colision)
 {
@@ -468,10 +477,12 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
         double t1;
         double t2;
         double c;
-        bool intersect = intersection_sphere_vector(t1, t2, spheres[i], step, step_lenght, O, isintra, c);
-        if (!(isintra && c>0) && !(!isintra && c<0)){
+        bool intersect = intersection_sphere_vector(t1, t2, spheres[i], step, step_lenght, O, isintra, c); 
             if (intersect){
+                //cout << "Intersects with sphere " << j <<", t1 :" << t1 << ", t2 : " << t2 <<", c :" << c << endl;
                 if(walker.status == Walker::bouncing){
+                    //cout << "is bouncing " <<endl;
+                
                     //if the collision are too close or negative.
                     if(  t1 >= EPS_VAL && t1 <= step_lenght + barrier_tickness){
                         dist_intersections.push_back(t1);
@@ -502,7 +513,7 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
                     }
                 }
             }
-        }
+
     }
 
     if(dist_intersections.size() > 0){
@@ -526,24 +537,33 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
 
         colision.type = Collision::hit;
         colision.rn = cs[index_];
+        // if walker is intra, it can still collide with spheres it is outside of
+        if(!isintra){
 
-        if(colision.rn <-1e-10){
-            colision.col_location = Collision::inside;
+            if(colision.rn <-1e-10){
+                colision.col_location = Collision::inside;
 
+            }
+            else if(colision.rn >1e-10){
+                colision.col_location = Collision::outside;
+        
+
+            }
+            else{
+                colision.col_location = Collision::unknown;
+            }
         }
-        else if(colision.rn >1e-10){
+        else if (isintra && !check_negatif(cs)){
+   
             colision.col_location = Collision::outside;
-    
-
-        }
-        else{
-            colision.col_location = Collision::unknown;
+            //cout << "No c < 0" << endl;
         }
         
 
         colision.t = fmin(dist_to_collision,step_lenght);
         colision.colision_point = walker.pos_v + colision.t*step;
 
+        /*
         //Normal point
         Vector3d normal;
         double d1 = (colision.colision_point-spheres[sphere_ind-1].center).norm();
@@ -568,8 +588,9 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
         else{
             normal = (colision.colision_point- spheres[sphere_ind].center).normalized();
         }
+        */
 
-
+        Vector3d normal = (colision.colision_point- spheres[sphere_ind].center).normalized();
         Vector3d temp_step = step;
         elasticBounceAgainsPlane(walker.pos_v,normal,colision.t,temp_step);
         colision.bounced_direction = temp_step.normalized();
