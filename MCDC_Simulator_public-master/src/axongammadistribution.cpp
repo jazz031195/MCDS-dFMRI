@@ -530,10 +530,9 @@ bool AxonGammaDistribution::find_next_center(Axon ax, Dynamic_Sphere& s, double 
             out << "phi :" << phi/M_PI << endl;
         }
 
-
-        delta_x = dist_*cos(phi)*sin(theta);
-        delta_y = dist_*sin(phi)*sin(theta);
-        delta_z = dist_*cos(theta);
+        delta_x = dist_*cos(theta)*sin(phi);
+        delta_y = dist_*sin(theta)*sin(phi);
+        delta_z = dist_*cos(phi);
 
         pos_ = new_pos;
         //Eigen::Vector3d prev_to_pos = (new_pos-prev_pos).normalized();
