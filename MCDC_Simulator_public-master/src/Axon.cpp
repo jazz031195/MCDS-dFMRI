@@ -406,6 +406,15 @@ Vector3d find_nearest_point_on_skeleton(Vector3d collision_point, Vector3d spher
     return point;
 }
 
+bool Axon::check_negatif(vector<double> list)
+{
+    for (size_t i=0 ; i < list.size(); ++i)
+    {
+        if (list[i] < 1e-10)
+            return true;
+    }
+    return false;
+}
 
 bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, Collision &colision)
 {
@@ -594,16 +603,6 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
         return false;   
     }
 
-}
-
-bool Axon::check_negatif(vector<double> list)
-{
-    for (size_t i=0 ; i < list.size(); ++i)
-    {
-        if (list[i] < 1e-10)
-            return true;
-    }
-    return false;
 }
 
 double Axon::volumeAxon()

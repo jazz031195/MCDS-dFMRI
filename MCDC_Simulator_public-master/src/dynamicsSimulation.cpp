@@ -1157,10 +1157,6 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
 
     for (w = 0 ; w < params.num_walkers; w++)
     {
-
-        // if(back_tracking){
-        //     t--;
-        // }
         cout << "Walker : " << w <<  "\n" <<  endl;
 
         //flag in case there was any error with the particle.
@@ -1222,7 +1218,10 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
         }// end for t
 
 
-
+        if(!back_tracking){
+            if(finalPositionCheck())
+                back_tracking = true;
+        }
         //If there was an error, we don't compute the signal or write anything.
         if(back_tracking){
             continue;
