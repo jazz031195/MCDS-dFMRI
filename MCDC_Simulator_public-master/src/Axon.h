@@ -98,7 +98,6 @@ public:
     int closest_sphere_dichotomy(Walker &walker, double &step_lenght);
     /* Calculate the volume of the current axon and update its tortuosity */
     double volumeAxon();
-    bool check_negatif(vector<double> list);
 };
 
 

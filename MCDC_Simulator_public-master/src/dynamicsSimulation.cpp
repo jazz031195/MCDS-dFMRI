@@ -1181,7 +1181,6 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
 
         for(unsigned t = 1 ; t <= params.num_steps; t++) //T+1 steps in total (avoid errors)
         {
-            cout << "t : " << t << endl;
             //Get the time step in milliseconds
             getTimeDt(last_time_dt, time_dt, l, dataSynth, t, time_step);
 
@@ -1217,11 +1216,12 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
 
         }// end for t
 
-
-        if(!back_tracking){
-            if(finalPositionCheck())
+        if (!back_tracking){
+            if(finalPositionCheck()){
                 back_tracking = true;
+            }
         }
+
         //If there was an error, we don't compute the signal or write anything.
         if(back_tracking){
             continue;
@@ -1473,11 +1473,13 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step, double &
 
     //For each Axon Obstacle
     //We are already in an Axon, no need to check all the others
-    if (walker.location == Walker::intra && walker.in_ax_index >= 0){
+    
+    if (walker.location == Walker::intra && (*axons_list).size()>0){
         (*axons_list)[walker.in_ax_index].checkCollision(walker, bounced_step, tmax, colision_tmp);
         handleCollisions(colision, colision_tmp, max_collision_distance, walker.in_ax_index);
     }
-    else if ((*axons_list).size() > 0) {
+    else {
+    
         for(unsigned int i = 0 ; i < walker.axons_collision_sphere.small_sphere_list_end; i++ )
         {
             unsigned index = walker.axons_collision_sphere.collision_list->at(i);
