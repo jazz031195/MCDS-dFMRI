@@ -127,19 +127,18 @@ bool Neuron::isPosInsideNeuron(Eigen::Vector3d &position,  double distance_to_be
     int part_id; // id of the soma or dendrite. -1 if not in neuron
     tie(neuron_part, part_id) = isNearNeuron(position, distance_to_be_inside);
     std::vector<int> sphere_ids;
-    if(!(neuron_part=="none")){
-        if (neuron_part=="dendrite")
+    if(!(neuron_part == "none")){
+        if (neuron_part == "dendrite")
         {
             if (dendrites[part_id].isPosInsideAxon(position, distance_to_be_inside, false, sphere_ids))
-            {
                 return true;
-            } 
          } 
         else if (neuron_part == "soma")
         {
             // distance from position to soma boundary
             double dis = soma.minDistance(position);
-            if( dis <= distance_to_be_inside ){return true;}
+            if( dis <= -distance_to_be_inside )
+                return true;
         }  
     }
     return false;
@@ -158,7 +157,8 @@ tuple<string, int> Neuron::isNearNeuron(Vector3d &position,  double distance_to_
             ++count_isnear; 
         }
     }
-    if (count_isnear == 3){return tuple<string, int>{"soma", soma.id};}
+    if (count_isnear == 3)
+        return tuple<string, int>{"soma", soma.id};
     
     // Check each dendrite's box
     for (uint8_t i=0 ; i < nb_dendrites ; ++i)
@@ -175,9 +175,8 @@ tuple<string, int> Neuron::isNearNeuron(Vector3d &position,  double distance_to_
             }
         }
         if (count_isnear == 3)
-        {
             return tuple<string, int>{"dendrite", i};
-        }
+    
     }
 
     return tuple<string, int>{"none", -1};

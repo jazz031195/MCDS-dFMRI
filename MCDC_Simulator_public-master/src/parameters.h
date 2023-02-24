@@ -40,7 +40,7 @@ public:
     std::string output_base_name;                   /*!< output files base name (path + sufix)                                      */
     std::string ini_walkers_file;                   /*!< initial walker position file (if any)                                      */
     unsigned ini_walkers_file_count;                /*!< number of walker positions initialize in the configuration file            */
-    std::string ini_walker_flag;                    /*!< where to initialize the walkers                                            */
+    std::string ini_walker_flag;                    /*!< where to initialize the walkers. Either "intra", "extra" or "unkown"       */
     std::string scheme_file;                        /*!< signal adquisition scheme file (if any)                                    */
     Eigen::Vector3d min_limits;                     /*!< voxel min limits (if any) (bottom left corner)                             */
     Eigen::Vector3d max_limits;                     /*!< voxel max limits (if any)                                                  */

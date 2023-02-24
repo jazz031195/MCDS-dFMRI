@@ -116,8 +116,6 @@ bool Projections::isProjInside(std::vector<Projections::projection_pt> projs, Pr
     for (unsigned i = 0; i < projs.size(); i++){
         if (projs[i].axon_id == p.axon_id && projs[i].sph_id == p.sph_id){
             return true;
-            break;
-
         }  
     } 
     return false;
@@ -153,7 +151,6 @@ std::vector<std::vector<Projections::projection_pt>> Projections::find_collision
         } 
         if (colisions_axis_projs.size() == 0){
             return coliding_projs;
-            break;
         } 
         else{ 
             coliding_projs.push_back(colisions_axis_projs);

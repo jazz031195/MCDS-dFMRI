@@ -56,11 +56,11 @@ public:
 
     int in_sph_index;                                                /*!< Auxiliar index to save if the walker was inside a sphere               */
     
-    int in_ax_index;
+    int in_ax_index;                                                 /*!< Auxiliar index to save in which Axon the walker was                    */
 
     int in_cyl_index;                                               /*!< Auxiliar index to save if the walker was inside a cylinder              */
     
-    int in_neuron_index;                                               /*!< Auxiliar index to save if the walker was inside a neuron               */
+    int in_neuron_index;                                               /*!< Auxiliar index to save in which Neuron the walker                */
 
     //ObstacleCollisionSphere cylinders_collision_sphere;             /*!< Collision sphere for collition against cylidners                       */
 

@@ -20,9 +20,8 @@ Sentinel::Sentinel()
     illegal_count = 0;
 
     deport_illegals = true; //Trump mode on.
+    
     discard_stucks = true;
-
-
 
     rejected_step = false;
 }
@@ -70,7 +69,18 @@ bool Sentinel::checkErrors(Walker &walker, const Parameters &params, bool noPLY,
     if( (walker.location != Walker::unknown) && (params.obstacle_permeability <= 0.0) ){
 
         if(walker.initial_location != walker.location){
-            setCrossingError(uint(walker.in_ax_index));
+            if (walker.in_obj_index >= 0)
+                setCrossingError(uint(walker.in_obj_index));
+            else if (walker.in_ax_index >= 0)
+                setCrossingError(uint(walker.in_ax_index));
+            else if (walker.in_neuron_index >= 0)
+                setCrossingError(uint(walker.in_neuron_index));
+            else if (walker.in_ply_index >= 0)
+                setCrossingError(uint(walker.in_ply_index));
+            else if (walker.in_sph_index >= 0)
+                setCrossingError(uint(walker.in_sph_index));
+            else 
+                setCrossingError(uint(walker.in_cyl_index));   
             illegal_count++;
             throw(this->error);
         }
@@ -95,6 +105,7 @@ void Sentinel::deportationProcess(Walker &walker, unsigned& w, unsigned &t, bool
             cout << endl <<  SH_FG_GRAY <<  "[INFO]   " << SH_DEFAULT << " Sim: " << id << " " <<
                     "Walker "<< w << " labeled as 'stuck' after " << this->bouncings <<
                     " bouncings.\nBacktraking...\nDone" << endl;
+        w--;
         back_tracking = true;
     }
 
@@ -104,12 +115,12 @@ void Sentinel::deportationProcess(Walker &walker, unsigned& w, unsigned &t, bool
             cout << endl <<  SH_FG_GRAY <<  "[INFO]   " << SH_DEFAULT << " Sim: " << id << " " <<
                     "Walker "<< w << " labeled as 'illegal' after crossing obstacle id: " << this->obstacle_id <<
                     "\nBacktraking...\nDone" << endl;
+        w--;
         back_tracking = true;
     }
 
     if(this->error == Sentinel::ErrorCases::rejected){
         t--;
-
         if(t>1){
             walker.pos_r = Eigen::Vector3d(walker.pos_r_log(0,t),walker.pos_r_log(1,t),walker.pos_r_log(2,t));
             walker.last_pos_r = Eigen::Vector3d(walker.pos_r_log(0,t-1),walker.pos_r_log(1,t-1),walker.pos_r_log(2,t-1));

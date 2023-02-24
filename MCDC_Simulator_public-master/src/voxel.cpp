@@ -33,7 +33,7 @@ bool Voxel::CheckCollision(Walker &walker, Eigen::Vector3d& step, double& tmax, 
     Collision colision_temp = colision;
 
     for(int i = 0 ; i < 6; i++){
-        walls[i].CheckCollision(walker,step,tmax,colision_temp);
+        walls[i].CheckCollision(walker, step, tmax, colision_temp);
 
         if(colision_temp.doIHaveMorePiorityThan(colision))
             colision = colision_temp;
