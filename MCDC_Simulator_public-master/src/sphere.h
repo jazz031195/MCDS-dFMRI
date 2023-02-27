@@ -36,7 +36,7 @@ public:
      *  \param scale  overall scale for when reading files.
      *  \brief Initialize everything.
      */
-    Sphere(Eigen::Vector3d center_, double radius_,double scale =1):center(center_*scale),radius(radius_*scale){
+    Sphere(Eigen::Vector3d const& center_, double const& radius_,double const& scale =1):center(center_*scale),radius(radius_*scale){
         id = count++;
     }
 
@@ -53,15 +53,15 @@ public:
      *  \return true only if there was a Collision::hit status. \see Collision.
      *  \brief Basic collision function. Returns the if there was any collision on against the obstacle.
      */
-    bool checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision);
+    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision);
 
     /*! \fn  minDistance
      *  \param walker, Walker instance in the simulation.
      *  \brief Returns the minimum distance from the walker to the Sphere enveloppe. Used to set the reachable
      *  Spheres that a given walker can reach.
      */
-    double minDistance(Walker &w);
-    double minDistance(Eigen::Vector3d pos);
+    double minDistance(Walker const& w) const;
+    double minDistance(Eigen::Vector3d const& pos) const;
 
 private:
 
@@ -71,7 +71,7 @@ private:
      *  \param step, step vector where to move.
      *  \brief Returns true if it was any analytical collision to the infinite plane
      */
-    inline bool handleCollition(Walker& walker, Collision &colision, Eigen::Vector3d& step,double& a,double& b, double& c,double& discr,double& step_length);
+    inline bool handleCollition(Walker& walker, Collision &colision, Eigen::Vector3d const& step,double& a,double& b, double& c,double& discr,double const& step_length);
 
 };
 

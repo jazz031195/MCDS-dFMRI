@@ -41,7 +41,7 @@ public:
     void setScaleFactor(double scale){scale_factor = scale;}
 
 //  bool computeStepCollition(Walker &w, double step[3], const double &step_length,double end_point[3], Collision& colision);
-    bool checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision);
+    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision);
 
     bool checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision, std::vector<unsigned> &triangle_list, unsigned list_end);
 
@@ -56,7 +56,7 @@ private:
     void checkIfItsNearToTriangle(const Eigen::Vector3d end_point, const unsigned triangle_ind, Collision &colision);
 
     //Given the collision, handles the next walker status and the bouncing, if needed.
-    bool updateWalkerStatusAndHandleBouncing(Walker &walker, Eigen::Vector3d &ray_origin, Eigen::Vector3d &step, Collision &colision);
+    bool updateWalkerStatusAndHandleBouncing(Walker &walker, Eigen::Vector3d const&ray_origin, Eigen::Vector3d const&step, Collision &colision);
 
 };
 

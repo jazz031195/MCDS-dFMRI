@@ -14,7 +14,7 @@ Sphere::Sphere(const Sphere &sph)
     id = count++;
 }
 
-bool Sphere::checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision)
+bool Sphere::checkCollision(Walker &walker, Vector3d const&step, double const&step_lenght, Collision &colision)
 {
 
     //Origin of the ray
@@ -55,7 +55,7 @@ bool Sphere::checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_
 }
 
 
-inline bool Sphere::handleCollition(Walker& walker, Collision &colision, Vector3d& step,double& a,double& b, double& c,double& discr,double& step_length){
+inline bool Sphere::handleCollition(Walker& walker, Collision &colision, Vector3d const& step,double& a,double& b, double& c,double& discr,double const& step_length){
 
     double t1 = (-b - sqrt(discr))/a;
 
@@ -129,7 +129,8 @@ inline bool Sphere::handleCollition(Walker& walker, Collision &colision, Vector3
 
 }
 
-double Sphere::minDistance(Walker &w){
+double Sphere::minDistance(Walker const& w) const
+{
 
     //Origin of the ray
     Vector3d O;
@@ -144,7 +145,7 @@ double Sphere::minDistance(Walker &w){
     return d_;
 }
 
-double Sphere::minDistance(Vector3d pos)
+double Sphere::minDistance(Vector3d const& pos) const
 {
 
     // First check distance to soma

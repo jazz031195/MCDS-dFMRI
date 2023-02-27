@@ -25,25 +25,28 @@ public:
      */
     Obstacle();
 
-    /*! \fn  checkCollision
-     *  \param walker, Walker instance in the simulation.
+    /*! \param walker, Walker instance in the simulation.
      *  \param 3d step. Is assumed to be normalized.
      *  \param step_lenght, length used as the maximum step collision distance.
-     *  \param colilsion, Collision instance to save the collision (if any) details.
+     *  \param colision, Collision instance to save the collision (if any) details.
      *  \return true only if there was a Collision::hit status. \see Collision.
      *  \brief Basic collision function. Returns the if there was any collision on against the obstacle.
      */
-    bool checkCollision(Walker& walker, Eigen::Array3d& step,const double& step_lenght, Collision& colision);
+    bool checkCollision(Walker& walker, Eigen::Vector3d const& step, double const& step_lenght, Collision& colision);
 
-    /*! \fn     elasticBounceAgainsPlane
+    /*! Modifies step_dir so that it contains the step_dir after the bounce
+     *  \param ray_origin Vector3d, origin of the incident ray.
+     *  \param normal Vector3d, normal of the obstacle on which to bounce.
+     *  \param step_lenght double, length used as the maximum step collision distance.
+     *  \param step_dir Vector3d, step direction - incident ray.
      */
-    void elasticBounceAgainsPlane(Eigen::Vector3d& ray_origin, Eigen::Vector3d& normal, double& t, Eigen::Vector3d &step);
+    void elasticBounceAgainsPlane(Eigen::Vector3d const& ray_origin, Eigen::Vector3d const& normal, double const& step_length, Eigen::Vector3d &step_dir) const;
 
     /*!
      *  \param  walker to find the (closest) distance.
      *  \brief  Returns the minimum distance of collision.
      */
-    double minDistance(Walker& w);
+    double minDistance(Walker const& walker) const;
 
 };
 

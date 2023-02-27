@@ -20,7 +20,7 @@ void Projections::clear_projections(){
     sph_projections_z.clear();
 }
 
-void Projections::append_right_place(Projections::projection_pt p1, Projections::projection_pt p2, int axis){
+void Projections::append_right_place(Projections::projection_pt const& p1, Projections::projection_pt const& p2, int const& axis){
     
     double position1 = p1.position;
     double position2 = p2.position;
@@ -64,7 +64,7 @@ void Projections::append_right_place(Projections::projection_pt p1, Projections:
 }
 
 
-std::vector<Projections::projection_pt> Projections::find_collisions(projection_pt proj_on_axis_min, projection_pt proj_on_axis_max, std::vector<projection_pt> projections_on_axis){
+std::vector<Projections::projection_pt> Projections::find_collisions(projection_pt const& proj_on_axis_min, projection_pt const& proj_on_axis_max, std::vector<projection_pt> const& projections_on_axis) const{
     
     std::vector<projection_pt> closest_spheres;
     closest_spheres.clear();
@@ -107,22 +107,21 @@ std::vector<Projections::projection_pt> Projections::find_collisions(projection_
     return closest_spheres;
 }
 
-bool Projections::isProjInside(std::vector<Projections::projection_pt> projs, Projections::projection_pt p){
+bool Projections::isProjInside(std::vector<Projections::projection_pt> const& projs, Projections::projection_pt const& p) const{
     
     // search for s in spheres_
-    if (projs.size() == 0){
+    if (projs.size() == 0)
         return false;
-    } 
+     
     for (unsigned i = 0; i < projs.size(); i++){
-        if (projs[i].axon_id == p.axon_id && projs[i].sph_id == p.sph_id){
+        if (projs[i].axon_id == p.axon_id && projs[i].sph_id == p.sph_id)
             return true;
-        }  
     } 
     return false;
 }  
 
 
-std::vector<std::vector<Projections::projection_pt>> Projections::find_collisions_all_axes(Vector3d &position, double rad, int ax_id){
+std::vector<std::vector<Projections::projection_pt>> Projections::find_collisions_all_axes(Vector3d const&position, double const&rad, int const&ax_id) const{
     std::vector<std::vector<projection_pt>> coliding_projs;
     std::vector<projection_pt> colisions_axis_projs;
     coliding_projs.clear();

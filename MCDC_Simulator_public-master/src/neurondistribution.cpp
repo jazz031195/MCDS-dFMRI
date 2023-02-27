@@ -6,7 +6,7 @@
 using namespace std;
 using namespace Eigen;
 
-NeuronDistribution::NeuronDistribution(unsigned num_obstacles_, double icvf_, Eigen::Vector3d & min_limits_vx_, Eigen::Vector3d & max_limits_vx_)
+NeuronDistribution::NeuronDistribution(int const& num_obstacles_, double const& icvf_, Vector3d const& min_limits_vx_, Vector3d const& max_limits_vx_)
 {
     num_obstacles = num_obstacles_;
     icvf = icvf_;
@@ -22,26 +22,22 @@ NeuronDistribution::NeuronDistribution(unsigned num_obstacles_, double icvf_, Ei
 
 }
 
-void NeuronDistribution::computeMinimalSize(std::vector<double> radiis, double icvf_, Eigen::Vector3d &l)
-{
+// void NeuronDistribution::computeMinimalSize(std::vector<double> const& radiis, double &icvf_, Vector3d &l) const
+// {
 
-    /*A little heuristic for complicated ICVF: > 0.7*/
-    if (icvf_ >= 0.7 && icvf_ < 0.99)
-    {
-        icvf_ += 0.01;
-    }
+//     /*A little heuristic for complicated ICVF: > 0.7*/
+//     if (icvf_ >= 0.7 && icvf_ < 0.99)
+//         icvf_ += 0.01;
 
-    double area = 0;
+//     double area = 0;
 
-    for (uint i = 0; i < radiis.size(); i++)
-    {
-        area += radiis[i] * radiis[i] * M_PI;
-    }
+//     for (uint i = 0; i < radiis.size(); i++)
+//         area += radiis[i] * radiis[i] * M_PI;
 
-    double l_ = sqrt(area / icvf_);
+//     double l_ = sqrt(area / icvf_);
 
-    l = {l_, l_, l_};
-}
+//     l = {l_, l_, l_};
+// }
 
 
 void NeuronDistribution::createSubstrate()
@@ -51,7 +47,6 @@ void NeuronDistribution::createSubstrate()
     uint max_adjustments = 5;
     // double best_icvf = 0;
     // Eigen::Vector3d best_max_limits;
-    min_limits_vx = {0.,0.,0.};
 
     bool achieved = false;
     std::random_device rd;
@@ -67,8 +62,7 @@ void NeuronDistribution::createSubstrate()
 
         for(uint t = 0 ;  t < repetition; t++){
             neurons.clear();
-            int nb_neurons = 0;
-            for(unsigned i = 0 ; i < num_obstacles; i++){
+            for(int i = 0 ; i < num_obstacles; i++){
                 unsigned stuck = 0;
                 while(++stuck <= 1000){
                     double t = udist(gen);
@@ -94,14 +88,13 @@ void NeuronDistribution::createSubstrate()
                     if (!isSphereColliding(soma_center, soma_radius))
                     {
                         Neuron neuron(soma_center, soma_radius);
-                        growDendrites(neuron, i); 
+                        growDendrites(neuron); 
                         neurons.push_back(neuron);
-                        nb_neurons++;
                         break;
                     }         
                 }
             } // end for neurons
-            icvf = computeICVF(neurons, min_limits_vx, max_limits_vx);
+            icvf = computeICVF();
 
             // if(this->icvf - best_icvf  < 0.0005){
             //     achieved = true;
@@ -126,7 +119,7 @@ void NeuronDistribution::createSubstrate()
     // SimErrno::info(message,cout);
 }
 
-void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
+void NeuronDistribution::growDendrites(Neuron& neuron)
 {
     // Store all the starting points of dendrites, on the soma of the neuron
     std::vector<Eigen::Vector3d> start_dendrites;
@@ -141,6 +134,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
 
         while(tries < max_tries)
         {
+            // Find a point at the surface of the soma
             double x = distribution(generator); 
             double y = distribution(generator);
             double z = distribution(generator);
@@ -175,62 +169,60 @@ void NeuronDistribution::growDendrites(Neuron& neuron, int neuron_id)
                 Eigen::Vector3d begin;
                 Axon dendrite(sphere_radius, begin, begin, 0, false, false , 1);
                 std::vector<Dynamic_Sphere> spheres_to_add;
+                spheres_to_add.clear();
 
                 for(int j=0; j < nb_spheres; ++j)
                 {
                     Eigen::Vector3d center = j*dendrite_direction*sphere_radius/4 + dendrite_start;
                     if (isInVoxel(center, sphere_radius + barrier_tickness) && !isSphereColliding(center, sphere_radius))
                     {
-                        Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, 0);
+                        Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, false);
                         spheres_to_add.push_back(sphere_to_add);
                     }
-                    else{ break; }
+                    else
+                        break; 
                 }
                 dendrite.set_spheres(spheres_to_add, i);
-                neuron.dendrites.push_back(dendrite);
+                neuron.add_dendrite(dendrite);
                 break;
             }
         }
     } 
 }
 
-bool NeuronDistribution::isSphereColliding(Dynamic_Sphere sph)
+bool NeuronDistribution::isSphereColliding(Dynamic_Sphere const& sph) 
 {
     Vector3d position = sph.center;
     double distance_to_be_inside = sph.max_radius - 2 * barrier_tickness;
 
     for (unsigned i = 0; i < neurons.size() ; i++){
         bool isinside = neurons[i].isPosInsideNeuron(position, distance_to_be_inside, false);
-        if (isinside){
+        if (isinside)
             return true;
-            break;
-        }
     }
     return false;
 }
 
-bool NeuronDistribution::isSphereColliding(Vector3d sphere_center, double sphere_radius)
+bool NeuronDistribution::isSphereColliding(Vector3d const& sphere_center, double const& sphere_radius) 
 {
     double distance_to_be_inside = sphere_radius - 2 * barrier_tickness;
 
     for (unsigned i = 0; i < neurons.size() ; i++){
         bool isinside = neurons[i].isPosInsideNeuron(sphere_center, distance_to_be_inside, false);
-        if (isinside){
+        if (isinside)
             return true;
-            break;
-        }
     }
     return false;
 }
 
-void NeuronDistribution::printSubstrate(ostream &out)
+void NeuronDistribution::printSubstrate(ostream &out) const
 {
     out << 1 << endl; //scale
     out << 0 << endl; //volume_inc_perc
     out << 0 << endl; //dyn_perc
     out << icvf << endl;
-    out << 0 << endl; //min_limits [mm]
-    out << 0.1 << endl; //max_limits [mm]
+    out << min_limits_vx[0] << endl; //min_limits [mm]
+    out << max_limits_vx[0] << endl; //max_limits [mm]
 
     for (unsigned i = 0; i < neurons.size(); i++)
     {
@@ -252,7 +244,7 @@ void NeuronDistribution::printSubstrate(ostream &out)
                 << neurons[i].dendrites[j].spheres[k].center[1] << " "
                 << neurons[i].dendrites[j].spheres[k].center[2] << " "
                 << neurons[i].dendrites[j].spheres[k].radius << " "
-                << 0 << endl; //bool_active = false for now
+                << neurons[i].dendrites[j].spheres[k].swell << endl; 
             }
             out << "Dendrite " + to_string(j) << endl;
 
@@ -261,39 +253,42 @@ void NeuronDistribution::printSubstrate(ostream &out)
     }
 }
 
-bool NeuronDistribution::isInVoxel(Eigen::Vector3d pos, double distance_to_border) 
+bool NeuronDistribution::isInVoxel(Eigen::Vector3d const& pos, double const& distance_to_border) const
 {
     Eigen::Vector3d new_min_limits_vx = {min_limits_vx[0] + distance_to_border, min_limits_vx[1] + distance_to_border, min_limits_vx[2] + distance_to_border};
     Eigen::Vector3d new_max_limits_vx = {max_limits_vx[0] - distance_to_border, max_limits_vx[1] - distance_to_border, max_limits_vx[2] - distance_to_border};
 
-    if ((pos[0]-new_min_limits_vx[0])<0 || (pos[1]-new_min_limits_vx[1])<0 || (pos[2]-new_min_limits_vx[2])<0){
+    if ((pos[0] - new_min_limits_vx[0]) < 0 || 
+        (pos[1] - new_min_limits_vx[1]) < 0 || 
+        (pos[2] - new_min_limits_vx[2]) < 0)
         return false;
-    }
-    else if ((pos[0]-new_max_limits_vx[0])>0 || (pos[1]-new_max_limits_vx[1])>0 || (pos[2]-new_max_limits_vx[2])>0) {
+    else if ((pos[0] - new_max_limits_vx[0]) > 0 || 
+             (pos[1] - new_max_limits_vx[1]) > 0 || 
+             (pos[2] - new_max_limits_vx[2]) > 0) 
         return false;
-    }
+
     return true;   
 }
 
-double NeuronDistribution::computeICVF(vector<Neuron> &neurons, Vector3d &min_limits, Vector3d &max_limits)
+double NeuronDistribution::computeICVF() const
 {
 
     if (neurons.size() == 0)
         return 0;
 
-    double VolumeVoxel = (max_limits[0] - min_limits[0]) * (max_limits[1] - min_limits[1]) * (max_limits[2] - min_limits[2]);
-    double VolumeNeuron = 0;
+    double VolumeVoxel = (max_limits_vx[0] - min_limits_vx[0]) * (max_limits_vx[1] - min_limits_vx[1]) * (max_limits_vx[2] - min_limits_vx[2]);
+    double VolumeNeurons = 0;
    
     for (size_t i = 0; i < neurons.size(); i++)
     {
         // Calculate the volume of the soma
-        VolumeNeuron += 4/3*M_PI*pow(neurons[i].soma.radius, 3);
+        VolumeNeurons += 4/3*M_PI*pow(neurons[i].soma.radius, 3);
 
         // Calculate the cylindrical volume of each dendrite
         for (uint8_t j = 0; j < neurons[i].nb_dendrites; j++)
         {
-            VolumeNeuron += neurons[i].dendrites[j].volumeAxon();
+            VolumeNeurons += neurons[i].dendrites[j].volumeAxon();
         }      
     }
-    return VolumeNeuron / VolumeVoxel;
+    return VolumeNeurons / VolumeVoxel;
 }

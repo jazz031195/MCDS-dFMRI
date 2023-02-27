@@ -29,6 +29,8 @@ Neuron::Neuron()
     // Create a random span radius and set its value to this
     generateSpanRadius();
 
+    dendrites.clear();
+
 }
 
 Neuron::~Neuron()
@@ -36,7 +38,7 @@ Neuron::~Neuron()
     nb_neurons--;
 }
 
-Neuron::Neuron(vector<Axon> dendrites_, Dynamic_Sphere soma_) : Neuron()
+Neuron::Neuron(vector<Axon> const& dendrites_, Dynamic_Sphere const& soma_) : Neuron()
 {
     dendrites    = dendrites_;     
     assert(dendrites_.size() < std::numeric_limits<decltype(nb_dendrites)>::max());
@@ -44,38 +46,34 @@ Neuron::Neuron(vector<Axon> dendrites_, Dynamic_Sphere soma_) : Neuron()
     soma         = soma_;
 }
 
-Neuron::Neuron(Vector3d soma_center, double soma_radius=5e-3) : Neuron()
+Neuron::Neuron(Vector3d const& soma_center, double const& soma_radius=5e-3) : Neuron()
 {
     soma = Dynamic_Sphere(soma_center, soma_radius);
 }
 
-Neuron::Neuron(vector<Axon> dendrites_, Vector3d soma_center, double soma_radius=5e-3) : Neuron()
+Neuron::Neuron(vector<Axon> const& dendrites_, Vector3d const& soma_center, double const& soma_radius=5e-3) : Neuron()
 {
     dendrites    = dendrites_; 
     nb_dendrites = dendrites_.size();        
     soma         = Dynamic_Sphere(soma_center, soma_radius);
 }
 
-Neuron::Neuron(const Neuron &neuron)
+Neuron::Neuron(Neuron const&neuron) : nb_dendrites(neuron.nb_dendrites), span_radius(neuron.span_radius), dendrites(neuron.dendrites), soma(neuron.soma) 
 {
-    id           = nb_neurons++;
-    dendrites    = neuron.dendrites;           
-    soma         = neuron.soma;
-    nb_dendrites = neuron.nb_dendrites;
-    span_radius  = neuron.span_radius;
+    id = nb_neurons++;
 }
 
-double Neuron::minDistance(Walker &w)
+double Neuron::minDistance(Walker const& walker) const
 {
     vector<double> distances;
     distances.clear();
-    distances  = Distances_to_Spheres(w);
-    double min = *min_element(begin(distances), end(distances ));
+    distances  = Distances_to_Spheres(walker);
+    double min = *min_element(begin(distances), end(distances));
 
     return min;
 }
 
-vector<double> Neuron::Distances_to_Spheres(Walker &w)
+vector<double> Neuron::Distances_to_Spheres(Walker const& w) const
 {
 
     Vector3d O;
@@ -84,7 +82,7 @@ vector<double> Neuron::Distances_to_Spheres(Walker &w)
 
 }
 
-double Neuron::minDistance(Eigen::Vector3d pos)
+double Neuron::minDistance(Eigen::Vector3d const& pos) const
 {
 
     vector<double> distances = Distances_to_Spheres(pos);
@@ -93,16 +91,13 @@ double Neuron::minDistance(Eigen::Vector3d pos)
 
 }
 
-vector<double> Neuron::Distances_to_Spheres(Vector3d pos)
+vector<double> Neuron::Distances_to_Spheres(Vector3d const& pos) const
 {
-    
-    vector<double> distances;
-    distances.clear();
-    
+ 
     // First check distance to soma
     Vector3d m = pos - soma.center;
     double distance_to_sphere = m.norm() - soma.radius;
-    distances.push_back(distance_to_sphere);
+    vector<double> distances {distance_to_sphere};
 
     // Then iterate through dendrites
     for (uint8_t i=0; i < nb_dendrites; ++i)
@@ -117,11 +112,8 @@ vector<double> Neuron::Distances_to_Spheres(Vector3d pos)
     return distances;
 }
 
-bool Neuron::isPosInsideNeuron(Eigen::Vector3d &position,  double distance_to_be_inside, bool swell_){
-    // when checking collision with walker -> check with normal radius
-    // when checking with collisions of other neurons -> check with max_radius so there is room for swelling
-    vector<vector<Projections::projection_pt>> coliding_projs;
-    Dynamic_Sphere sphere_ ;
+bool Neuron::isPosInsideNeuron(Eigen::Vector3d const& position,  double const& distance_to_be_inside, bool const& swell_) 
+{
     // if position is in box with axon inside
     string neuron_part; // "soma", "dendrite" or "none"
     int part_id; // id of the soma or dendrite. -1 if not in neuron
@@ -145,7 +137,7 @@ bool Neuron::isPosInsideNeuron(Eigen::Vector3d &position,  double distance_to_be
 } 
 
 
-tuple<string, int> Neuron::isNearNeuron(Vector3d &position,  double distance_to_be_inside)
+tuple<string, int> Neuron::isNearNeuron(Vector3d const& position,  double const& distance_to_be_inside) const
 {
     // Check soma box
     int count_isnear = 0;
@@ -183,29 +175,26 @@ tuple<string, int> Neuron::isNearNeuron(Vector3d &position,  double distance_to_
 }
 
 
-bool Neuron::checkCollision(Walker &walker, Eigen::Vector3d &step_dir, double &step_lenght, Collision &colision)
+bool Neuron::checkCollision(Walker &walker, Eigen::Vector3d const& step_dir, double const&step_lenght, Collision &colision)
 {
     // Check if collision with soma
     if(soma.checkCollision(walker, step_dir, step_lenght, colision))
-    {
         return true;
-    } 
+    
     // Check if collision with dendrites
     for(uint8_t i=0 ; i < nb_dendrites ; ++i)
     {
         if(dendrites[i].checkCollision(walker, step_dir, step_lenght, colision))
-        {
             return true;
-        }  
     } 
     return false;
+
+    // TODOines : check displacement dendrite-soma
 }
 
 
-bool Neuron::intersection_sphere_vector(double &intercept1, double &intercept2, Dynamic_Sphere &sphere, Vector3d &step_dir, double &step_length, Vector3d &traj_origin, double &c){
-    //https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
-    // A sphere and a line can intersect in 3 ways : no intersect, 1 intersect (tangent), 2 intersect
-
+bool Neuron::intersection_sphere_vector(double &intercept1, double &intercept2, Dynamic_Sphere const&sphere, Vector3d const&step_dir, double const&step_length, Vector3d const&traj_origin, double &c) const
+{
     Vector3d m = traj_origin - sphere.center;
     double rad = sphere.radius;
 
@@ -214,81 +203,81 @@ bool Neuron::intersection_sphere_vector(double &intercept1, double &intercept2, 
 
     // If the minimum distance from the walker to the sphere is more than
     // the actual step size, we can discard this collision.
-    if(d_> EPS_VAL){
-        if(d_ > step_length+barrier_tickness){
+    if(d_> EPS_VAL)
+        if(d_ > step_length + barrier_tickness)
             return false;
-        }
-    }
 
     double a = 1;
-    double b = (m.dot(step_dir));
-    c = m.dot(m) - rad*rad;
+    double b = m.dot(step_dir);
+    c        = m.dot(m) - rad*rad;
 
-    
     double discr = b*b - a*c;
 
-    if (discr < 0.0 ){
+    if (discr < 0.0 )
         return false;
-    }
 
     intercept1 = (-b + sqrt(discr))/(a);
     intercept2 = (-b - sqrt(discr))/(a);
 
     return true;
-
 }
 
-tuple<string, int, int> Neuron::closest_sphere_dichotomy(Walker &walker, double &step_lenght, double barrier_thickness)
+tuple<string, int, int> Neuron::closest_sphere(Walker const& walker, double const& barrier_thickness) const
 {
-    Vector3d O;
-    walker.getVoxelPosition(O);
+    Vector3d walker_pos;
+    walker.getVoxelPosition(walker_pos);
 
     string neuron_part; // "soma", "dendrite" or "none"
     int part_id; // id of the soma or dendrite. -1 if not in neuron
-    tie(neuron_part, part_id) = isNearNeuron(O, barrier_thickness);
+    tie(neuron_part, part_id) = isNearNeuron(walker_pos, barrier_thickness);
 
-    if (neuron_part=="dendrite")
+    if (neuron_part == "dendrite")
     {
-        int number_spheres = dendrites[part_id].spheres.size();
-        int i=0;
-        int i_last = number_spheres-1;
-        int half_way;
-        double first_distance;
-        double last_distance;
-        while ((i_last-i)>1)
-        {
-            half_way       = int((i_last+i)/2);
-            first_distance = (dendrites[part_id].spheres[i].center-O).norm() - dendrites[part_id].spheres[i].radius;
-            last_distance  = (dendrites[part_id].spheres[i_last].center-O).norm() - dendrites[part_id].spheres[i_last].radius;
-            if(first_distance < last_distance)
-            {
-                i_last = half_way;
-            } 
-            else
-            {
-                i = half_way;
-            } 
-        }
-        if (first_distance < last_distance)
-            return {neuron_part, part_id, i};
-
-        return {neuron_part, part_id, i_last};
+        int i = closest_sphere_dichotomy(part_id, walker_pos);
+        return {neuron_part, part_id, i};
     }
-    if (neuron_part == "soma")
+    else if (neuron_part == "soma")
         return {neuron_part, part_id, 0};
-    return {"none", -1, -1}; //TODO: to check
+    else
+        return {"none", -1, -1}; //TODO: to check
 } 
 
-
-void Neuron::set_axons(std::vector<Axon> axons_to_add, int axon_id)
+int Neuron::closest_sphere_dichotomy(int const& dendrite_id, Vector3d const& walker_pos) const
 {
-    if (axons_to_add.size() != 0)
+    int i = 0;
+    int number_spheres = dendrites[dendrite_id].spheres.size();
+    int i_last = number_spheres-1;
+    int half_way;
+    double first_distance;
+    double last_distance;
+    while ((i_last-i) > 1)
     {
-        dendrites = axons_to_add;
+        half_way       = int((i_last + i) / 2);
+        first_distance = (dendrites[dendrite_id].spheres[i].center - walker_pos).norm() - dendrites[dendrite_id].spheres[i].radius;
+        last_distance  = (dendrites[dendrite_id].spheres[i_last].center - walker_pos).norm() - dendrites[dendrite_id].spheres[i_last].radius;
+        if(first_distance < last_distance)
+            i_last = half_way;
+        else
+            i = half_way;
     }
+    if (first_distance < last_distance)
+        return i;
+
+    return i_last;
 }
 
-void Neuron::generateSpanRadius(int lower_bound, int upper_bound)
+void Neuron::set_axons(std::vector<Axon> const& axons_to_add)
+{
+    if (axons_to_add.size() != 0)
+        dendrites = axons_to_add;
+}
+
+void Neuron::add_dendrite(Axon const& dendrite_to_add)
+{
+    dendrites.push_back(dendrite_to_add);
+}
+
+void Neuron::generateSpanRadius(int const& lower_bound, int const& upper_bound)
 {
     random_device dev;
     mt19937 rng(dev());

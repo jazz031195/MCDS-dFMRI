@@ -186,7 +186,7 @@ void PLYObstacle::readPLY_ASCII_trianglesSubdivitionDistance(string ply_file, ve
 }
 
 
-bool PLYObstacle::checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision)
+bool PLYObstacle::checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision)
 {
     Collision colision_temp;
     colision.type = Collision::null;
@@ -219,7 +219,7 @@ bool PLYObstacle::checkCollision(Walker &walker, Eigen::Vector3d &step, double &
 
 }
 
-bool PLYObstacle::checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision, std::vector<unsigned>& triangle_list, unsigned list_end)
+bool PLYObstacle::checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision, std::vector<unsigned> const& triangle_list, unsigned const& list_end)
 {
     Collision colision_temp;
     colision.type = Collision::null;
@@ -322,7 +322,7 @@ void PLYObstacle::checkIfItsNearToTriangle(const Eigen::Vector3d end_point, cons
     }
 }
 
-bool PLYObstacle::updateWalkerStatusAndHandleBouncing(Walker &walker, Eigen::Vector3d &ray_origin, Eigen::Vector3d &step, Collision &colision)
+bool PLYObstacle::updateWalkerStatusAndHandleBouncing(Walker &walker, Eigen::Vector3d const&ray_origin, Eigen::Vector3d const&step, Collision &colision)
 {
     if (colision.type == Collision::null){
         return 0;
@@ -364,7 +364,7 @@ bool PLYObstacle::updateWalkerStatusAndHandleBouncing(Walker &walker, Eigen::Vec
     return bounced;
 }
 
-double PLYObstacle::minDistance(Walker &w, unsigned t)
+double PLYObstacle::minDistance(Walker const&w, unsigned const& t) const
 {
     return faces[t].minDistance(w.pos_v);
 }

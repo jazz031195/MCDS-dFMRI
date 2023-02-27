@@ -52,7 +52,7 @@ bool Dynamic_Cylinder::checkSwallow(Walker &walker, bool walker_is_extra)
     // walker should be intra so is swallowed if is outside cylinder
 
 }
-bool Dynamic_Cylinder::checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision)
+bool Dynamic_Cylinder::checkCollision(Walker &walker, Eigen::Vector3d const& step, double const& step_lenght, Collision &colision)
 {
     //Origin of the ray
     Vector3d O;
@@ -103,7 +103,7 @@ bool Dynamic_Cylinder::checkCollision(Walker &walker, Eigen::Vector3d &step, dou
 
 }
 
-inline bool Dynamic_Cylinder::handleCollition(Walker& walker, Collision &colision, Vector3d& step,double& a,double& b, double& c,double& discr,double& step_length){
+inline bool Dynamic_Cylinder::handleCollition(Walker& walker, Collision &colision, Vector3d const& step,double& a,double& b, double& c,double& discr,double const& step_length){
 
     double t1 = (-b - sqrt(discr))/a;
 
@@ -188,7 +188,8 @@ inline bool Dynamic_Cylinder::handleCollition(Walker& walker, Collision &colisio
 
 }
 
-double Dynamic_Cylinder::minDistance(Walker &w){
+double Dynamic_Cylinder::minDistance(Walker const& w) const
+{
 
     //Origin of the ray
     Vector3d O;

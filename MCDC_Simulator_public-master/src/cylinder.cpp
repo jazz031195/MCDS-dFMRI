@@ -27,7 +27,7 @@ Cylinder::Cylinder(const Cylinder &cyl)
 
 }
 
-bool Cylinder::checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision)
+bool Cylinder::checkCollision(Walker& walker, Eigen::Vector3d const& step, double const& step_lenght, Collision &colision)
 {
     //Origin of the ray
     Vector3d O;
@@ -74,11 +74,12 @@ bool Cylinder::checkCollision(Walker &walker, Eigen::Vector3d &step, double &ste
     }
 
     //if we arrived here we need to compute the quadratic equation.
-    return handleCollition(walker,colision,step,a,b,c,discr,step_lenght);
+    return handleCollition(walker, colision, step, a, b, c, discr, step_lenght);
 
 }
 
-inline bool Cylinder::handleCollition(Walker& walker, Collision &colision, Vector3d& step,double& a,double& b, double& c,double& discr,double& step_length){
+inline bool Cylinder::handleCollition(Walker& walker, Collision &colision, Vector3d const& step, double& a, double& b, double& c, double& discr, double const& step_length) 
+{
 
     double t1 = (-b - sqrt(discr))/a;
 
@@ -163,7 +164,7 @@ inline bool Cylinder::handleCollition(Walker& walker, Collision &colision, Vecto
 
 }
 
-double Cylinder::minDistance(Walker &w){
+double Cylinder::minDistance(Walker const& w) const{
 
     //Origin of the ray
     Vector3d O;

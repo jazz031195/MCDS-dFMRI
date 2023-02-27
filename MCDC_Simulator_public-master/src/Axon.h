@@ -46,7 +46,7 @@ public:
     ~Axon();
 
 
-    Axon(double min_radius_,  Eigen::Vector3d begin_, Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , double scale):
+    Axon(double const& min_radius_,  Eigen::Vector3d const& begin_, Eigen::Vector3d const& end_, double const& volume_inc_perc_, bool const& active_state_ , bool const& swell_ , double const& scale):
     min_radius(min_radius_*scale), 
     swell(swell_), 
     begin(begin_*scale),
@@ -75,29 +75,26 @@ public:
     }
     Axon(Axon const &ax);
 
-    std::vector<double> Distances_to_Spheres(Walker &w);
+    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision);
 
-    std::vector<Dynamic_Sphere>  closestSpheres (Walker &w);
+    std::vector<Dynamic_Sphere>  closestSpheres (Eigen::Vector3d const& pos) const;
+    std::vector<Dynamic_Sphere>  closestSpheres (Walker const& w) const;
+    int closest_sphere_dichotomy(Walker const& walker) const;
+    
+    std::vector<double> Distances_to_Spheres(Walker const& w) const;
+    std::vector<double> Distances_to_Spheres(Eigen::Vector3d const& pos) const;
+    std::vector<double> Distances_to_Centers(Eigen::Vector3d const& pos) const;
+    double minDistanceCenter(Eigen::Vector3d const& pos) const;
+    double minDistance(Walker const& w) const;
+    double minDistance(Eigen::Vector3d const& pos) const;
 
-    bool checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision);
-
-    std::vector<Dynamic_Sphere>  closestSpheres (Eigen::Vector3d pos);
-
-    std::vector<double> Distances_to_Spheres(Eigen::Vector3d pos);
-    std::vector<double> Distances_to_Centers(Eigen::Vector3d pos);
-    double minDistanceCenter(Eigen::Vector3d pos);
-    double minDistance(Walker &w);
-
-    double minDistance(Eigen::Vector3d pos);
-
-    bool intersection_sphere_vector(double &t1, double &t2,Dynamic_Sphere &s, Eigen::Vector3d &step, double &step_length, Eigen::Vector3d &pos, bool isintra, double &c);
-    void set_spheres(std::vector<Dynamic_Sphere> spheres_to_add, int axon_id);
-    void add_projection(int axon_id);
-    bool isNearAxon(Eigen::Vector3d &position,  double distance_to_be_inside);
-    bool isPosInsideAxon(Eigen::Vector3d &position,  double distance_to_be_inside, bool swell_, std::vector<int> sphere_ids);
-    int closest_sphere_dichotomy(Walker &walker, double &step_lenght);
+    bool intersection_sphere_vector(double &t1, double &t2, Dynamic_Sphere const&s, Eigen::Vector3d const&step, double const&step_length, Eigen::Vector3d const& pos, bool const& isintra, double &c) const;
+    void set_spheres(std::vector<Dynamic_Sphere> const& spheres_to_add, int const& axon_id);
+    void add_projection(int const& axon_id);
+    bool isNearAxon(Eigen::Vector3d const&position,  double const& distance_to_be_inside) const;
+    bool isPosInsideAxon(Eigen::Vector3d const&position,  double const& distance_to_be_inside, bool const& swell_, std::vector<int> sphere_ids);
     /* Calculate the volume of the current axon and update its tortuosity */
-    double volumeAxon();
+    double volumeAxon() const;
 };
 
 

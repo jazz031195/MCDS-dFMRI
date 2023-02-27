@@ -34,7 +34,7 @@ Axon::Axon(const Axon &ax)
     projections_max = ax.projections_max;
 }
 
-void Axon::add_projection(int axon_id){
+void Axon::add_projection(int const& axon_id){
     Vector3d smallest_pos;
     Vector3d largest_pos;
 
@@ -44,8 +44,7 @@ void Axon::add_projection(int axon_id){
         double largest_pos_ = 0;
 
         for (size_t i=0; i < spheres.size(); ++i){ 
-            // TODO : ask jasmine why 
-            double position1, position2;//, position1_, position2_;
+            double position1, position2, position1_, position2_;
             int sph_id = i;
 
             // projections_max
@@ -70,19 +69,19 @@ void Axon::add_projection(int axon_id){
             }
             projections_max.append_right_place(p1,  p2, axis);
 
-            // // projections
-            // // center + radius
-            // position1_ = spheres[i].center[axis] + spheres[i].radius;
-            Projections::projection_pt p1_ {position1, axon_id, sph_id};
-            // // center - radius
-            // position2_ = spheres[i].center[axis] - spheres[i].radius;
-            Projections::projection_pt p2_ {position2, axon_id, sph_id};
+            // projections
+            // center + radius
+            position1_ = spheres[i].center[axis] + spheres[i].radius;
+            Projections::projection_pt p1_ {position1_, axon_id, sph_id};
+            // center - radius
+            position2_ = spheres[i].center[axis] - spheres[i].radius;
+            Projections::projection_pt p2_ {position2_, axon_id, sph_id};
 
             projections.append_right_place(p1_,  p2_, axis);
         }
 
         smallest_pos[axis] = smallest_pos_;
-        largest_pos[axis] = largest_pos_;
+        largest_pos[axis]  = largest_pos_;
         
     }
 
@@ -98,7 +97,7 @@ void Axon::add_projection(int axon_id){
     
 }
 
-void Axon::set_spheres(std::vector<Dynamic_Sphere> spheres_to_add, int axon_id){
+void Axon::set_spheres(std::vector<Dynamic_Sphere> const& spheres_to_add, int const& axon_id){
 
     if (spheres_to_add.size() != 0){
 
@@ -112,7 +111,7 @@ void Axon::set_spheres(std::vector<Dynamic_Sphere> spheres_to_add, int axon_id){
     add_projection(axon_id);
 }
 
-bool Axon::isNearAxon(Vector3d &position,  double distance_to_be_inside){
+bool Axon::isNearAxon(Vector3d const&position,  double const& distance_to_be_inside) const {
 
     size_t count_isnear = 0;
     for (size_t axis=0 ; axis < 3 ; axis++)
@@ -132,7 +131,7 @@ bool Axon::isNearAxon(Vector3d &position,  double distance_to_be_inside){
     return false;
 }
 
-bool Axon::isPosInsideAxon(Vector3d &position,  double distance_to_be_inside, bool swell_, std::vector<int> sphere_ids){
+bool Axon::isPosInsideAxon(Vector3d const& position,  double const& distance_to_be_inside, bool const& swell_, std::vector<int> sphere_ids){
     // when checking collision with walker -> check with normal radius
     // when checking with collisions of other axons -> check with max_radius so there is room for swelling
     std::vector<std::vector<Projections::projection_pt>> coliding_projs;
@@ -216,10 +215,10 @@ bool Axon::isPosInsideAxon(Vector3d &position,  double distance_to_be_inside, bo
 } 
 
 
-std::vector<double> Axon::Distances_to_Spheres(Vector3d pos){
+std::vector<double> Axon::Distances_to_Spheres(Vector3d const& pos) const {
     std::vector<double> distances;
     distances.clear();
-    for (unsigned i=0; i< spheres.size(); ++i){
+    for (unsigned i=0; i < spheres.size(); ++i){
         //if (spheres[i].center[0] == begin[0] && spheres[i].center[1] == begin[1]){ 
         Vector3d m = pos - spheres[i].center;
         double distance_to_sphere = m.norm() - spheres[i].radius;
@@ -230,7 +229,7 @@ std::vector<double> Axon::Distances_to_Spheres(Vector3d pos){
     return distances;
 }
 
-std::vector<double> Axon::Distances_to_Centers(Vector3d pos){
+std::vector<double> Axon::Distances_to_Centers(Vector3d const& pos) const {
     std::vector<double> distances;
     distances.clear();
     for (unsigned i=0; i< spheres.size(); ++i){
@@ -247,7 +246,7 @@ std::vector<double> Axon::Distances_to_Centers(Vector3d pos){
 
 
 
-std::vector<double> Axon::Distances_to_Spheres(Walker &w){
+std::vector<double> Axon::Distances_to_Spheres(Walker const& w) const{
 
     Vector3d O;
     w.getVoxelPosition(O);
@@ -256,7 +255,7 @@ std::vector<double> Axon::Distances_to_Spheres(Walker &w){
 }
 
 
-std::vector<Dynamic_Sphere> Axon::closestSpheres(Vector3d pos){
+std::vector<Dynamic_Sphere> Axon::closestSpheres(Vector3d const& pos) const{
 
     Vector3d O = pos;
     std::vector <double> distances;
@@ -289,14 +288,14 @@ std::vector<Dynamic_Sphere> Axon::closestSpheres(Vector3d pos){
     return closest_spheres;
 }
 
-std::vector<Dynamic_Sphere> Axon::closestSpheres(Walker &w){
+std::vector<Dynamic_Sphere> Axon::closestSpheres(Walker const& w) const{
     Vector3d O;
     w.getVoxelPosition(O);
     return closestSpheres(O);
 
 }
 
-double Axon::minDistance(Walker &w){
+double Axon::minDistance(Walker const& w) const{
 
     std::vector<double> distances;
     distances.clear();
@@ -307,7 +306,7 @@ double Axon::minDistance(Walker &w){
 
 }
 
-double Axon::minDistance(Vector3d pos){
+double Axon::minDistance(Vector3d const& pos) const{
 
     std::vector<double> distances = Distances_to_Spheres(pos);
     double min = *std::min_element(std::begin(distances), std::end(distances ));
@@ -315,7 +314,7 @@ double Axon::minDistance(Vector3d pos){
 
 }
 
-double Axon::minDistanceCenter(Vector3d pos){
+double Axon::minDistanceCenter(Vector3d const& pos) const{
 
     std::vector<double> distances = Distances_to_Centers(pos);
     double min = *std::min_element(std::begin(distances), std::end(distances ));
@@ -323,7 +322,7 @@ double Axon::minDistanceCenter(Vector3d pos){
 
 }
 
-bool Axon::intersection_sphere_vector(double &t1, double &t2, Dynamic_Sphere &s, Vector3d &step, double &step_length, Vector3d &pos, bool isintra, double &c){
+bool Axon::intersection_sphere_vector(double &t1, double &t2, Dynamic_Sphere const&s, Vector3d const&step, double const&step_length, Vector3d const&pos, bool const&isintra, double &c) const {
     //https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
 
     Vector3d m = pos - s.center;
@@ -370,7 +369,7 @@ double getAverage(std::vector<double> const& v) {
     return sum / v.size();
 }
 
-int Axon::closest_sphere_dichotomy(Walker &walker, double &step_lenght){
+int Axon::closest_sphere_dichotomy(Walker const& walker) const{
     Vector3d O;
     walker.getVoxelPosition(O);
     int number_spheres = spheres.size();
@@ -400,23 +399,21 @@ int Axon::closest_sphere_dichotomy(Walker &walker, double &step_lenght){
  
 }
 
-Vector3d find_nearest_point_on_skeleton(Vector3d collision_point, Vector3d sphere_center1, Vector3d sphere_center2){
-    double distance_to_point = (collision_point-sphere_center1).dot(sphere_center2-sphere_center1)/(sphere_center1-sphere_center2).norm();
-    Vector3d point = sphere_center1+ (sphere_center2-sphere_center1)*distance_to_point;
+Vector3d find_nearest_point_on_skeleton(Vector3d const& collision_point, Vector3d const& sphere_center1, Vector3d const& sphere_center2){
+    double distance_to_point = (collision_point - sphere_center1).dot(sphere_center2 - sphere_center1)/(sphere_center1 - sphere_center2).norm();
+    Vector3d point = sphere_center1 + (sphere_center2 - sphere_center1)*distance_to_point;
     return point;
 }
 
-bool check_negatif(vector<double> list){
+bool check_negatif(vector<double> const& list) {
     for (unsigned i=0 ; i< list.size(); ++i){
-        if (list[i] < 1e-10){
+        if (list[i] < 1e-10)
             return true;
-            break;        
-        }
     }
     return false;
 }
 
-bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, Collision &colision)
+bool Axon::checkCollision(Walker &walker, Vector3d const&step, double const&step_lenght, Collision &colision)
 {
     string message;
     Vector3d O;
@@ -450,7 +447,7 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
 
 
     // is near axon (inside box)
-    if (!isNearAxon(O, step_lenght+barrier_tickness)){
+    if (!isNearAxon(O, step_lenght + barrier_tickness)){
         colision.type = Collision::null;
         //cout << "not near axon" << endl;
         return false;
@@ -603,7 +600,7 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
 
 }
 
-double Axon::volumeAxon()
+double Axon::volumeAxon() const
 {
     double volume = 0;
     // double tortuosity;
@@ -620,7 +617,7 @@ double Axon::volumeAxon()
             mean_rad += spheres[j].radius;
         }
         mean_rad   = mean_rad/spheres.size();
-        tortuosity = ax_length/((this->begin - this->end).norm());
+        // tortuosity = ax_length/((this->begin - this->end).norm());
         volume     = M_PI * mean_rad * mean_rad * ax_length;
     }
     else
