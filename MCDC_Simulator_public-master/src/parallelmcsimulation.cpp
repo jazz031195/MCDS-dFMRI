@@ -865,7 +865,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 Eigen::Vector3d begin = {min_limits, min_limits, min_limits};
                 Eigen::Vector3d end = {max_limits, max_limits, max_limits};
                 Axon ax (r, begin, end,volume_inc_perc, params.active_state, s, scale);
-                ax.set_spheres(spheres_, ax_id);
+                ax.set_spheres(spheres_);
                 axons_list.push_back(ax);
                 spheres_.clear();
                 cout << "adding axon, begin x:" << ax.begin[0] << ", end x :" << ax.end[0] <<", min radius :" << ax.min_radius <<", max radius :" << ax.max_radius <<", radius :" << ax.radius << ", swell : " << ax.swell << endl;
@@ -1143,7 +1143,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
         ofstream out_(file);
         gamma_dist.printSubstrate(out_);
 
-        this->axons_list = gamma_dist.axons;
+        axons_list = gamma_dist.axons;
 
         //for (unsigned i=0; i< axons_list.size(); ++i){
         //    for (unsigned s=0; s< this->axons_list[i].spheres.size(); ++s){

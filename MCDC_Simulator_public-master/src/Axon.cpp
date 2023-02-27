@@ -8,15 +8,6 @@ using namespace Eigen;
 using namespace std;
 
 int Axon::count = 0;
-Axon::Axon()
-{
-    id = count++;
-}
-
-Axon::~Axon()
-{
-    count--;
-}
 
 Axon::Axon(const Axon &ax)
 {
@@ -34,9 +25,10 @@ Axon::Axon(const Axon &ax)
     projections_max = ax.projections_max;
 }
 
-void Axon::add_projection(int axon_id){
+void Axon::add_projection(){
     Vector2d smallest_pos;
     Vector2d largest_pos;
+    int axon_id = id;
 
     // projections are in descending order. When added, it is added at the right position.
     for (unsigned axis = 0; axis < 3; ++axis) {
@@ -73,10 +65,10 @@ void Axon::add_projection(int axon_id){
             // projections
             // center + radius
             position1_ = spheres[i].center[axis] + spheres[i].radius;
-            Projections::projection_pt p1_ {position1, axon_id, sph_id};
+            Projections::projection_pt p1_ {position1_, axon_id, sph_id};
             // center - radius
             position2_ = spheres[i].center[axis] - spheres[i].radius;
-            Projections::projection_pt p2_ {position2, axon_id, sph_id};
+            Projections::projection_pt p2_ {position2_, axon_id, sph_id};
 
             projections.append_right_place(p1_,  p2_, axis);
         }
@@ -96,7 +88,7 @@ void Axon::add_projection(int axon_id){
     
 }
 
-void Axon::set_spheres(std::vector<Dynamic_Sphere> spheres_to_add, int axon_id){
+void Axon::set_spheres(std::vector<Dynamic_Sphere> spheres_to_add){
 
     if (spheres_to_add.size() != 0){
 
@@ -107,7 +99,7 @@ void Axon::set_spheres(std::vector<Dynamic_Sphere> spheres_to_add, int axon_id){
         this->end = spheres_to_add[spheres_to_add.size()-1].center;
     }
     // create projections
-    add_projection(axon_id);
+    add_projection();
 
 }
 

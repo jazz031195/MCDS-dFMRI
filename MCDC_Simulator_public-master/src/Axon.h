@@ -40,9 +40,9 @@ public:
     /*!
      *  \brief Default constructor. Does nothing
      */
-    Axon();
+    Axon(){id = count++;};
 
-    ~Axon();
+    ~Axon(){count--;};
 
 
     Axon(double min_radius_,  Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , double scale):min_radius(min_radius_*scale), begin(begin_*scale),end(end_*scale),volume_inc_perc(volume_inc_perc_), active_state(active_state_), swell(swell_){
@@ -63,7 +63,6 @@ public:
 
         projections.clear_projections();
         projections_max.clear_projections();
-
         id = count++;
     }
     Axon(Axon const &ax);
@@ -84,8 +83,8 @@ public:
     double minDistance(Eigen::Vector3d pos);
 
     bool intersection_sphere_vector(double &t1, double &t2,Dynamic_Sphere &s, Eigen::Vector3d &step, double &step_length, Eigen::Vector3d &pos, bool isintra, double &c);
-    void set_spheres(std::vector<Dynamic_Sphere> spheres_to_add, int axon_id);
-    void add_projection(int axon_id);
+    void set_spheres(std::vector<Dynamic_Sphere> spheres_to_add);
+    void add_projection();
     bool isNearAxon(Eigen::Vector3d &position,  double distance_to_be_inside);
     bool isPosInsideAxon(Eigen::Vector3d &position,  double distance_to_be_inside, bool swell_, std::vector<int> sphere_ids);
     int closest_sphere_dichotomy(Walker &walker, double &step_lenght);
