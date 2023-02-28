@@ -42,10 +42,8 @@ public:
 
 //  bool computeStepCollition(Walker &w, double step[3], const double &step_length,double end_point[3], Collision& colision);
     bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision);
-
-    bool checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision, std::vector<unsigned> &triangle_list, unsigned list_end);
-
-    double minDistance(Walker& w, unsigned t);
+    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision, std::vector<unsigned> const& triangle_list, unsigned const& list_end);
+    double minDistance(Walker const& w, unsigned const& t) const;
 
 private:
     // Compare 2 coliision and decides wich one has the highest piority and if

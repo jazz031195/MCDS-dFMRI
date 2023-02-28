@@ -1043,6 +1043,7 @@ bool DynamicsSimulation::isInsideNeurons(Vector3d &position, int &neuron_id, dou
         bool isinside = neurons_list->at(i).isPosInsideNeuron(position, barrier_thickness, false);
         if (isinside)
         {
+            walker.in_neuron_index;
             neuron_id = i;
             intra_tries++;
             return true;
@@ -1589,7 +1590,10 @@ void DynamicsSimulation::handleCollisions(Collision &colision, Collision &colisi
 
 void DynamicsSimulation::mapWalkerIntoVoxel(Eigen::Vector3d& bounced_step, Collision &colision,double barrier_thicknes)
 {
-
+    /*
+     * The obstacle (axons, neurons) are set one step_length away from the borders to avoid problems with boundary mirroring.
+     * The axons are aligned along z axis, which means that the mapping only occurs along z, thus mapped_on_z.
+     */
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> udist(0,1);
@@ -1628,7 +1632,7 @@ void DynamicsSimulation::mapWalkerIntoVoxel(Eigen::Vector3d& bounced_step, Colli
         }
     }
 
-    if (mapped_on_z){
+    if (mapped_on_z && walker.in_ax_index != 1){
         bool incorrectcomp = false;
 
         while (!incorrectcomp){
