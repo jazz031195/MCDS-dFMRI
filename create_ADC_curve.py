@@ -6,9 +6,6 @@ import os
 import pandas as pd
 import seaborn as sns
 from pathlib import Path
-from sklearn import datasets, linear_model
-from sklearn.linear_model import LinearRegression
-import statsmodels.api as sm
 from scipy import stats
 import warnings
 warnings.filterwarnings("ignore")
@@ -520,10 +517,10 @@ def get_adc_diff_rest_active(folder, conf):
 
 #data = create_data(dwi_path)
 
-intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_active__DWI.txt"
-extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_active__DWI.txt"
-intra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra__DWI.txt"
-extra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra__DWI.txt"               
+intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/nbr_axons_50_intra_active_icvf_0.5_DWI.txt"
+extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/nbr_axons_50_extra_active_icvf_0.5_DWI.txt"
+intra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/nbr_axons_50_intra_rest_icvf_0.5_DWI.txt"
+extra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/nbr_axons_50_extra_rest_icvf_0.5_DWI.txt"               
 data2 = assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_rest_path)
 
 #print(data)

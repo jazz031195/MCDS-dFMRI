@@ -2,6 +2,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+    
         {
             "name": "ccc",
             "type": "cppdbg",
@@ -20,6 +21,9 @@
                     "ignoreFailures": true
                 }
             ],
+            "logging": {
+                "engineLogging": true,
+             },
             "preLaunchTask": "test",
             "miDebuggerPath": "/home/localadmin/gdb-12.1/gdb/gdb"
         },

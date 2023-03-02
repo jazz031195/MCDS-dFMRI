@@ -12,7 +12,7 @@ c2="1";
 # nbr of axons
 a="50";
 # icvf
-declare -a icvf=("0.5" "0.55" "0.6" "0.65");
+declare -a icvf=("0.5");
 
 cd "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/" || exit 
 # compiles code

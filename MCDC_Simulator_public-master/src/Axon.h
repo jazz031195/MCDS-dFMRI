@@ -61,8 +61,8 @@ public:
             radius = max_radius;
         } 
 
-        projections.clear_projections();
-        projections_max.clear_projections();
+        //projections.clear_projections();
+        //projections_max.clear_projections();
         id = count++;
     }
     Axon(Axon const &ax);

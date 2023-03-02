@@ -9,27 +9,16 @@ from scipy.linalg import norm
 cur_path = os.getcwd()
 conf_file_path = cur_path + "/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedAxons.conf"
 
-def get_T_N ():
-    N = 0
-    T = 0
-    with open(conf_file_path) as f:
-        for line in f.readlines():
-            if line.split(' ')[0] == "N":
-                N = int(line.split(' ')[1][:-1])
-            elif line.split(' ')[0] == "T":
-                T = int(line.split(' ')[1][:-1])
-    return T, N
-
-def get_nbr_cylinders ():
+def get_nbr_cylinders (file):
     nbr_cylinders = 0
-    with open(conf_file_path) as f:
+    with open(file ) as f:
         for line in f.readlines():
-            if line.split(' ')[0] == "num_axons":
-                nbr_cylinders = int(line.split(' ')[1][:-1])
+            if "Axon" in line:
+                nbr_cylinders += 1
     return nbr_cylinders
 
-def get_first_cylinder_array(file):
-    nbr_cylinders = 50
+def get_first_cylinder_array(file, N):
+    nbr_cylinders = N
     cylinder_array = np.zeros((nbr_cylinders,5))
     prev_length = 0
     with open(file) as f:
@@ -38,7 +27,7 @@ def get_first_cylinder_array(file):
 
             if e< nbr_cylinders:
                 
-                if len(line.split(' ')) > 4 and prev_length < 3:
+                if len(line.split(' ')) > 4 and prev_length < 4:
                     
                     
                     cylinder_array[e] = np.array([float(i)*0.001 for i in line.split(' ')[:]])
@@ -48,8 +37,8 @@ def get_first_cylinder_array(file):
     return cylinder_array
 
 
-def get_last_cylinder_array(file):
-    nbr_cylinders = 50
+def get_last_cylinder_array(file, N):
+    nbr_cylinders = N
     cylinder_array = np.zeros((nbr_cylinders,5))
     with open(file) as f:
         e = 0
@@ -59,7 +48,7 @@ def get_last_cylinder_array(file):
 
             if e< nbr_cylinders:
 
-                if (line_nbr>6 and len(line.split(' ')) <3 and len(prev_line.split(' '))>4):
+                if (line_nbr>6 and len(line.split(' ')) <4 and len(prev_line.split(' '))>4):
                     
                     cylinder_array[e] = np.array([float(i)*0.001 for i in prev_line.split(' ')[:]])
                     e = e+1
@@ -103,12 +92,12 @@ def draw_cercles(cylinder_array, swell = False):
 
 def main():
 
-    file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/_rep_01_gamma_distributed_axon_list.txt"
-
-    cylinder_array = get_first_cylinder_array(file)
+    file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/__gamma_distributed_axon_list.txt"
+    N = get_nbr_cylinders (file )
+    cylinder_array = get_first_cylinder_array(file, N)
     draw_cercles(cylinder_array)
 
-    cylinder_array = get_last_cylinder_array(file)
+    cylinder_array = get_last_cylinder_array(file, N)
     draw_cercles(cylinder_array)
 
 main()

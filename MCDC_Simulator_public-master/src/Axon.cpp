@@ -442,16 +442,22 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
         return false;
     }
 
-    // is inside or near a sphere
-    //std::vector<int> col_sphere_ids;
-    //bool isnearspheres = isPosInsideAxon(O, step_lenght+barrier_tickness*10, false, col_sphere_ids);
-    //if(!isnearspheres){
-    //    cout << "not near spheres" << endl;
-    //    colision.type = Collision::null;
-    //    return false;
-    //}
-
-
+    // check if closest sphere is within range (step length)
+    std::vector<double> distances = Distances_to_Spheres(O);
+    auto it = std::min_element(std::begin(distances), std::end(distances ));
+    double min_distance = *it;
+    
+    if (min_distance > step_lenght+barrier_tickness){
+        colision.type = Collision::null;
+        return false;
+    }
+    // indexes of close spheres within range
+    std::vector<int> close_spheres_ind;
+    for (unsigned j=0 ; j< distances.size(); ++j){
+        if (distances[j]<= step_lenght+barrier_tickness){
+            close_spheres_ind.push_back(j);
+        }
+    }
     // distances to intersections
     std::vector<double> dist_intersections;
     std::vector<double> cs;
@@ -460,11 +466,9 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
     dist_intersections.clear();
     int sph_id;
 
- 
-    for (unsigned j=0 ; j< spheres.size(); ++j){
+    for (unsigned j=0 ; j< close_spheres_ind.size(); ++j){
 
-        int i = j;
-        //int i = col_sphere_ids[j];
+        int i = close_spheres_ind[j];
         // distances to collision
         double t1;
         double t2;

@@ -28,6 +28,7 @@ AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc
     c2 = c2_;
     tortuosities.clear();
     tortuous = tortuous_;
+    small_voxel_size = max_limits;
 
 }
 void AxonGammaDistribution::computeMinimalSize(std::vector<double> radiis, double icvf_, Eigen::Vector3d &l)
@@ -75,12 +76,12 @@ void AxonGammaDistribution::displayGammaDistribution()
 
     for (int i=0; i<9; ++i) {
         message = std::to_string(i) + "-" + std::to_string(i+1) + ": " + std::string(p[i]*nstars/nrolls,'*');
-        SimErrno::info(message,cout);
+        SimErrno::info(message,std::cout);
     }
     message = "9-10:" + std::string(p[9]*nstars/nrolls,'*') ;
-    SimErrno::info(message,cout);
+    SimErrno::info(message,std::cout);
     message = ">10: " +  std::string(p[10]*nstars/nrolls,'*') + "\n" ;
-    SimErrno::info(message,cout);
+    SimErrno::info(message,std::cout);
 }
 
 void AxonGammaDistribution::find_target_point (double c2, double radius, Eigen::Vector3d& initial_point , Eigen::Vector3d& target_point){
@@ -100,9 +101,9 @@ void AxonGammaDistribution::find_target_point (double c2, double radius, Eigen::
     std::uniform_real_distribution<double> udist_(0, 1);
     double t = udist_(gen);
     double distance_to_border = radius*sqrt(1+volume_inc_perc) + barrier_tickness;
-    double x_i = (t * (max_limits[0]-distance_to_border)) + (1 - t) * (min_limits[0]+ distance_to_border);
+    double x_i = (t * (small_voxel_size[0]-distance_to_border)) + (1 - t) * (min_limits[0]+ distance_to_border);
     t = udist_(gen);
-    double y_i = (t * (max_limits[1]-distance_to_border) + (1 - t) * (min_limits[1]+ distance_to_border));
+    double y_i = (t * (small_voxel_size[1]-distance_to_border) + (1 - t) * (min_limits[1]+ distance_to_border));
 
 
     while(!achieved){
@@ -142,12 +143,77 @@ void AxonGammaDistribution::find_target_point (double c2, double radius, Eigen::
 void display_progress(double nbr_axons, double number_obstacles){
     int cTotalLength = 50;
     double lProgress = nbr_axons/number_obstacles;
-    cout << 
+    std::cout << 
         "\r[" <<                                            //'\r' aka carriage return should move printer's cursor back at the beginning of the current line
             string(int(cTotalLength * lProgress), '*') <<        //printing filled part
             string(int(cTotalLength * (1 - lProgress)), '-') <<  //printing empty part
         "] "  << nbr_axons << "/" << number_obstacles << endl;          //printing percentage
 } 
+
+void AxonGammaDistribution::flip(int flip_nbr, int j, int k, Eigen::Vector3d small_voxel_size, Eigen::Vector3d& initial_pos){
+
+    // projection onto next small voxel
+    double x_increment = j*small_voxel_size[0];
+    double y_increment = k*small_voxel_size[1];
+    initial_pos = {initial_pos[0] + x_increment, initial_pos[1] + y_increment, initial_pos[2]};
+    
+    double x_flip;
+    double y_flip;
+    // center of small voxel
+    Eigen::Vector2d center = {(j+0.5)*small_voxel_size[0], (k+0.5)*small_voxel_size[1]};
+
+    // flips of the small voxel wrt y
+    if (flip_nbr == 1){
+        double distance = 2*(center[1]-initial_pos[1]);
+        y_flip = distance;
+
+    }
+    // flips of the small voxel wrt x
+    else if (flip_nbr == 2){
+        double distance = 2*(center[0]-initial_pos[0]);
+        x_flip = distance;
+
+    }
+
+    initial_pos = {initial_pos[0] + x_flip, initial_pos[1] + y_flip, initial_pos[2]};
+
+}
+
+void AxonGammaDistribution::add_periodic_voxel(int nbr_small_voxels, Eigen::Vector3d small_voxel_size){
+    
+    int axons_size = axons.size();
+    
+    for (unsigned j = 0; j < nbr_small_voxels -1 ; ++j){
+        
+        for (unsigned k = 0; k < nbr_small_voxels -1 ; ++k){
+            
+            int flip_nbr = rand()%3;
+            for (unsigned i = 0; i < axons_size; ++i){
+                if (j == 0 and k == 0){
+                    k += 1;
+                }
+                Eigen::Vector3d new_begin = axons[i].begin;
+                flip(flip_nbr, j, k, small_voxel_size, new_begin);
+                Eigen::Vector3d new_end = axons[i].end;
+                flip(flip_nbr, j, k, small_voxel_size, new_end);
+                Axon *ax = new Axon (axons[i].min_radius, {0,0,0}, {0,0,0}, volume_inc_perc, active_state, axons[i].swell, 1);
+                std::vector<Dynamic_Sphere> new_spheres;
+
+                for (unsigned s = 0; s < axons[i].spheres.size(); ++s){
+                    Dynamic_Sphere new_sphere = axons[i].spheres[s];
+                    Eigen::Vector3d new_center = new_sphere.center;
+                    flip(flip_nbr, j, k, small_voxel_size, new_center);
+                    new_sphere.center = new_center;
+                    new_spheres.push_back(new_sphere);
+                }
+                
+                ax->set_spheres(new_spheres);
+                axons.push_back(*ax);
+            }
+        }
+    }
+}
+
 void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 {
     /* 
@@ -157,11 +223,6 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
     std::default_random_engine generator(rd());
     std::gamma_distribution<double> distribution(alpha, beta);
     uint repetition = 1;
-    uint max_adjustments = 0;
-    double best_icvf = 0;
-    vector<Axon> best_axons;
-    Projections best_projections;
-    Eigen::Vector3d best_max_limits;
     min_limits = {0., 0., 0.};
 
     std::mt19937 gen(rd());
@@ -178,7 +239,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
     string message;
 
     auto start = high_resolution_clock::now();
-    cout << " Growing axons " << endl;
+    std::cout << " Growing axons " << endl;
 
     // create list bools that show whether an axon has the potential to swell
     for (unsigned i = 0; i < number_swelling_axons; ++i)
@@ -193,14 +254,13 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
         bool_swell_ax_id[random_id] = true;
     }
 
-
     for (unsigned i = 0; i < num_obstacles; ++i)
     {
         
         if (tried > 1000)
         {
             message = " Radii distribution cannot be sampled [Min. radius Error]\n";
-            SimErrno::error(message, cout);
+            SimErrno::error(message, std::cout);
             assert(0);
         }
         double jkr = distribution(generator);
@@ -217,107 +277,86 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
         radiis[i] = jkr * 1e-3; // WE CONVERT FROM UM TO MM HERE
     }
 
-
     // sorts the radii 
     std::sort(radiis.begin(), radiis.end(), [](const double a, double b) -> bool
               { return a > b; });
 
     double max_radius_ = radiis[0] * sqrt(1+volume_inc_perc);
 
-    uint adjustments = 0;
-    // We increease 1% the total area. (Is prefered to fit all the cylinders than achieve a perfect ICVF.)
-    double adj_increase = icvf * 0.01;
-
-
     while (!achieved)
     {
 
-        double target_icvf = this->icvf - adjustments * adj_increase;
-        // computes max_limits
-        computeMinimalSize(radiis, target_icvf, max_limits);
-
-
-        for (uint t = 0; t < repetition; t++)
-        {
-
-            axons.clear();
-
-            unsigned stuck = 0;
-
-            Vector3d Q;
-            Vector3d D;
-
-            for (unsigned i = 0; i < num_obstacles; i++)
-            {
-                bool axon_placed = false;
-                if(stuck < 3000 && !axon_placed){
-
-                    if (c2 == 1){
-                        double t = udist(gen);
-                        double distance_to_border = radiis[i]*sqrt(1+volume_inc_perc) + barrier_tickness;
-                        double x = (t * (max_limits[0]-distance_to_border)) + (1 - t) * (min_limits[0]+ distance_to_border);
-                        t = udist(gen);
-                        double y = (t * (max_limits[1]-distance_to_border) + (1 - t) * (min_limits[1]+ distance_to_border));
-
-                        Q = {x, y, min_limits[2]};
-                        D = {x, y, max_limits[2]};
-                    }
-                    else{
-
-                        find_target_point (c2, radiis[i], Q, D);
-
-                    }
-
-                    Axon *ax = new Axon (radiis[i], Q, D, volume_inc_perc, active_state, bool_swell_ax_id[i], 1);
-                    out << "axon : " << ax->id << " , i :" << i << endl;
-                    std::vector<Dynamic_Sphere> spheres_to_add = GrowAxon(ax, max_radius_, i,  out);
-
-                    if(spheres_to_add.size() != 0)
-                    {
-                        ax->set_spheres(spheres_to_add);
-                        axons.push_back(*ax);
-                        stuck = 0;
-                        axon_placed = true;
-                    }
-                    else{
-                        i -= 1; 
-                        stuck += 1;
-                        delete ax;
-                        continue;
-                    }
-                    display_progress(axons.size(), num_obstacles);
-                }
-
-                int dummy;
-                icvf_current = computeICVF(axons, min_limits, max_limits, dummy);
-                if (icvf_current > best_icvf)
-                {
-                    best_icvf = icvf_current;
-                    best_axons.clear();
-                    best_axons = axons;
-                    best_max_limits = max_limits;
-                }
-
-
-            } // end for axons
-
-            if (this->icvf - best_icvf < 0.0005)
-            {
-                achieved = true;
-                break;
-            }
+        computeMinimalSize(radiis, icvf, small_voxel_size);
+        // in case the voxel size input in parameters is too small 
+        if (small_voxel_size[2] > max_limits[2]){
+            max_limits = small_voxel_size;
         }
+        // count how many times this small voxel can fit in the voxel size initialised
+        int sqrt_nbr_small_voxels = int((max_limits[0]/small_voxel_size[0]));
+        // make this small voxel a rectangle
+        small_voxel_size[2] = max_limits[2];
+        // readjust max_limits so that it is a multiple of small_voxel
+        max_limits = {small_voxel_size[0]*sqrt_nbr_small_voxels, small_voxel_size[1]*sqrt_nbr_small_voxels, max_limits[2]};
+
         axons.clear();
-        adjustments++;
-        cout << best_icvf << endl;
-        if (adjustments > max_adjustments)
+
+        unsigned stuck = 0;
+
+        Vector3d Q;
+        Vector3d D;
+
+        for (unsigned i = 0; i < num_obstacles; i++)
         {
-            break;
-        }
+            bool axon_placed = false;
+            if(stuck < 100000 && !axon_placed){
+
+                if (c2 == 1){
+                    double t = udist(gen);
+                    double distance_to_border = radiis[i]*sqrt(1+volume_inc_perc) + barrier_tickness;
+                    double x = (t * (small_voxel_size[0]-distance_to_border)) + (1 - t) * (min_limits[0]+ distance_to_border);
+                    t = udist(gen);
+                    double y = (t * (small_voxel_size[1]-distance_to_border) + (1 - t) * (min_limits[1]+ distance_to_border));
+
+                    Q = {x, y, min_limits[2]};
+                    D = {x, y, small_voxel_size[2]};
+                }
+                else{
+
+                    find_target_point (c2, radiis[i], Q, D);
+
+                }
+
+                Axon *ax = new Axon (radiis[i], Q, D, volume_inc_perc, active_state, bool_swell_ax_id[i], 1);
+                out << "axon : " << ax->id << " , i :" << i << endl;
+                std::vector<Dynamic_Sphere> spheres_to_add = GrowAxon(ax, max_radius_, i,  out);
+
+                if(spheres_to_add.size() != 0)
+                {
+                    ax->set_spheres(spheres_to_add);
+                    axons.push_back(*ax);
+                    stuck = 0;
+                    axon_placed = true;
+                }
+                else{
+                    i -= 1; 
+                    stuck += 1;
+                    delete ax;
+                    continue;
+                }
+                display_progress(axons.size(), num_obstacles);
+            }
+
+
+        } // end for axons
+
+        // check ICVF
+        cout << "sqrt_nbr_small_voxels :" << sqrt_nbr_small_voxels << endl;
+        add_periodic_voxel(sqrt_nbr_small_voxels, small_voxel_size);
+        icvf_current = computeICVF();
+        achieved = true;
     }
 
-    axons = best_axons;
-    max_limits = best_max_limits;
+
 
     for (unsigned i = 0; i < axons.size(); i++){
         out << "Axon :" << i << endl;
@@ -326,19 +365,15 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
         }
     }
 
-
-    // TODO cambiar a INFO
-    icvf_current = best_icvf;
-
+    // time
     auto stop = high_resolution_clock::now();
     auto duration_ = duration_cast<seconds>(stop - start);
     duration = duration_.count() ;
 
-
+    // messages
     out <<"icvf:"<< icvf_current << "voxel size: "<< max_limits[0] << endl;
-
     message = "ICVF achieved: " + to_string(icvf_current * 100) + "  (" + to_string(int((icvf_current / icvf * 100))) + "% of the desired icvf)\n";
-    SimErrno::info(message, cout);
+    SimErrno::info(message, std::cout);
 
 }
 
@@ -362,7 +397,7 @@ void AxonGammaDistribution::printSubstrate(ostream &out)
     out << "Time_to_grow:" << duration  << "_seconds"<< endl;
 }
 
-double AxonGammaDistribution::computeICVF(std::vector<Axon> &axons, Vector3d &min_limits, Vector3d &max_limits, int &num_no_repeat)
+double AxonGammaDistribution::computeICVF()
 {
 
     if (axons.size() == 0)
@@ -378,24 +413,12 @@ double AxonGammaDistribution::computeICVF(std::vector<Axon> &axons, Vector3d &mi
     std::sort(axons.begin(), axons.end(), [](const Axon a, Axon b) -> bool
               { return a.radius > b.radius; });
 
-    double rad_holder = -1;
-    num_no_repeat = 0;
+
     for (uint i = 0; i < axons.size(); i++)
     {
 
-        if (fabs(rad_holder - axons[i].radius) < 1e-15)
-        {
-            continue;
-        }
-        else
-        {
-            rad_holder = axons[i].radius;
-        }
-
         double ax_length = 0;
-
         double mean_rad= 0;
-        double rads  =0 ;
 
         if (axons[i].spheres.size() > 0){
 
@@ -404,7 +427,7 @@ double AxonGammaDistribution::computeICVF(std::vector<Axon> &axons, Vector3d &mi
                     double l = (axons[i].spheres[j-1].center-axons[i].spheres[j].center).norm();
                     ax_length += l;
                 }
-                mean_rad += axons[i].spheres[j].radius;
+                mean_rad += axons[i].spheres[j].min_radius;
 
             }
 
@@ -417,7 +440,6 @@ double AxonGammaDistribution::computeICVF(std::vector<Axon> &axons, Vector3d &mi
             AreaC += M_PI * mean_rad * mean_rad * ax_length;
         }
         
-        num_no_repeat++;
     }
     return AreaC / AreaV;
 }
@@ -456,7 +478,7 @@ std::tuple<double, double>  phi_theta_to_target (Eigen::Vector3d new_pos, Eigen:
 
 bool AxonGammaDistribution::check_borders(Eigen::Vector3d pos, double distance_to_border) {
     Eigen::Vector3d new_min_limits = {min_limits[0] + distance_to_border, min_limits[1] + distance_to_border,min_limits[2] + distance_to_border};
-    Eigen::Vector3d new_max_limits = {max_limits[0] - distance_to_border, max_limits[1] - distance_to_border,max_limits[2] - distance_to_border};
+    Eigen::Vector3d new_max_limits = {small_voxel_size[0] - distance_to_border, small_voxel_size[1] - distance_to_border,small_voxel_size[2] - distance_to_border};
 
     if ((pos[0]-new_min_limits[0])<0 || (pos[1]-new_min_limits[1])<0 ){
         return true;
@@ -498,7 +520,7 @@ bool AxonGammaDistribution::find_next_center(Axon* ax, Dynamic_Sphere& s, vector
     double prev_phi, prev_theta;
     // number of tries 
     int tries = 0;
-    int max_tries = 1000;
+    int max_tries = 10000;
     // random
     std::random_device rd;
     std::mt19937 gen(rd()); 
@@ -693,7 +715,7 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon* ax, double dis
     std::vector<Dynamic_Sphere> spheres_to_add;
 
     // maximum of shrinking percentage
-    double max_shrinking = 0.5;
+    double max_shrinking = 0.7;
     // managed to add 4 spheres
     bool spheres_added = false;
     // fiber collapsing is possible

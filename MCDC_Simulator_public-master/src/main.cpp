@@ -16,7 +16,7 @@
 #include "dynamic_Cylinder.h"
 #include "dynamic_sphere.h"
 #include "Axon.h"
-#include "dynamic_sphere.h"
+#include "swipeprune.h"
 #include <thread>
 #include "simerrno.h"
 

@@ -43,6 +43,8 @@ public:
     double duration; 
     std::vector<double> tortuosities;
     double c2;                                      /*!< ODF                                               */
+    
+    Eigen::Vector3d small_voxel_size;               /*!< size of small voxel where the aount of desired axons are fitted                                              */
     /*!
      *  \param P_ Cylinder origin
      *  \param Q_ cylinder direction.
@@ -86,6 +88,9 @@ public:
     void find_target_point (double c2, double radius, Eigen::Vector3d& initial_point , Eigen::Vector3d& target_point);
     bool can_add_four_spheres(Axon* ax, Dynamic_Sphere& added_sphere, std::vector<Dynamic_Sphere>& spheres_to_add_, std::vector<Eigen::Vector3d> centers, std::vector<double>& sph_radii, double& dist_, double rad, ostream& out);
     void add_spheres_to_list(Axon* ax, vector<Eigen::Vector3d> centers, vector<double> sph_radii, vector<Dynamic_Sphere>& spheres_to_add);
+    void add_periodic_voxel(int nbr_small_voxels, Eigen::Vector3d small_voxel_size);
+    void flip(int flip_nbr, int j, int k, Eigen::Vector3d small_voxel_size, Eigen::Vector3d& initial_pos);
+
 private:
 
     /*!
@@ -94,7 +99,7 @@ private:
      *  \param min_limits voxel min limits.
      *  \param max_limits voxel max limits.
     */
-    double  computeICVF(std::vector<Axon> &axons, Eigen::Vector3d &min_limits, Eigen::Vector3d &max_limits, int &num_no_repeat);
+    double  computeICVF();
 
     void computeMinimalSize(std::vector<double> radiis, double icvf_, Eigen::Vector3d& l);
 

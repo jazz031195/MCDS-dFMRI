@@ -731,7 +731,7 @@ bool SimErrno::checkAxonsListFile(Parameters &params)
             if (enum_ == 2 || enum_ == 3 || enum_ == 4 || enum_ == 5 || enum_ == 6){
                 std::vector<std::string> jkr = split_(line,' ');
                 if (jkr.size()!= 1){
-                    error( "line have one value",cout);
+                    error( "this line should have one value",cout);
                     in.close();
                     assert(0);
                     return true;

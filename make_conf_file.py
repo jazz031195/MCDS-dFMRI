@@ -43,6 +43,10 @@ def write_conf_file_create_axons(N, T, exp_prefix, icvf , num_axons, c2):
     lines.append("tortuous true")
     lines.append("</axon_gamma_packing>")
     lines.append("</obstacle>")
+    lines.append("<voxels>")
+    lines.append("0 0 0")
+    lines.append("0.1 0.1 0.1")
+    lines.append("</voxels>")
     lines.append("ini_walkers_pos extra")
     lines.append("num_process 10")
     lines.append("<END>")
@@ -83,6 +87,10 @@ def write_conf_file(N, T, activation, exp_prefix, location, axons_list_prefix):
     lines.append("<obstacle>")
     lines.append("axon_list /home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/axons/"+str(axons_list_prefix)+"_gamma_distributed_axon_list.txt")
     lines.append("</obstacle>")
+    lines.append("<voxels>")
+    lines.append("0 0 0")
+    lines.append("0.1 0.1 0.1")
+    lines.append("</voxels>")
     lines.append("ini_walkers_pos "+ str(location))
     lines.append("num_process 10")
     lines.append("<END>")
@@ -109,7 +117,7 @@ def get_variables():
     loc = None 
     state = None
     icvf = None
-    concentration = 1000
+    concentration = 100000
     create_substrate_ = "true"
 
     argv = sys.argv[1:]
