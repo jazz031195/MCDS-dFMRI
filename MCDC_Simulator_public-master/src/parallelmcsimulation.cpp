@@ -985,6 +985,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                     Neuron neuron(axons_, soma);
                     neurons_list.push_back(neuron);
                     axons_.clear();
+                    // TODO : why nb_dendrites not printed ? [ines]
                     cout << "adding neuron: "  << id << ", nb_dendrites: " << neuron.nb_dendrites << endl;
                 }
             }
@@ -1315,8 +1316,9 @@ void ParallelMCSimulation::addObstacleConfigurations()
 
         string message = "Initialializing neuron distribution";
         SimErrno::info(message,cout);
+        double step_length = sqrt(6.0*params.diffusivity*params.sim_duration/params.num_steps);
         NeuronDistribution neuron_dist(params.gamma_num_obstacles,params.gamma_icvf
-                                             ,params.min_limits, params.max_limits);
+                                      ,params.min_limits, params.max_limits, step_length);
 
         neuron_dist.createSubstrate();
 

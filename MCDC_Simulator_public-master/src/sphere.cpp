@@ -4,6 +4,7 @@
 #include <iostream>
 
 using namespace Eigen;
+using namespace std;
 
 int Sphere::count = 0;
 
@@ -27,10 +28,11 @@ bool Sphere::checkCollision(Walker &walker, Vector3d const&step, double const&st
     // collision distance
     double d_ = distance_to_sphere - radius;
 
-    //If the minimum distance from the walker to the cylinder is more than
+    // If the minimum distance from the walker to the sphere is more than
     // the actual step size, we can discard this collision.
     if(d_> EPS_VAL){
         if(d_ > step_lenght+barrier_tickness){
+            colision.type = Collision::null;
             return false;
         }
     }
@@ -39,7 +41,11 @@ bool Sphere::checkCollision(Walker &walker, Vector3d const&step, double const&st
     double b = m.dot(step);
     double c = m.dot(m) - radius*radius;
     if(b > EPS_VAL && c > EPS_VAL)
+    {
+        colision.type = Collision::null;
         return false;
+    }
+        
 
 
     double discr = b*b - a*c;
@@ -50,7 +56,7 @@ bool Sphere::checkCollision(Walker &walker, Vector3d const&step, double const&st
     }
 
     //if we arrived here we need to compute the quadratic equation.
-    return handleCollition(walker,colision,step,a,b,c,discr,step_lenght);
+    return handleCollition(walker, colision, step, a, b, c, discr, step_lenght);
 
 }
 
@@ -121,9 +127,9 @@ inline bool Sphere::handleCollition(Walker& walker, Collision &colision, Vector3
     //Normal point
     Eigen::Vector3d normal = (colision.colision_point-this->center).normalized();
     Eigen::Vector3d temp_step = step;
-    elasticBounceAgainsPlane(walker.pos_v,normal,colision.t,temp_step);
+    elasticBounceAgainsPlane(walker.pos_v, normal, colision.t, temp_step);
 
-    colision.bounced_direction = temp_step.normalized();
+    colision.bounced_direction = temp_step;
 
     return true;
 

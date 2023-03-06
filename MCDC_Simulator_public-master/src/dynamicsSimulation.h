@@ -169,7 +169,7 @@ public:
 
 private:    
 
-    inline void generateStep(Eigen::Vector3d& step , double l);
+    inline void generateStep(Eigen::Vector3d& step);
 
     /*! \fn     generateDirectedStep
      *  \param  new_step stores the computed step.

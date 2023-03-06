@@ -58,10 +58,18 @@ public:
     
     int in_ax_index;                                                 /*!< Auxiliar index to save in which Axon the walker was                    */
 
-    int in_cyl_index;                                               /*!< Auxiliar index to save if the walker was inside a cylinder              */
+    int in_cyl_index;                                                /*!< Auxiliar index to save if the walker was inside a cylinder              */
     
-    int in_neuron_index;                                               /*!< Auxiliar index to save in which Neuron the walker                */
+    int in_neuron_index;                                             /*!< Auxiliar index to save in which Neuron the walker                       */
+    
+    int in_soma_index;                                               /*!< Auxiliar index to save if walker is in the soma of Neuron               */
+    
+    int in_dendrite_index;                                           /*!< Auxiliar index to save in which dendrite of the Neuron the walker is    */
 
+    bool next_step_in_soma;                                          /*!< Auxiliar index to save if the walker goes from dendrite to soma         */
+    
+    bool next_step_in_dendrite;                                      /*!< Auxiliar index to save if the walker goes from soma to dendrite         */
+    
     //ObstacleCollisionSphere cylinders_collision_sphere;             /*!< Collision sphere for collition against cylidners                       */
 
     ObstacleCollisionSphere dyn_cylinders_collision_sphere;         /*!< Collision sphere for collition against dynamic cylidners               */

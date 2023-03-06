@@ -105,7 +105,6 @@ void Sentinel::deportationProcess(Walker &walker, unsigned& w, unsigned &t, bool
             cout << endl <<  SH_FG_GRAY <<  "[INFO]   " << SH_DEFAULT << " Sim: " << id << " " <<
                     "Walker "<< w << " labeled as 'stuck' after " << this->bouncings <<
                     " bouncings.\nBacktraking...\nDone" << endl;
-        w--;
         back_tracking = true;
     }
 
@@ -115,7 +114,6 @@ void Sentinel::deportationProcess(Walker &walker, unsigned& w, unsigned &t, bool
             cout << endl <<  SH_FG_GRAY <<  "[INFO]   " << SH_DEFAULT << " Sim: " << id << " " <<
                     "Walker "<< w << " labeled as 'illegal' after crossing obstacle id: " << this->obstacle_id <<
                     "\nBacktraking...\nDone" << endl;
-        w--;
         back_tracking = true;
     }
 

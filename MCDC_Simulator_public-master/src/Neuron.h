@@ -69,9 +69,10 @@ bool checkCollision(Walker &walker, Eigen::Vector3d const&step_dir, double const
  * @param position Eigen::Vector3d, position of the walker.
  * @param barrier_thickness double, thickness of the cellular barrier.
  * @param swell_              bool, if this swells or not. 
+ * @param w                 Walker, if this swells or not. 
  * @return                    bool, true if position is inside this.
  */
-bool isPosInsideNeuron(Eigen::Vector3d const& position,  double const& barrier_thickness, bool const& swell_);
+bool isPosInsideNeuron(Eigen::Vector3d const& position,  double const& barrier_thickness, bool const& swell_, int& in_soma_index, int& in_dendrite_index);
 /**
  * Minimal distance between a position pos and this.
  *
@@ -166,6 +167,15 @@ private:
      * @param upper_bound int, upper bound of the interval, in [10*mm].
      */
     void generateSpanRadius(int const& lower_bound=2, int const& upper_bound=5);
+    /**
+     * Find the closest dendrite/axon from the soma. Indeed, the walker can go from the 
+     * soma to the dendrites.
+     *
+     * @param position Eigen::Vector3d, initial position of the walker.
+     * @param step_length       double, length of the step of the walker.
+     * @returns            axon_id int, index of the dendrite. 
+     */
+    int closest_axon_from_soma(Eigen::Vector3d const& position, double const& step_length);
 };
 
 

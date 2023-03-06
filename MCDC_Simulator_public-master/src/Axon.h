@@ -76,6 +76,17 @@ public:
     Axon(Axon const &ax);
 
     bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision);
+    /**
+     * Check the collision within a dendrite and with the soma of the neuron.
+     * 
+     * @param walker        Walker.
+     * @param step Eigen::Vector3d, direction of the next step.
+     * @param step_length   double, length of the step.
+     * @param colision   Collision, to handle the eventual collision.
+     * @param Soma  Dynamic_Sphere, soma of the neuron.
+     * @return true if there is a collision, else false.    
+     * */
+    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision, Dynamic_Sphere const& Soma);
 
     std::vector<Dynamic_Sphere>  closestSpheres (Eigen::Vector3d const& pos) const;
     std::vector<Dynamic_Sphere>  closestSpheres (Walker const& w) const;

@@ -18,9 +18,6 @@ class Dynamic_Sphere : public Sphere
 public:
 
     static int count;
-
-    Eigen::Vector3d center;    /*!< Cilinder Axis reference Points, P should be the "center"      */
-    double radius;             /*!< Radius of the Sphere                                          */
     bool swell;
     double volume_inc_perc;
     int ax_id;
@@ -44,7 +41,6 @@ public:
      *  \brief Initialize everything.
      */
     Dynamic_Sphere(Eigen::Vector3d center_, double min_radius_, double volume_inc_perc_, bool swell_, int ax_id_,double scale, bool active_state_):
-    center(center_*scale),
     swell(swell_),
     volume_inc_perc(volume_inc_perc_), 
     ax_id(ax_id_),
@@ -60,10 +56,8 @@ public:
         if (active_state){
             radius = max_radius;
         }
-
+        center = center_*scale;
         id = count++;
-
-    
     }
 
     /*!
@@ -79,7 +73,7 @@ public:
      *  Spheres that a given walker can reach.
      */
     bool isInside(Walker &w);
-    bool isInside(Eigen::Vector3d pos, double distance_to_be_inside);
+    bool isInside(Eigen::Vector3d pos, double distance_to_be_inside) const;
     bool distSmallerThan(Eigen::Vector3d pos, double distance);
     void set_center(Eigen::Vector3d center_);
 

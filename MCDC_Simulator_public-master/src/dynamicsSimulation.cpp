@@ -23,6 +23,7 @@
 #include "simerrno.h"
 #include "simulablesequence.h"
 #include "axongammadistribution.h"
+#include <cassert>
 
 using namespace Eigen;
 using namespace std;
@@ -294,6 +295,8 @@ bool DynamicsSimulation::finalPositionCheck()
 
             //cout << (this->walker.initial_location == Walker::intra) <<  "Intra"  << endl;
             //cout << isIntra << endl;
+            //TODO check this [ines]
+            cout << " Walker current location is not matching Walker.initial_location." << endl;
             return true;
         }
     }
@@ -1040,15 +1043,18 @@ bool DynamicsSimulation::isInsideNeurons(Vector3d &position, int &neuron_id, dou
 {
     for (unsigned i = 0; i < neurons_list->size() ; i++)
     {
-        bool isinside = neurons_list->at(i).isPosInsideNeuron(position, barrier_thickness, false);
+        bool isinside = neurons_list->at(i).isPosInsideNeuron(position, barrier_thickness, false, walker.in_soma_index, walker.in_dendrite_index);
         if (isinside)
         {
-            walker.in_neuron_index;
+            walker.in_neuron_index = i;
             neuron_id = i;
             intra_tries++;
             return true;
         }
     }
+    // Quick fix in case it goes in extra. TODO: correct it [ines]
+    walker.in_neuron_index = -1;
+    walker.location = Walker::extra;
     return false;
 }
 bool DynamicsSimulation::isInsidePLY(Vector3d &position, int &ply_id,double distance_to_be_inside)
@@ -1158,6 +1164,7 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
 
     for (w = 0 ; w < params.num_walkers; w++)
     {
+        
         cout << "Walker : " << w <<  "\n" <<  endl;
 
         //flag in case there was any error with the particle.
@@ -1186,7 +1193,7 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
             getTimeDt(last_time_dt, time_dt, l, dataSynth, t, time_step);
 
             //Generates a random oriented step of size l
-            generateStep(step, l);
+            generateStep(step);
 
             // Moves the particle. Checks collision and handles bouncing.
             try{
@@ -1197,9 +1204,9 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
                 // Possible errors, or numerical un-handed cases should end here.
                 sentinela.deportationProcess(walker, w, t, back_tracking, params, id);
 
-                if ( error == Sentinel::ErrorCases::stuck || error == Sentinel::ErrorCases::crossed ){
+                if ( error == Sentinel::ErrorCases::stuck || error == Sentinel::ErrorCases::crossed )
                     break;
-                }
+                
 
                 if ( error == Sentinel::rejected )
                     continue;
@@ -1217,17 +1224,22 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
 
         }// end for t
 
-        if (!back_tracking){
-            if(finalPositionCheck()){
+        if (!back_tracking)
+            if(finalPositionCheck())
+            {
+                sentinela.illegal_count++;
                 back_tracking = true;
             }
-        }
+                
+            
 
         //If there was an error, we don't compute the signal or write anything.
-        if(back_tracking){
+        if(back_tracking)
+        {
+            w--;
             continue;
         }
-
+        
         //updates the phase shift.
         if(dataSynth)
             dataSynth->update_phase_shift(this->time_step,walker.pos_r_log);
@@ -1239,10 +1251,10 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
         //Write the positions.
         trajectory.writePosition(walker.pos_r_log);
 
-        if(params.log_propagator){
+        if(params.log_propagator)
             //Update Propagator
             updatePropagator(walker.pos_r_log);
-        }
+        
 
         //Displays the remained expected time and check for the time limit.
         if(expectedTimeAndMaxTimeCheck(w)){
@@ -1307,12 +1319,7 @@ void DynamicsSimulation::readConfigurationFile(std::string conf_file_path) {
 /**
  * @return void
  */
-void DynamicsSimulation::generateStep(Vector3d & step, double l) {
-
-    if(walker.status == Walker::on_object){
-        step = walker.next_direction.normalized();
-        return;
-    }
+void DynamicsSimulation::generateStep(Vector3d & step) {
 
     std::uniform_real_distribution<double> dist(0,1);
 
@@ -1322,10 +1329,10 @@ void DynamicsSimulation::generateStep(Vector3d & step, double l) {
     double cosTh  = cos(theta);
     double sinTh  = sin(theta);
     double sinPhi = sqrt(1.0-cosPhi*cosPhi);
-
-    step(0) = l*cosTh*sinPhi;
-    step(1) = l*sinTh*sinPhi;
-    step(2) = l*cosPhi;
+    // It should change nothing to multiply by l and then normalize...
+    step(0) = cosTh*sinPhi;
+    step(1) = sinTh*sinPhi;
+    step(2) = cosPhi;
 
     step.normalize();
 
@@ -1360,9 +1367,9 @@ void DynamicsSimulation::generateDirectedStep(Vector3d &new_step, Vector3d &dire
  */
 bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
 
-
+    // assert((step.norm() - 1) < 1e-9 && "The norm of the step isn't 1.");
     //new step to take
-    Vector3d bounced_step = step.normalized();
+    Vector3d bounced_step = step;
     Vector3d end_point;
     Vector3d previous_real_position, previous_voxel_position, real_pos, voxel_pos;
 
@@ -1397,10 +1404,12 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
 
         // Updates the position and bouncing direction.
         if(update_walker_status){
+            // At this point, bounced_step = step
             bounced = updateWalkerPositionAndHandleBouncing(bounced_step, tmax, colision);
             // restarts the variables.
             update_walker_status = false;
             colision.type = Collision::null;
+                
         }
         else{
             if (colision.type == Collision::null){
@@ -1423,8 +1432,11 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
         //string message = " Update position  \n";
         //SimErrno::info(message,cout);
         walker.getVoxelPosition(voxel_pos);
-        walker.setVoxelPosition(voxel_pos+ tmax*bounced_step);
-
+        // Vector3d voxel_tmp = voxel_pos;
+        walker.setVoxelPosition(voxel_pos + tmax*bounced_step);
+        int a, b, c, d, e;
+        if(!isInIntra(walker.pos_v, a, b, c, d, e))
+            cout << "Warning: Walker crossed the boundary : intra to extra" << endl;
     }
 
     return false;
@@ -1502,8 +1514,8 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step, double &
         for(unsigned int i = 0 ; i < walker.neurons_collision_sphere.small_sphere_list_end; i++ )
         {   
             unsigned index = walker.neurons_collision_sphere.collision_list->at(i);
-            (*neurons_list)[index].checkCollision(walker,bounced_step,tmax,colision_tmp);
-            handleCollisions(colision,colision_tmp,max_collision_distance,index);       
+            (*neurons_list)[index].checkCollision(walker, bounced_step, tmax, colision_tmp);
+            handleCollisions(colision, colision_tmp, max_collision_distance, index);       
         }
     }
 
@@ -1632,7 +1644,7 @@ void DynamicsSimulation::mapWalkerIntoVoxel(Eigen::Vector3d& bounced_step, Colli
         }
     }
 
-    if (mapped_on_z && walker.in_ax_index != 1){
+    if (mapped_on_z && walker.in_ax_index >= 0){
         bool incorrectcomp = false;
 
         while (!incorrectcomp){
@@ -1670,7 +1682,6 @@ void DynamicsSimulation::mapWalkerIntoVoxel(Eigen::Vector3d& bounced_step, Colli
     }
 }
 
-//TODO : change this so that it works for neurons
 bool DynamicsSimulation::isIntraEdge(Eigen::Vector3d& position, bool low_edge, int& ax_id, bool init_loc_intra){
     
     
@@ -1691,7 +1702,6 @@ bool DynamicsSimulation::isIntraEdge(Eigen::Vector3d& position, bool low_edge, i
             if(checkIfPosInsideVoxel(position)){
                 ax_id = i;
                 return true;
-                break;
             }
         }
     }
@@ -1724,13 +1734,11 @@ bool DynamicsSimulation::updateWalkerPositionAndHandleBouncing(Vector3d &bounced
     //Sets the status of the walker
     walker.status = Walker::free;
 
-
     if (tmax < min_step_length)
     {
         tmax = 0;
         return false;
     }
-
 
     if(colision.type == Collision::hit && colision.col_location != Collision::voxel)
     {
@@ -1763,9 +1771,8 @@ bool DynamicsSimulation::updateWalkerPositionAndHandleBouncing(Vector3d &bounced
             walker.initial_location = walker.location;
         }
         
-        //string message = "Update position after bouncing \n";
-        //SimErrno::info(message,cout);
-        //We update the position.
+        // We update the position. This is the position of the bounce. 
+        // bounced_step = step at this moment
         walker.setRealPosition (real_pos   + displ*bounced_step);
         walker.setVoxelPosition(voxel_pos  + displ*bounced_step);
 
@@ -1777,7 +1784,7 @@ bool DynamicsSimulation::updateWalkerPositionAndHandleBouncing(Vector3d &bounced
         walker.status= Walker::on_voxel;
         //string message = "mapWalkerIntoVoxel \n";
         //SimErrno::info(message,cout);
-        mapWalkerIntoVoxel(bounced_step,colision,barrier_tickness);
+        mapWalkerIntoVoxel(bounced_step, colision, barrier_tickness);
         bounced_step = colision.bounced_direction;
         tmax        -= colision.t;
     }

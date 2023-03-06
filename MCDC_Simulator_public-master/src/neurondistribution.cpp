@@ -6,12 +6,9 @@
 using namespace std;
 using namespace Eigen;
 
-NeuronDistribution::NeuronDistribution(int const& num_obstacles_, double const& icvf_, Vector3d const& min_limits_vx_, Vector3d const& max_limits_vx_)
+NeuronDistribution::NeuronDistribution(int const& num_obstacles_, double const& icvf_, Vector3d const& min_limits_vx_, Vector3d const& max_limits_vx_, double const& step_length_):
+min_limits_vx(min_limits_vx_), max_limits_vx(max_limits_vx_), num_obstacles(num_obstacles_), icvf(icvf_), step_length(step_length_)
 {
-    num_obstacles = num_obstacles_;
-    icvf = icvf_;
-    min_limits_vx = min_limits_vx_;
-    max_limits_vx = max_limits_vx_;
     neurons.clear();
     projections_x.clear();
     projections_y.clear();
@@ -19,7 +16,6 @@ NeuronDistribution::NeuronDistribution(int const& num_obstacles_, double const& 
     
     string message = "neurons : " + std::to_string(this->num_obstacles) + " \n";
     SimErrno::info(message, std::cout);
-
 }
 
 // void NeuronDistribution::computeMinimalSize(std::vector<double> const& radiis, double &icvf_, Vector3d &l) const
@@ -74,14 +70,16 @@ void NeuronDistribution::createSubstrate()
 
                     Eigen::Vector3d soma_center = {x, y, z};
                     double soma_radius = 5e-3; //mm
-
+                    // Let enough distance for the radius and for a step_length so that 
+                    // mirroring border conditions are ok
+                    double min_distance_from_border = barrier_tickness + soma_radius + step_length;
                     // If too close to the border, discard
-                    if ((x - min_limits_vx[0] <= barrier_tickness + soma_radius) ||
-                        (max_limits_vx[0] - x <= barrier_tickness + soma_radius) ||
-                        (y - min_limits_vx[1] <= barrier_tickness + soma_radius) ||
-                        (max_limits_vx[1] - y <= barrier_tickness + soma_radius) ||
-                        (z - min_limits_vx[2] <= barrier_tickness + soma_radius) ||
-                        (max_limits_vx[2] - z <= barrier_tickness + soma_radius))
+                    if ((x - min_limits_vx[0] <= min_distance_from_border) ||
+                        (max_limits_vx[0] - x <= min_distance_from_border) ||
+                        (y - min_limits_vx[1] <= min_distance_from_border) ||
+                        (max_limits_vx[1] - y <= min_distance_from_border) ||
+                        (z - min_limits_vx[2] <= min_distance_from_border) ||
+                        (max_limits_vx[2] - z <= min_distance_from_border))
                         {
                             continue;
                         } 
@@ -134,11 +132,14 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
 
         while(tries < max_tries)
         {
+            // Radius of each dendrite sphere [mm]
+            double sphere_radius = 0.5e-3;
             // Find a point at the surface of the soma
             double x = distribution(generator); 
             double y = distribution(generator);
             double z = distribution(generator);
 
+            // Avoid division by 0 while normalizing
             while(x==0 && y==0 && z==0)
             {
                 x = distribution(generator);
@@ -149,15 +150,25 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
             x = x/normalization_factor*neuron.soma.radius + neuron.soma.center[0];
             y = y/normalization_factor*neuron.soma.radius + neuron.soma.center[1];
             z = z/normalization_factor*neuron.soma.radius + neuron.soma.center[2];
-
             Eigen::Vector3d dendrite_start(x, y, z);
-            // Radius of each dendrite sphere [mm]
-            double sphere_radius = 0.5e-3;
+            
+            // Keep the neuron one step length away from the border so that water mirroring at
+            // the boundary doesn't need to be checked if intra
+            double min_distance_from_border = barrier_tickness + sphere_radius + step_length;
+
+            while(!isInVoxel(dendrite_start, min_distance_from_border))
+            {
+                x = distribution(generator);
+                y = distribution(generator);
+                z = distribution(generator);
+                dendrite_start = {x, y, z};
+            }
+
             // If the vector is not already contained in start_dendrites, add it. 
             // Otherwise, decrement i and do one more round
             if((i != 0) && 
                std::count(start_dendrites.begin(), start_dendrites.end(), dendrite_start) && 
-               (!isInVoxel(dendrite_start, sphere_radius + barrier_tickness)) &&
+               (!isInVoxel(dendrite_start, min_distance_from_border)) &&
                (isSphereColliding(dendrite_start, sphere_radius))){ i--; tries++; }
             else
             {
@@ -174,7 +185,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                 for(int j=0; j < nb_spheres; ++j)
                 {
                     Eigen::Vector3d center = j*dendrite_direction*sphere_radius/4 + dendrite_start;
-                    if (isInVoxel(center, sphere_radius + barrier_tickness) && !isSphereColliding(center, sphere_radius))
+                    if (isInVoxel(center, min_distance_from_border) && !isSphereColliding(center, sphere_radius))
                     {
                         Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, false);
                         spheres_to_add.push_back(sphere_to_add);
@@ -194,9 +205,9 @@ bool NeuronDistribution::isSphereColliding(Dynamic_Sphere const& sph)
 {
     Vector3d position = sph.center;
     double distance_to_be_inside = sph.max_radius - 2 * barrier_tickness;
-
+    int dummy, dummy2;
     for (unsigned i = 0; i < neurons.size() ; i++){
-        bool isinside = neurons[i].isPosInsideNeuron(position, distance_to_be_inside, false);
+        bool isinside = neurons[i].isPosInsideNeuron(position, distance_to_be_inside, false, dummy, dummy2);
         if (isinside)
             return true;
     }
@@ -206,9 +217,9 @@ bool NeuronDistribution::isSphereColliding(Dynamic_Sphere const& sph)
 bool NeuronDistribution::isSphereColliding(Vector3d const& sphere_center, double const& sphere_radius) 
 {
     double distance_to_be_inside = sphere_radius - 2 * barrier_tickness;
-
+    int dummy, dummy2;
     for (unsigned i = 0; i < neurons.size() ; i++){
-        bool isinside = neurons[i].isPosInsideNeuron(sphere_center, distance_to_be_inside, false);
+        bool isinside = neurons[i].isPosInsideNeuron(sphere_center, distance_to_be_inside, false, dummy, dummy2);
         if (isinside)
             return true;
     }

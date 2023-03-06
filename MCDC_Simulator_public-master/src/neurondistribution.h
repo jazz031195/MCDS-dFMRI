@@ -25,7 +25,7 @@ public:
     std::vector<Neuron> neurons;                    /*!< All neurons of the simulation                                              */
     Eigen::Vector3d min_limits_vx;                  /*!< voxel min limits (if any) (bottom left corner)                             */
     Eigen::Vector3d max_limits_vx;                  /*!< voxel max limits (if any)                                                  */
-
+    
     NeuronDistribution(){}
     /**
      *  @brief Constructor.
@@ -33,8 +33,10 @@ public:
      *  @param icvf                    double, intra compartment volume fraction.
      *  @param min_limits_vx_ Eigen::Vector3d, minimum limit of the simulation voxel.
      *  @param max_limits_vx_ Eigen::Vector3d, maximum limit of the simulation voxel.
+     *  @param step_length double, length of a walker step, based on Einstein equation.
     */
-    NeuronDistribution(int const& num_obstacles, double const& icvf, Eigen::Vector3d const& min_limits_vx_, Eigen::Vector3d const& max_limits_vx_);
+    NeuronDistribution(int const& num_obstacles, double const& icvf, Eigen::Vector3d const& min_limits_vx_, 
+                       Eigen::Vector3d const& max_limits_vx_, double const& step_length);
     /**
      *  @brief Populate the simulation voxel with Neurons.
     */ 
@@ -49,6 +51,8 @@ private:
 
     int num_obstacles;                              /*!< number of neurons to fit inside the substrate                              */
     double icvf;                                    /*!< Achieved intra-celular volum fraction in the substrate                     */
+    double step_length;                             /*!< Length of a walker step, based on Einstein equation                        */
+
     struct projection_pt{                           /*!< Structure to calculate the projection of a sphere                          */
         double position;
         int neuron_id;

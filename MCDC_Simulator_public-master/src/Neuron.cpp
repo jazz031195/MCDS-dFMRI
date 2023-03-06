@@ -112,7 +112,7 @@ vector<double> Neuron::Distances_to_Spheres(Vector3d const& pos) const
     return distances;
 }
 
-bool Neuron::isPosInsideNeuron(Eigen::Vector3d const& position,  double const& distance_to_be_inside, bool const& swell_) 
+bool Neuron::isPosInsideNeuron(Eigen::Vector3d const& position,  double const& distance_to_be_inside, bool const& swell_, int& in_soma_index, int& in_dendrite_index) 
 {
     // if position is in box with axon inside
     string neuron_part; // "soma", "dendrite" or "none"
@@ -123,16 +123,26 @@ bool Neuron::isPosInsideNeuron(Eigen::Vector3d const& position,  double const& d
         if (neuron_part == "dendrite")
         {
             if (dendrites[part_id].isPosInsideAxon(position, distance_to_be_inside, false, sphere_ids))
+            {
+                in_dendrite_index = part_id;
+                in_soma_index     = -1;
+                // cout << "in dendrite" << endl;
                 return true;
+            }            
          } 
         else if (neuron_part == "soma")
         {
-            // distance from position to soma boundary
-            double dis = soma.minDistance(position);
-            if( dis <= -distance_to_be_inside )
+            if(soma.isInside(position, -distance_to_be_inside))
+            {
+                in_soma_index = 0;
+                in_dendrite_index = -1;
+                // cout << "in soma" << endl;
                 return true;
+            }               
         }  
     }
+    in_dendrite_index = -1;
+    in_soma_index     = -1;
     return false;
 } 
 
@@ -148,6 +158,8 @@ tuple<string, int> Neuron::isNearNeuron(Vector3d const& position,  double const&
         {
             ++count_isnear; 
         }
+        else
+            break;
     }
     if (count_isnear == 3)
         return tuple<string, int>{"soma", soma.id};
@@ -165,6 +177,8 @@ tuple<string, int> Neuron::isNearNeuron(Vector3d const& position,  double const&
             {
                 ++count_isnear;
             }
+            else
+                break;
         }
         if (count_isnear == 3)
             return tuple<string, int>{"dendrite", i};
@@ -175,23 +189,104 @@ tuple<string, int> Neuron::isNearNeuron(Vector3d const& position,  double const&
 }
 
 
-bool Neuron::checkCollision(Walker &walker, Eigen::Vector3d const& step_dir, double const&step_lenght, Collision &colision)
+bool Neuron::checkCollision(Walker &walker, Vector3d const& step_dir, double const& step_lenght, Collision &colision)
 {
-    // Check if collision with soma
-    if(soma.checkCollision(walker, step_dir, step_lenght, colision))
-        return true;
-    
-    // Check if collision with dendrites
-    for(uint8_t i=0 ; i < nb_dendrites ; ++i)
-    {
-        if(dendrites[i].checkCollision(walker, step_dir, step_lenght, colision))
-            return true;
-    } 
-    return false;
+    Vector3d O;
+    walker.getVoxelPosition(O);
+    Vector3d next_step = step_dir*step_lenght + O;
+    vector<int> sphere_ids;
 
-    // TODOines : check displacement dendrite-soma
+    // If inside soma
+    if(walker.in_soma_index == 0)
+    {
+        // But next step isn't
+        if(!soma.isInside(next_step, -barrier_tickness))
+        {
+            // Find in which axon/dendrite it can go
+            int closest_axon_id = closest_axon_from_soma(next_step, step_lenght);
+
+            // If inside this axon => no collision
+            if((closest_axon_id >= 0) &&
+               dendrites[closest_axon_id].isPosInsideAxon(next_step, -barrier_tickness, false, sphere_ids))
+            {
+                colision.type = Collision::null;
+                walker.in_dendrite_index = closest_axon_id;
+                walker.in_soma_index     = -1;
+                cout << "next step in dendrite" << endl;
+                return false; 
+            }
+            // Or in extra => collision. Technically, no need to check here (TODO [ines])
+            else if (soma.checkCollision(walker, step_dir, step_lenght, colision))
+                return true;
+
+        }
+        // If the next step is also in the soma => no collision
+        else
+        {
+            walker.in_soma_index = 0;
+            colision.type = Collision::null;
+            return false;
+        }  
+    }
+    // Check if collision with soma. Can be internal or external collisions.
+    if(walker.location == Walker::extra)
+        if(soma.checkCollision(walker, step_dir, step_lenght, colision))
+            return true; 
+    
+    // If inside a dendrite
+    if(walker.in_dendrite_index >= 0)
+    {
+        // If next step is not inside dendrite.  
+        if((!dendrites[walker.in_dendrite_index].isPosInsideAxon(next_step, -barrier_tickness, false, sphere_ids)))
+        {
+            // If inside soma => no collision
+            if(soma.isInside(next_step, -barrier_tickness))
+            {
+                colision.type = Collision::null;
+                walker.in_soma_index     = 0;
+                walker.in_dendrite_index = -1;
+                cout << "next step in soma" << endl;
+                return false;  
+            }
+            // If in extra => collision
+            else if(dendrites[walker.in_dendrite_index].checkCollision(walker, step_dir, step_lenght, colision, soma))
+                return true;
+        }
+        // If the next step is also inside dendrite => no collision
+        else
+        {
+            colision.type = Collision::null;
+            return false;
+        }
+    }
+    // Check if collision with dendrites from outside.
+    if(walker.location == Walker::extra)
+    {
+        for(uint8_t i=0 ; i < nb_dendrites ; ++i)
+        {
+            if(dendrites[i].checkCollision(walker, step_dir, step_lenght, colision))
+                return true;
+        } 
+    }
+    return false;
 }
 
+int Neuron::closest_axon_from_soma(Vector3d const& position, double const&step_length)
+{
+    int smaller_dist = 1000;
+    int closer_dendrite = -1;
+    for(size_t i=0; i < dendrites.size(); ++i)
+    {
+        // TODO : there was a segfault here once ... [ines]
+        int distance_to_axon = (position - dendrites[i].spheres[0].center).norm();
+        if(distance_to_axon < smaller_dist && distance_to_axon <= step_length)
+        {
+            smaller_dist = distance_to_axon;
+            closer_dendrite = i;
+        }
+    }
+    return closer_dendrite;
+}
 
 bool Neuron::intersection_sphere_vector(double &intercept1, double &intercept2, Dynamic_Sphere const&sphere, Vector3d const&step_dir, double const&step_length, Vector3d const&traj_origin, double &c) const
 {
