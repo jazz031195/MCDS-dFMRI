@@ -10,13 +10,13 @@ T="1000";
 #c2
 c2="1";
 # nbr of axons
-a="50";
+a="15";
 # icvf
-declare -a icvf=("0.5");
+declare -a icvf=("0.2");
 
 cd "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/" || exit 
 # compiles code
-./MCDC_Simulator_public-master/compile.sh
+#./MCDC_Simulator_public-master/compile.sh
 for (( i=0; i<${#icvf[@]}; i++ ));
 do
     echo "Starting creation of substrate with icvf of ${icvf[i]} ... "

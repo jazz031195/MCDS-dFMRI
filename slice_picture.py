@@ -92,7 +92,7 @@ def draw_cercles(cylinder_array, swell = False):
 
 def main():
 
-    file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/__gamma_distributed_axon_list.txt"
+    file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_gamma_distributed_axon_list.txt"
     N = get_nbr_cylinders (file )
     cylinder_array = get_first_cylinder_array(file, N)
     draw_cercles(cylinder_array)

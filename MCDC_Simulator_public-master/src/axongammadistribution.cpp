@@ -10,7 +10,7 @@ using namespace std;
 using namespace Eigen;
 using namespace std::chrono;
 
-AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc_perc_, unsigned num_ax, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, float min_radius, bool active_state_, double c2_, bool tortuous_)
+AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc_perc_, unsigned num_ax, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, float min_radius, bool active_state_, double c2_, bool tortuous_, double step_length_)
 {
     dyn_perc = dyn_perc_;
     volume_inc_perc = volume_inc_perc_;
@@ -29,6 +29,7 @@ AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc
     tortuosities.clear();
     tortuous = tortuous_;
     small_voxel_size = max_limits;
+    step_length = step_length_;
 
 }
 void AxonGammaDistribution::computeMinimalSize(std::vector<double> radiis, double icvf_, Eigen::Vector3d &l)
@@ -132,7 +133,7 @@ void AxonGammaDistribution::find_target_point (double c2, double radius, Eigen::
         double y_f = y_i + length*sqrt(diff_y_2);
 
         // check if target point is in the voxel limits 
-        if (!check_borders({x_f, y_f, max_limits[2]}, radius*sqrt(1+volume_inc_perc))){
+        if (!check_borders({x_f, y_f, max_limits[2]}, radius*sqrt(1+volume_inc_perc)+step_length)){
             achieved = true;
             initial_point = {x_i, y_i, min_limits[2]};
             target_point = {x_f, y_f, max_limits[2]};
@@ -155,13 +156,17 @@ void AxonGammaDistribution::flip(int flip_nbr, int j, int k, Eigen::Vector3d sma
     // projection onto next small voxel
     double x_increment = j*small_voxel_size[0];
     double y_increment = k*small_voxel_size[1];
+    cout << "   small_voxel_size: " << small_voxel_size << endl;
+    cout << "initial position : " << initial_pos << endl;
     initial_pos = {initial_pos[0] + x_increment, initial_pos[1] + y_increment, initial_pos[2]};
-    
+    cout << " position after increment : " << initial_pos << endl;
     double x_flip;
     double y_flip;
     // center of small voxel
     Eigen::Vector2d center = {(j+0.5)*small_voxel_size[0], (k+0.5)*small_voxel_size[1]};
+    cout << "center : " << center << endl;
 
+    cout << "flip nbr : " << flip_nbr << endl;
     // flips of the small voxel wrt y
     if (flip_nbr == 1){
         double distance = 2*(center[1]-initial_pos[1]);
@@ -176,19 +181,18 @@ void AxonGammaDistribution::flip(int flip_nbr, int j, int k, Eigen::Vector3d sma
     }
 
     initial_pos = {initial_pos[0] + x_flip, initial_pos[1] + y_flip, initial_pos[2]};
-
+    cout << " position after flip : " << initial_pos << endl;
 }
 
 void AxonGammaDistribution::add_periodic_voxel(int nbr_small_voxels, Eigen::Vector3d small_voxel_size){
     
-    int axons_size = axons.size();
-    
+    std::vector<Axon> axons_to_add;
     for (unsigned j = 0; j < nbr_small_voxels -1 ; ++j){
         
         for (unsigned k = 0; k < nbr_small_voxels -1 ; ++k){
             
             int flip_nbr = rand()%3;
-            for (unsigned i = 0; i < axons_size; ++i){
+            for (unsigned i = 0; i < axons.size(); ++i){
                 if (j == 0 and k == 0){
                     k += 1;
                 }
@@ -196,7 +200,9 @@ void AxonGammaDistribution::add_periodic_voxel(int nbr_small_voxels, Eigen::Vect
                 flip(flip_nbr, j, k, small_voxel_size, new_begin);
                 Eigen::Vector3d new_end = axons[i].end;
                 flip(flip_nbr, j, k, small_voxel_size, new_end);
-                Axon *ax = new Axon (axons[i].min_radius, {0,0,0}, {0,0,0}, volume_inc_perc, active_state, axons[i].swell, 1);
+                Axon *ax = new Axon (axons[i]);
+                ax->begin = new_begin;
+                ax->end = new_end;
                 std::vector<Dynamic_Sphere> new_spheres;
 
                 for (unsigned s = 0; s < axons[i].spheres.size(); ++s){
@@ -208,10 +214,13 @@ void AxonGammaDistribution::add_periodic_voxel(int nbr_small_voxels, Eigen::Vect
                 }
                 
                 ax->set_spheres(new_spheres);
-                axons.push_back(*ax);
+                axons_to_add.push_back(*ax);
             }
         }
     }
+    // extend axons with axons to add
+    axons.reserve(axons.size() + distance(axons_to_add.begin(),axons_to_add.end()));
+    axons.insert(axons.end(),axons_to_add.begin(),axons_to_add.end());
 }
 
 void AxonGammaDistribution::createGammaSubstrate(ostream& out)
@@ -293,11 +302,10 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
         }
         // count how many times this small voxel can fit in the voxel size initialised
         int sqrt_nbr_small_voxels = int((max_limits[0]/small_voxel_size[0]));
+        // readjust max_limits so that it is a multiple of small_voxel
+        max_limits = {small_voxel_size[0]*sqrt_nbr_small_voxels, small_voxel_size[1]*sqrt_nbr_small_voxels, small_voxel_size[2]*sqrt_nbr_small_voxels};
         // make this small voxel a rectangle
         small_voxel_size[2] = max_limits[2];
-        // readjust max_limits so that it is a multiple of small_voxel
-        max_limits = {small_voxel_size[0]*sqrt_nbr_small_voxels, small_voxel_size[1]*sqrt_nbr_small_voxels, max_limits[2]};
-
         axons.clear();
 
         unsigned stuck = 0;
@@ -312,7 +320,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
                 if (c2 == 1){
                     double t = udist(gen);
-                    double distance_to_border = radiis[i]*sqrt(1+volume_inc_perc) + barrier_tickness;
+                    double distance_to_border = radiis[i]*sqrt(1+volume_inc_perc) + step_length;
                     double x = (t * (small_voxel_size[0]-distance_to_border)) + (1 - t) * (min_limits[0]+ distance_to_border);
                     t = udist(gen);
                     double y = (t * (small_voxel_size[1]-distance_to_border) + (1 - t) * (min_limits[1]+ distance_to_border));
@@ -477,6 +485,8 @@ std::tuple<double, double>  phi_theta_to_target (Eigen::Vector3d new_pos, Eigen:
 }
 
 bool AxonGammaDistribution::check_borders(Eigen::Vector3d pos, double distance_to_border) {
+    
+    
     Eigen::Vector3d new_min_limits = {min_limits[0] + distance_to_border, min_limits[1] + distance_to_border,min_limits[2] + distance_to_border};
     Eigen::Vector3d new_max_limits = {small_voxel_size[0] - distance_to_border, small_voxel_size[1] - distance_to_border,small_voxel_size[2] - distance_to_border};
 
@@ -568,11 +578,6 @@ bool AxonGammaDistribution::find_next_center(Axon* ax, Dynamic_Sphere& s, vector
             }
         }
 
-        //out << "phi_to_target :" << phi_to_target << endl;
-        //out << "theta_to_target :" << theta_to_target << endl;
-        //out << "phi :" << phi << endl;
-        //out << "theta :" << theta << endl;
-
         // spherical coordinates to cartesian
         delta_x = dist_*cos(theta)*sin(phi);
         delta_y = dist_*sin(theta)*sin(phi);
@@ -585,7 +590,7 @@ bool AxonGammaDistribution::find_next_center(Axon* ax, Dynamic_Sphere& s, vector
         new_pos[2] +=  delta_z;
 
         // check distance with border
-        if (!check_borders(new_pos, rad*sqrt(1+ax->volume_inc_perc) + barrier_tickness)) {
+        if (!check_borders(new_pos, rad*sqrt(1+volume_inc_perc) + step_length)) {
 
             Dynamic_Sphere sphere_ (new_pos, rad,ax->volume_inc_perc,ax->swell, ax->id, 1, ax->active_state);
             // check collision with other spheres

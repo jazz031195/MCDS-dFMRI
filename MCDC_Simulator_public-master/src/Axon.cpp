@@ -435,8 +435,8 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
     }
 
 
-    // is near axon (inside box)
-    if (!isNearAxon(O, step_lenght+barrier_tickness)){
+    // is extra and is near axon (inside box)
+    if (!isintra && !isNearAxon(O, step_lenght+barrier_tickness)){
         colision.type = Collision::null;
         //cout << "not near axon" << endl;
         return false;

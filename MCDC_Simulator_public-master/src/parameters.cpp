@@ -50,6 +50,8 @@ Parameters::Parameters()
 
     for (auto i= 0;i<3; i++)
         min_sampling_area[i] = max_sampling_area[i] = 0.0;
+
+    step_lenght = sqrt(6.0*diffusivity*sim_duration/num_steps);
 }
 
 void Parameters::readSchemeFile(std::string conf_file_path)

@@ -1536,88 +1536,75 @@ void DynamicsSimulation::mapWalkerIntoVoxel(Eigen::Vector3d& bounced_step, Colli
 
     walker.setRealPosition(walker.pos_r + colision.t*bounced_step);
 
+    // position after bounce
     Eigen::Vector3d voxel_pos = walker.pos_v + (colision.t)*bounced_step;
 
     int cyl_id, ply_id, sph_id, ax_id, ax_id_;
 
-    bool mapped_on_z = false;
-    bool low_edge = false;
     bool mapped = false;
 
-
-    for(int i = 0 ; i < 3; i++)
+    // check if walker exits though x and y planes
+    for(int i = 0 ; i < 2; i++)
     {
+        // difference with voxel limits
         double diff_max = voxel_pos[i] - voxels_list[0].max_limits[i];
         double diff_min = voxel_pos[i] - voxels_list[0].min_limits[i];
-        // exits through z = min
-        if ( fabs(diff_min) <= EPS_VAL || diff_min < EPS_VAL){
-            //message = "diff_min : "+to_string(diff_min)+", i :"+to_string(i)+ " \n";
-            //SimErrno::info(message,cout);
-            //if(i == 2)
-            //    cout << "before : " << voxel_pos[2] << endl;
-            voxel_pos[i] = voxels_list[0].max_limits[i] - fabs(diff_min);
+        if (diff_min <= EPS_VAL){
+            voxel_pos[i] = voxels_list[0].max_limits[i] - fabs(diff_min) -EPS_VAL;
             mapped = true;
-            if(i == 2){
-                //cout << "after : " << voxel_pos[2] << endl;
-                mapped_on_z = true;
-            }
         }
-        // exits through z = max
-        else if ( fabs(diff_max) <= EPS_VAL || diff_max > EPS_VAL){
-            //message = "diff_max : "+to_string(diff_max)+", i :"+to_string(i)+ " \n";
-            //SimErrno::info(message,cout);
-            //if(i == 2)
-            //    cout << "before : " << voxel_pos[2] << endl;
-            voxel_pos[i] = voxels_list[0].min_limits[i] + fabs(diff_max);
+        else if (diff_max >= -EPS_VAL){
+            voxel_pos[i] = voxels_list[0].min_limits[i] + fabs(diff_max) +EPS_VAL;
             mapped = true;
-            if(i == 2){
-                //cout << "after : " << voxel_pos[2] << endl;
-                mapped_on_z = true;
-                low_edge  = true;
-            }
         }
     }
 
-    if (mapped_on_z){
-        bool incorrectcomp = false;
+    // check if walker exits though z planes
 
-        while (!incorrectcomp){
+    // difference with voxel limits
+    double diff_max_z = voxel_pos[2] - voxels_list[0].max_limits[2];
+    double diff_min_z = voxel_pos[2] - voxels_list[0].min_limits[2];
+
+    // if exits though z plane
+    if (diff_min_z <= EPS_VAL || diff_max_z >= -EPS_VAL){
+
+        mapped = true;
+        bool achieved = false;
+
+        while(!achieved){
+
+            // generate random x and y
             double x = double(udist(gen));
             double y = double(udist(gen));
-            double z = voxel_pos[2];
-
-            if(z < barrier_tickness){
-                z = barrier_tickness;
-            }
-
             x = x*(params.min_sampling_area[0]) + ( 1.0-x)*params.max_sampling_area[0];
             y = y*(params.min_sampling_area[1]) + ( 1.0-y)*params.max_sampling_area[1];
-            voxel_pos = {x,y,z};
-            //int ax_id;
-            bool isintra;
-            bool isintra_;
-            //bool isintra = isInsideAxons(voxel_pos,ax_id,barrier_tickness);
 
-            if (params.ini_walker_flag.compare("intra")== 0){
-                isintra= isIntraEdge(voxel_pos, low_edge, ax_id, true);
+            // exit through z = min
+            double z;
+            if (diff_min_z <= EPS_VAL){
+                z = voxels_list[0].max_limits[2] - fabs(diff_min_z) - EPS_VAL;
+            }   
+            // exit through z = max
+            else if (diff_max_z >= -EPS_VAL){
+                z = voxels_list[0].min_limits[2] + fabs(diff_max_z) + EPS_VAL;
+            }
+
+            Eigen::Vector3d new_pos = {x,y,z};
+            // check if is inside a shape
+            bool isintra = isInIntra(new_pos, cyl_id, ply_id, sph_id, ax_id);
+            // if walker are intra and are mapped inside an axon
+            if (walker.location == Walker::intra && isintra){
                 walker.in_ax_index = ax_id;
-                //isintra_ = isInsideAxons(voxel_pos,ax_id_,0);
-                //if(isintra != isintra_){
-
-                //    cout << "isIntraEdge : " << isintra << endl;
-                //    cout << "isInsideAxons : " << isintra_  << endl;
-                //    double d = axons_list->at(ax_id).minDistance(voxel_pos);
-                //    cout << "distance : " << d << endl;
-                //}
-
-                incorrectcomp = isintra;
+                achieved = true;
+                voxel_pos = new_pos;
             }
-            else if (params.ini_walker_flag.compare("extra")== 0){
-                isintra= isIntraEdge(voxel_pos, low_edge,ax_id, false);
-                incorrectcomp = !isintra;
+            // if walker are intra and are mapped ouside an axon
+            else if (walker.location == Walker::extra && !isintra){
+                achieved = true;
+                voxel_pos = new_pos;
             }
-
         }
+
     }
 
 
@@ -1629,26 +1616,6 @@ void DynamicsSimulation::mapWalkerIntoVoxel(Eigen::Vector3d& bounced_step, Colli
     }
 }
 
-bool DynamicsSimulation::isIntraEdge(Eigen::Vector3d& position, bool low_edge, int& ax_id, bool init_loc_intra){
-    for (int i = 0 ; i < axons_list->size(); i++){
-        Vector3d sph_ref;
-        if (low_edge){
-            sph_ref = axons_list->at(i).begin;
-        }
-        else{
-            sph_ref = axons_list->at(i).end;
-        }
-        double distance = (sph_ref - position).norm();
-        if (distance < axons_list->at(i).radius){
-            if(checkIfPosInsideVoxel(position)){
-                ax_id = i;
-                return true;
-                break;
-            }
-        }
-    }
-    return false;
-}
 
 void DynamicsSimulation::getTimeDt(double &last_time_dt, double &time_dt, double &l, SimulableSequence* dataSynth, unsigned t, double time_step)
 {

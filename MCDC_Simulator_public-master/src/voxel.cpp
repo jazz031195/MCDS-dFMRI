@@ -58,7 +58,7 @@ Plane::Plane(Eigen::Vector3d& a, Eigen::Vector3d& b, Eigen::Vector3d& c, Eigen::
 bool Plane::CheckCollision(Walker &walker, Eigen::Vector3d& step, double tmax, Collision& colision)
 {
     colision.type = Collision::null;
-
+    // distance between walker and plane
     double t = (d - normal.dot(walker.pos_v))/(normal.dot(step));
 
     if(walker.status == Walker::on_voxel){

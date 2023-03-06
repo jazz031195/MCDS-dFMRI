@@ -28,6 +28,7 @@ public:
     double diffusivity;                             /*!< D, diffusivity constant                                                    */
     double sim_duration;                            /*!< simulation total time                                                      */
     double dyn_perc;                                /*!< percentage of swelling cylinders                                           */
+    double step_lenght;
     double volume_inc_perc;  
     bool write_traj;                                /*!< flag, write a traj file or not, binary format only                         */
     bool write_txt;                                 /*!< flag, writes DWI output signals in .txt if True                            */
