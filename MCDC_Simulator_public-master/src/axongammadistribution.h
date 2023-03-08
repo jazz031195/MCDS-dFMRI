@@ -90,7 +90,9 @@ public:
     void add_spheres_to_list(Axon* ax, vector<Eigen::Vector3d> centers, vector<double> sph_radii, vector<Dynamic_Sphere>& spheres_to_add);
     void add_periodic_voxel(int nbr_small_voxels, Eigen::Vector3d small_voxel_size);
     void flip(int flip_nbr, int j, int k, Eigen::Vector3d small_voxel_size, Eigen::Vector3d& initial_pos);
-
+    void add_next_sphere(Dynamic_Sphere added_sphere, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii);
+    void fill_with_spheres(Axon* ax, std::vector<Dynamic_Sphere>& spheres_to_add, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii, ostream& out);
+    void find_shrinking_dichotomy(double& rad, double axon_rad, double min_shrink, double max_shrink, double& half_shrink);
 private:
 
     /*!

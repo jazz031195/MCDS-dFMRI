@@ -508,7 +508,9 @@ bool AxonGammaDistribution::isSphereColliding(Dynamic_Sphere sph){
     std::vector<int> col_sphere_ids;
 
     for (unsigned i = 0; i < axons.size() ; i++){
+
         bool isinside = axons[i].isPosInsideAxon(position, distance_to_be_inside, true, col_sphere_ids);
+        
         if (isinside){
             return true;
             break;
@@ -546,8 +548,8 @@ bool AxonGammaDistribution::find_next_center(Axon* ax, Dynamic_Sphere& s, vector
     Eigen::Vector3d curr_pos = {centers[centers.size() -1][0],centers[centers.size() -1][1],centers[centers.size() -1][2]};
     // current position (position of 4 spheres before last )
     Eigen::Vector3d prev_pos;
-    if (centers.size()>5){
-        prev_pos = {centers[centers.size()-5][0],centers[centers.size() -5][1],centers[centers.size() -5][2]};
+    if (centers.size()>2){
+        prev_pos = {centers[centers.size()-2][0],centers[centers.size() -2][1],centers[centers.size() -2][2]};
     }
     else {
         prev_pos = {centers[centers.size()-1][0],centers[centers.size() -1][1],centers[centers.size() -1][2]-dist_};
@@ -605,7 +607,7 @@ bool AxonGammaDistribution::find_next_center(Axon* ax, Dynamic_Sphere& s, vector
         }
         else {
             tries += 1;
-         }
+        }
     }
     return false;
 }
@@ -614,7 +616,7 @@ bool AxonGammaDistribution::fiber_collapse(std::vector<Eigen::Vector3d>& centers
     
     int fiber_collapse_threshold = 5;
     // we delete 4 spheres at a time
-    int nbr_discarded_centers = (fibre_collapsed_nbr+1)*4;
+    int nbr_discarded_centers = (fibre_collapsed_nbr+1);
     if ((centers.size()> nbr_discarded_centers) && (fibre_collapsed_nbr<= fiber_collapse_threshold)){
         for (unsigned j=0; j< nbr_discarded_centers; ++j){
             centers.pop_back();
@@ -658,6 +660,65 @@ bool AxonGammaDistribution::can_add_four_spheres(Axon* ax, Dynamic_Sphere& added
         return false;
     }
 }
+
+void AxonGammaDistribution::fill_with_spheres(Axon* ax, std::vector<Dynamic_Sphere>& spheres_to_add, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii, ostream& out){
+
+    for (unsigned i = 0; i < centers.size(); i++){
+
+        Dynamic_Sphere sphere (centers[i], sph_radii[i] ,ax->volume_inc_perc, ax->swell, ax->id, 1, ax->active_state);  
+        spheres_to_add.push_back(sphere);
+        if (i != 0) { 
+            // add spheres in between 
+            for (unsigned j = 0; j < 3; j++){
+                // center
+                Eigen::Vector3d center_between = {(3-j)*centers[i-1][0]/4+(j+1)*centers[i][0]/4, (3-j)*centers[i-1][1]/4+(j+1)*centers[i][1]/4, (3-j)*centers[i-1][2]/4+(j+1)*centers[i][2]/4};
+                // radius
+                double radius_in_between = (3-j)*sph_radii[i-1]/4+(j+1)*sph_radii[i]/4;
+                // sphere
+                Dynamic_Sphere sphere_in_between (center_between, radius_in_between,ax->volume_inc_perc, ax->swell, ax->id, 1, ax->active_state);  
+                double shrink_perc = 0;
+                Dynamic_Sphere sphere_ = sphere_in_between;
+                // check if this sphere collides
+                // at some point it should always find a radius at which it doesn't collide with environment
+                // because it is between two overlapping spheres that do not collide with environment
+                while (isSphereColliding(sphere_)){
+                    double rad;
+                    shrink_sphere_rad(rad, radius_in_between, shrink_perc, out);
+                    sphere_ = Dynamic_Sphere (center_between, rad,ax->volume_inc_perc, ax->swell, ax->id, 1, ax->active_state);  
+                    shrink_perc += 0.05;
+                }
+                sphere_in_between = sphere_;
+
+                bool last_sphere_add =false;
+                if (!last_sphere_add){  
+                    if (sphere_in_between.center[2]<= max_limits[2]){
+                        spheres_to_add.push_back(sphere_in_between);
+                    }
+                    else{
+                        // distances to border 
+                        double dist_i_1= abs((centers[i-1] - max_limits).norm());
+                        double dist_i = abs((centers[i] - max_limits).norm());
+                        // vector from centers[i-1] to centers[i] 
+                        Eigen::Vector3d vector = (centers[i] - centers[i-1]).normalized();
+                        // centers[i-1][2] + lambda*vector[2] = max_limits[2]
+                        double lambda_ = (max_limits[2]-centers[i-1][2])/vector[2];
+                        Eigen::Vector3d last_center = centers[i-1] +lambda_*vector;
+                        double weight_i_1 = abs((last_center-centers[i]).norm())/abs((centers[i-1]-centers[i]).norm());
+                        double weight_i = abs((last_center-centers[i-1]).norm())/abs((centers[i-1]-centers[i]).norm());
+                        double last_radius = weight_i*sph_radii[i]+weight_i_1*sph_radii[i-1];
+                        Dynamic_Sphere last_sphere(last_center, last_radius,ax->volume_inc_perc,ax->swell, ax->id, 1, ax->active_state);
+                        last_sphere_add = true;
+                        if (!isSphereColliding(last_sphere)){
+                            spheres_to_add.push_back(last_sphere);
+                        }
+                    }
+                } 
+            } 
+        } 
+    } 
+}  
+
+
 bool AxonGammaDistribution::add_four_spheres(Axon* ax, Dynamic_Sphere& added_sphere, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii, double& dist_, double rad, ostream& out){
     
     std::vector<Dynamic_Sphere> spheres_to_add_;
@@ -676,9 +737,23 @@ bool AxonGammaDistribution::add_four_spheres(Axon* ax, Dynamic_Sphere& added_sph
     }
 }
 
+void AxonGammaDistribution::add_next_sphere(Dynamic_Sphere added_sphere, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii){
+    
+    // update centers list
+    centers.push_back(added_sphere.center);
+    sph_radii.push_back(added_sphere.min_radius);
+        
+}
+
 void AxonGammaDistribution::shrink_sphere_rad(double& rad, double axon_rad, double& shrink_perc, ostream& out){
-    shrink_perc += 0.02;
-    rad = axon_rad *sqrt(1-shrink_perc);
+    rad = axon_rad *(1-shrink_perc);
+}
+
+void AxonGammaDistribution::find_shrinking_dichotomy(double& rad, double axon_rad, double min_shrink, double max_shrink, double& half_shrink){
+
+    half_shrink = (max_shrink-min_shrink)/2+min_shrink;
+    rad = axon_rad *(1-half_shrink);
+
 }
 
 void AxonGammaDistribution::add_spheres_to_list(Axon* ax, vector<Eigen::Vector3d> centers, vector<double> sph_radii, vector<Dynamic_Sphere>& spheres_to_add){
@@ -720,7 +795,8 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon* ax, double dis
     std::vector<Dynamic_Sphere> spheres_to_add;
 
     // maximum of shrinking percentage
-    double max_shrinking = 0.7;
+    double max_shrinking = 0.5;
+    double min_radius_shrinking = ax->min_radius*(1-max_shrinking);
     // managed to add 4 spheres
     bool spheres_added = false;
     // fiber collapsing is possible
@@ -734,76 +810,102 @@ std::vector<Dynamic_Sphere> AxonGammaDistribution::GrowAxon(Axon* ax, double dis
         return spheres_to_add;
     }
     else{
-        centers.push_back({s1.center[0],s1.center[1],s1.center[2]});
-        sph_radii.push_back(s1.min_radius);
+        add_next_sphere(s1, centers, sph_radii);
     }
     do{
 
-        double shrink_perc = 0.0;
+        double shrink_perc = 0.01;
         // radius of sphere to add
         double rad = ax->min_radius;
         // initial distance between spheres is the radius
-        double dist_ = ax->radius;
+        double dist_ = rad;
 
         Dynamic_Sphere sphere_to_add;
 
         // find 4 spheres to add that don't collide with environment at dist_ specified
-        spheres_added = add_four_spheres(ax, sphere_to_add, centers, sph_radii, dist_, rad, out);
+        spheres_added = find_next_center(ax, sphere_to_add, centers, dist_, rad, out);
+        if (spheres_added){
+            add_next_sphere(sphere_to_add, centers, sph_radii);
+            out << "managed to add spheres :" << spheres_added<< endl;
+            out << "centers size :" << centers.size() << endl;
+            continue;
+        }
 
-        if(!spheres_added ){
+        else{
             // while spheres aren't able to be added 
             while (!spheres_added && can_fiber_collapse){
                 // check and do fiber collapsing
                 out << "fiber collapse"<< endl;
                 can_fiber_collapse = fiber_collapse(centers, fibre_collapsed_nbr, out);
-                spheres_added = add_four_spheres(ax, sphere_to_add, centers, sph_radii, dist_, rad, out);
+                spheres_added = find_next_center(ax, sphere_to_add, centers, dist_, rad, out);
+                if (spheres_added){
+                    add_next_sphere(sphere_to_add, centers, sph_radii);
+                }
                 fibre_collapsed_nbr += 1;
                 out << "managed to add spheres :" << spheres_added<< endl;
                 out << "centers size :" << centers.size() << endl;
             }
 
             if (!spheres_added){
-                std::vector<Dynamic_Sphere> spheres_to_add_;
-                bool can_add_with_max_shrinking = can_add_four_spheres(ax, sphere_to_add, spheres_to_add_, centers, sph_radii, dist_, rad *sqrt(1-max_shrinking), out);
+                Dynamic_Sphere sphere_to_add_;
+                bool can_add_with_max_shrinking = find_next_center(ax, sphere_to_add_, centers, dist_, min_radius_shrinking,  out);
                 // if a sphere can be added after a maximum shrinking process
                 if (can_add_with_max_shrinking){
+                    double lower_boundary = shrink_perc;
+                    double upper_boundary = max_shrinking;
+                    double middle_boundary;
+                    bool dichotomy_check;
+                    bool achieved = false;
+                    Dynamic_Sphere last_sphere_to_add_= sphere_to_add_;
                     // while spheres can't be added and the radius doesn't reach the minimum required
-                    while (!spheres_added && rad > min_radius && shrink_perc + 0.01 < max_shrinking ){
-                        out << "    shrink to " << shrink_perc << endl;
-                        // rad = shrinked radius
-                        shrink_sphere_rad(rad, ax->radius, shrink_perc, out);
-                        // distance between spheres is the maximum between the radius of the two
-                        dist_ = max(rad, sph_radii[sph_radii.size()-1]);
-                        spheres_added = add_four_spheres(ax, sphere_to_add, centers, sph_radii, dist_, rad, out);
-                        out << "managed to add spheres :" << spheres_added<< endl;
-                        out << "centers size :" << centers.size() << endl;
+                    while (!achieved){
+                        // if boundaries are close enough
+                        if (abs(upper_boundary-lower_boundary) < 0.01){
+                            // shrink radius to the upper bound
+                            add_next_sphere(last_sphere_to_add_, centers, sph_radii);
+                            achieved = true;
+                            out << "    sphere shrinks to :"<< upper_boundary << endl;
+                            out << "centers size :" << centers.size() << endl;
+                        }
+                        else{   
+                            // rad = shrinked radius
+                            find_shrinking_dichotomy(rad, ax->min_radius, lower_boundary, upper_boundary, middle_boundary);
+                            // distance between spheres is the maximum between the radius of the two
+                            dist_ = max(rad, sph_radii[sph_radii.size()-1]);
+                            // try shrinking at half 
+                            dichotomy_check = find_next_center(ax, sphere_to_add_, centers, dist_, rad, out);
+                            
+                            out << "    checking shrink : " << middle_boundary  << ", result :"<< dichotomy_check << endl;
+                            if (dichotomy_check){
+                                upper_boundary = middle_boundary;
+                                last_sphere_to_add_ = sphere_to_add_;
+                            }
+                            else{
+                                lower_boundary = middle_boundary;
+                            }
+                        } 
+
                     }
-                    // spheres can't be added anyway
-                    if (!spheres_added){
-                        // this will be empty
-                        out << "cannot add shrinked sphere"<< endl;
-                        return spheres_to_add;
-                    }
+
                 }
                 else{
                     // this will be empty
                     out << "cannot add max shrinked sphere"<< endl;
                     return spheres_to_add;
+                    break;
                 }
             }
 
         }
-        else{
-            out << "managed to add spheres :" << spheres_added<< endl;
-            out << "centers size :" << centers.size() << endl;
-        } 
+
 
     //out << "centers.size() :" << centers.size() <<endl;
 
-    //out << "new_pos[2] : " << new_pos[2] <<", ax->end[2] :" << ax->end[2] << endl;
+    out << "last center : (" << centers[centers.size()-1][0] << ","<< centers[centers.size()-1][1] << ","<< centers[centers.size()-1][2] <<"), ax->end[2] :" << ax->end[2] << endl;
+    out << "small voxel size :" << small_voxel_size << endl;
     }while (centers[centers.size()-1][2] < ax->end[2]);
 
-    add_spheres_to_list(ax, centers, sph_radii, spheres_to_add);
+    fill_with_spheres(ax, spheres_to_add,centers, sph_radii,out);
 
     return spheres_to_add;
 
