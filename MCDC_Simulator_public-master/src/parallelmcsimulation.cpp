@@ -864,7 +864,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 ax_id = stod(jkr[1]);
                 Eigen::Vector3d begin = {min_limits, min_limits, min_limits};
                 Eigen::Vector3d end = {max_limits, max_limits, max_limits};
-                Axon ax (r, begin, end,volume_inc_perc, params.active_state, s, scale);
+                Axon ax (ax_id, r, begin, end,volume_inc_perc, params.active_state, s, scale);
                 ax.set_spheres(spheres_);
                 axons_list.push_back(ax);
                 spheres_.clear();

@@ -31,7 +31,7 @@ public:
     double alpha;                                   /*!< alpha coefficient of the Gamma distribution                                */
     double beta;                                    /*!< beta coefficient of the gamma distribution                                 */
     double icvf;                                    /*!< Achieved intra-celular volum fraction in the substrate                     */
-    float min_radius;                                /*!< Minimum radius to be sampled from the gamma distribution                  */
+    double min_radius;                                /*!< Minimum radius to be sampled from the gamma distribution                  */
     double icvf_current;
     
     Eigen::Vector3d min_limits;                     /*!< voxel min limits (if any) (bottom left corner)                             */
@@ -61,7 +61,7 @@ public:
      *  \param scale scale factor for the values passed. Useful when reading a file.
      *  \brief Initialize everything.
      */
-    AxonGammaDistribution(double, double, unsigned, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius = 0.001, bool active_state = false, double c2 = 1.0, bool tortuous = false, double step_length_ = barrier_tickness);
+    AxonGammaDistribution(double, double, unsigned, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, double min_radius = 0.001, bool active_state = false, double c2 = 1.0, bool tortuous = false, double step_length_ = barrier_tickness);
      
      /*!
      *  \brief Shows a small histogram of the gamma distribution
@@ -78,21 +78,23 @@ public:
      *  \param out ostream where to write the info.
     */
     void printSubstrate(std::ostream& out);
-    std::vector<Dynamic_Sphere> GrowAxon(Axon* ax, double distance_to_be_inside, int axon_id,  ostream& out);
-    bool check_borders(Eigen::Vector3d pos, double distance_to_border);
+    std::vector<Dynamic_Sphere> GrowAxon(Axon* ax, double distance_to_be_inside, bool& axon_collides_with_border, std::vector<Eigen::Vector2d>& all_twin_delta_pos, bool can_shrink, ostream& out);
+    bool check_borders(Eigen::Vector3d pos, double distance_to_border, Eigen::Vector2d& twin_delta_pos);
+    bool checkAxoninBorders(Axon* ax, Eigen::Vector2d& twin_delta_pos);
+    bool checkAxonsinBorders(std::vector<Axon*> ax, Eigen::Vector2d& twin_delta_pos);
     bool isSphereColliding(Dynamic_Sphere sph);
-    bool find_next_center(Axon* ax, Dynamic_Sphere& s, vector<Eigen::Vector3d> centers, double dist_, double& rad, ostream& out);
-    bool fiber_collapse(std::vector<Eigen::Vector3d>& centers, int& fibre_collapsed_nbr, ostream& out);
-    bool add_four_spheres(Axon* ax, Dynamic_Sphere& added_sphere, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii, double& dist_, double rad, ostream& out);
-    void shrink_sphere_rad(double& rad, double axon_rad, double& shrink_perc, ostream& out);
+    bool isAxonColliding(Axon* ax);
+    bool find_next_center(Axon* ax, Dynamic_Sphere& s, vector<Eigen::Vector3d> centers, double dist_, double& rad, ostream& out, bool& collides_with_border, Eigen::Vector2d& twin_delta_pos,  std::vector<Eigen::Vector2d> phi_theta_colliding, int max_tries);
+    bool fiber_collapse(std::vector<Eigen::Vector3d>& centers, int fibre_collapsed_nbr, ostream& out);
+    void shrink_sphere_rad(double& rad, double axon_rad, double& shrink_perc);
     void find_target_point (double c2, double radius, Eigen::Vector3d& initial_point , Eigen::Vector3d& target_point);
-    bool can_add_four_spheres(Axon* ax, Dynamic_Sphere& added_sphere, std::vector<Dynamic_Sphere>& spheres_to_add_, std::vector<Eigen::Vector3d> centers, std::vector<double>& sph_radii, double& dist_, double rad, ostream& out);
-    void add_spheres_to_list(Axon* ax, vector<Eigen::Vector3d> centers, vector<double> sph_radii, vector<Dynamic_Sphere>& spheres_to_add);
     void add_periodic_voxel(int nbr_small_voxels, Eigen::Vector3d small_voxel_size);
     void flip(int flip_nbr, int j, int k, Eigen::Vector3d small_voxel_size, Eigen::Vector3d& initial_pos);
     void add_next_sphere(Dynamic_Sphere added_sphere, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii);
-    void fill_with_spheres(Axon* ax, std::vector<Dynamic_Sphere>& spheres_to_add, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii, ostream& out);
+    void fill_with_spheres(Axon* ax, std::vector<Dynamic_Sphere>& spheres_to_add, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii);
     void find_shrinking_dichotomy(double& rad, double axon_rad, double min_shrink, double max_shrink, double& half_shrink);
+    void createTwinAxons(Axon* ax, Eigen::Vector2d twin_delta_pos, std::vector<Axon*>& twin_axons, int id);
+    void createTwinSpheres(std::vector<Dynamic_Sphere>& twin_spheres, Dynamic_Sphere s,  Eigen::Vector2d twin_delta_pos);
 private:
 
     /*!

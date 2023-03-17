@@ -22,8 +22,7 @@ using namespace std;
 class Axon : public Obstacle
 {
 public:
-
-    static int count;
+    int id;
     std::vector<Dynamic_Sphere> spheres; 
     double radius;
     double max_radius;
@@ -40,12 +39,12 @@ public:
     /*!
      *  \brief Default constructor. Does nothing
      */
-    Axon(){id = count++;};
+    Axon(){};
 
-    ~Axon(){count--;};
+    ~Axon(){};
 
 
-    Axon(double min_radius_,  Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , double scale):min_radius(min_radius_*scale), begin(begin_*scale),end(end_*scale),volume_inc_perc(volume_inc_perc_), active_state(active_state_), swell(swell_){
+    Axon(int id_, double min_radius_,  Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , double scale): id(id_), min_radius(min_radius_*scale), begin(begin_*scale),end(end_*scale),volume_inc_perc(volume_inc_perc_), active_state(active_state_), swell(swell_){
 
         radius = min_radius;
         spheres.clear();
@@ -63,7 +62,7 @@ public:
 
         //projections.clear_projections();
         //projections_max.clear_projections();
-        id = count++;
+
     }
     Axon(Axon const &ax);
 

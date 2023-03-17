@@ -6,7 +6,7 @@
 using namespace Eigen;
 using namespace std;
 
-int Dynamic_Sphere::count = 0;
+
 
 Dynamic_Sphere::Dynamic_Sphere(const Dynamic_Sphere &sph)
 {
@@ -15,10 +15,10 @@ Dynamic_Sphere::Dynamic_Sphere(const Dynamic_Sphere &sph)
     swell = sph.swell;
     volume_inc_perc = sph.volume_inc_perc; 
     ax_id = sph.ax_id;
-    id = count++;
     active_state = sph.active_state;
     min_radius = sph.min_radius;
     max_radius = sph.max_radius;
+    id = sph.id;
 
 }
 

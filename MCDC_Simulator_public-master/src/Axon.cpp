@@ -7,13 +7,12 @@
 using namespace Eigen;
 using namespace std;
 
-int Axon::count = 0;
 
 Axon::Axon(const Axon &ax)
 {
 
     swell = ax.swell;
-    id = count++;
+    id = ax.id;
     spheres = ax.spheres;
     radius = ax.radius;
     begin = ax.begin;
@@ -33,7 +32,7 @@ void Axon::add_projection(){
     // projections are in descending order. When added, it is added at the right position.
     for (unsigned axis = 0; axis < 3; ++axis) {
         double smallest_pos_ = 100;
-        double largest_pos_ = 0;
+        double largest_pos_ = -100;
 
         for (int i=0; i<spheres.size(); ++i){ 
 
@@ -90,6 +89,10 @@ void Axon::add_projection(){
 
 void Axon::set_spheres(std::vector<Dynamic_Sphere> spheres_to_add){
 
+    // set axon_id of spheres to the id of axon
+    for (int i=0; i<spheres_to_add.size(); ++i){
+        spheres_to_add[i].ax_id = id;
+    }
     if (spheres_to_add.size() != 0){
 
         this->begin = spheres_to_add[0].center;
@@ -98,6 +101,7 @@ void Axon::set_spheres(std::vector<Dynamic_Sphere> spheres_to_add){
 
         this->end = spheres_to_add[spheres_to_add.size()-1].center;
     }
+
     // create projections
     add_projection();
 
@@ -126,12 +130,15 @@ bool Axon::isPosInsideAxon(Vector3d &position,  double distance_to_be_inside, bo
     double rad_;
     // if position is in box with axon inside
     if(isNearAxon(position, distance_to_be_inside)){
+        // find all projections in between the two projections of the edges
         if (swell_){
-            rad = max_radius;
+            // the radius taken here is the max between the axon's radius and the sphere's radius
+            rad = max(max_radius, distance_to_be_inside );
             coliding_projs = projections_max.find_collisions_all_axes(position, rad, id);
         }
         else{
-            rad = radius;
+            // the radius taken here is the max between the axon's radius and the sphere's radius
+            rad = max(radius, distance_to_be_inside ) ;
             coliding_projs = projections.find_collisions_all_axes(position, rad, id);
         }
 

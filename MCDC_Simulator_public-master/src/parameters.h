@@ -84,7 +84,7 @@ public:
     double      gamma_icvf;
     double      gamma_output_configuration;
     unsigned    gamma_num_obstacles;
-    float       min_obstacle_radii;                 /*!< Minimum radii (in um) to be sampled                                        */
+    double       min_obstacle_radii;                 /*!< Minimum radii (in um) to be sampled                                        */
     double c2;                                      /*!< for Orientation Density Function of axons (instead of kappa)                                                   */
     bool tortuous = false;
 

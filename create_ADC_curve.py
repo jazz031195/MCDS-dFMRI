@@ -143,7 +143,6 @@ def get_axons_array(file):
 
 def plot_radii(file):
     axons = get_axons_array(file)
-    radiis =[] 
     area = 0
     for i in range(len(axons)):
         radius = [] 
@@ -152,7 +151,8 @@ def plot_radii(file):
             radius.append(spheres[ii][3])
         area += np.pi*spheres[ii][3]*spheres[ii][3]
         plt.plot(radius)
-    print("approximate ICVF :"+str(area/(97.55*97.55)))
+    plt.ylabel("[mm]")
+
     plt.show()
 
 
@@ -229,14 +229,18 @@ def plot_DWI(intra_rest_path,extra_rest_path, extra_active_path, intra_active_pa
 
 axons_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_gamma_distributed_axon_list.txt"
 
-intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_intra_active_DWI.txt"
-extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_extra_active_DWI.txt"
-intra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_intra_rest_DWI.txt"
-extra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_extra_rest_DWI.txt"               
-data2 = assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_rest_path)
+#intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_intra_active_DWI.txt"
+#extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_extra_active_DWI.txt"
+#intra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_intra_rest_DWI.txt"
+#extra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_extra_rest_DWI.txt"               
+#data2 = assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_rest_path)
 
-print(data2.groupby(["state"] ).mean())
-sns.pointplot(data = data2.groupby(["state"]).mean().reset_index(), x = "adc [um²/ms]", y = "state")
+
+#plot_DWI(intra_rest_path,extra_rest_path, extra_active_path, intra_active_path)
+
+file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/_DWI.txt"
+
+data = create_data(file)
+print(data)
+ax = sns.lineplot(data=data, x = "b [ms/um²]", y= "DWI")
 plt.show()
-
-plot_DWI(intra_rest_path,extra_rest_path, extra_active_path, intra_active_path)
