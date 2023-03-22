@@ -146,6 +146,7 @@ bool Axon::isPosInsideAxon(Vector3d &position,  double distance_to_be_inside, bo
 
             // for all coliding objects in x 
             for(unsigned j = 0; j < coliding_projs[0].size() ; j++){ 
+
                 const Projections::projection_pt coliding_proj = coliding_projs[0][j];
                 // if the same coliding objects are also in y and z but are not from same objects
                 if (swell_){
@@ -361,36 +362,30 @@ double getAverage(std::vector<double> const& v) {
     return sum / v.size();
 }
 
-int Axon::closest_sphere_dichotomy(Walker &walker, double &step_lenght){
-    Vector3d O;
-    walker.getVoxelPosition(O);
-    int number_spheres = spheres.size();
-    int i=0;
-    int i_last = number_spheres-1;
-    bool stop = false;
-    int count= 0;
-    int half_way;
-    double first_distance;
-    double last_distance;
-    while ((i_last-i)>1){
-        half_way = int((i_last+i)/2);
-        first_distance =(spheres[i].center-O).norm() - spheres[i].radius;
-        last_distance =(spheres[i_last].center-O).norm() - spheres[i_last].radius;
-        if(first_distance < last_distance){
-            i_last = half_way;
-        } 
-        else{
-            i = half_way;
-        } 
-        count += 1;
+int Axon::closest_sphere_dichotomy(Eigen::Vector3d O){
+
+    // two spheres
+    Eigen::Vector2d sph_ind_range = {0, spheres.size()};
+    // distances walkers - spheres
+    Eigen::Vector2d distance_range = {(O-spheres[sph_ind_range[0]].center).norm()- spheres[sph_ind_range[0]].radius, (O-spheres[sph_ind_range[1]].center).norm()- spheres[sph_ind_range[1]].radius};
+    
+    while (sph_ind_range[1]-sph_ind_range[0] > 1){
+        int sph_ind_half = int((sph_ind_range[1]-sph_ind_range[0])/2) + sph_ind_range[0];
+        if (distance_range[0]< distance_range[1]) {
+            sph_ind_range = {sph_ind_range[0], sph_ind_half};
+            distance_range = {distance_range[0], (O-spheres[sph_ind_range[1]].center).norm()- spheres[sph_ind_range[1]].radius};
+        }
+        else {
+            sph_ind_range = {sph_ind_half, sph_ind_range[1]};
+            distance_range = {(O-spheres[sph_ind_range[0]].center).norm()- spheres[sph_ind_range[0]].radius, distance_range[1]};
+        }
     }
-    if (first_distance < last_distance){
-        return i;
+    if (distance_range[0]< distance_range[1]){
+        return sph_ind_range[0];
     }
     else{
-        return i_last;
-    }  
- 
+        return sph_ind_range[1];
+    }
 }
 
 Vector3d find_nearest_point_on_skeleton(Vector3d collision_point, Vector3d sphere_center1, Vector3d sphere_center2){
@@ -435,15 +430,15 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
             isintra = false;
         }
     }
-
+    
     if(isintra && next_step_is_intra){
         colision.type = Collision::null;
         return false;
     }
+    
 
-
-    // is extra and is near axon (inside box)
-    if (!isintra && !isNearAxon(O, step_lenght+barrier_tickness)){
+    // is not near axon (inside box)
+    if (!isNearAxon(O, step_lenght+barrier_tickness)){
         colision.type = Collision::null;
         //cout << "not near axon" << endl;
         return false;
@@ -461,10 +456,11 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
     // indexes of close spheres within range
     std::vector<int> close_spheres_ind;
     for (unsigned j=0 ; j< distances.size(); ++j){
-        if (distances[j]<= step_lenght+barrier_tickness){
+        if (distances[j]<= step_lenght+10*barrier_tickness){
             close_spheres_ind.push_back(j);
         }
     }
+
     // distances to intersections
     std::vector<double> dist_intersections;
     std::vector<double> cs;
@@ -473,7 +469,7 @@ bool Axon::checkCollision(Walker &walker, Vector3d &step, double &step_lenght, C
     dist_intersections.clear();
     int sph_id;
 
-    for (unsigned j=0 ; j< close_spheres_ind.size(); ++j){
+    for (unsigned j= 0 ; j< close_spheres_ind.size(); ++j){
 
         int i = close_spheres_ind[j];
         // distances to collision

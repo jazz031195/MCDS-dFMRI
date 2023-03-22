@@ -44,7 +44,15 @@ public:
     ~Axon(){};
 
 
-    Axon(int id_, double min_radius_,  Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , double scale): id(id_), min_radius(min_radius_*scale), begin(begin_*scale),end(end_*scale),volume_inc_perc(volume_inc_perc_), active_state(active_state_), swell(swell_){
+    Axon(int id_, double min_radius_,  Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , int scale = 1){
+
+        id = id_;
+        begin = begin_*scale;
+        end = end_*scale;
+        volume_inc_perc = volume_inc_perc_;
+        min_radius = min_radius_*scale;
+        active_state = active_state_;
+        swell = swell_;
 
         radius = min_radius;
         spheres.clear();
@@ -86,7 +94,7 @@ public:
     void add_projection();
     bool isNearAxon(Eigen::Vector3d &position,  double distance_to_be_inside);
     bool isPosInsideAxon(Eigen::Vector3d &position,  double distance_to_be_inside, bool swell_, std::vector<int> sphere_ids);
-    int closest_sphere_dichotomy(Walker &walker, double &step_lenght);
+    int closest_sphere_dichotomy(Eigen::Vector3d O);
 
 };
 

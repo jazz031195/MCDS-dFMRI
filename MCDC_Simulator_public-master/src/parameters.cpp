@@ -33,6 +33,7 @@ Parameters::Parameters()
     volume_inc_perc     = 0;
     dyn_perc            = 0; 
     active_state = false;
+    gamma_from_file = "";
 
     ini_walkers_file = "";
     num_proc    = 0;
@@ -702,6 +703,9 @@ void Parameters::readGammaParams(ifstream &in)
         else if(str_dist(tmp,"icvf") <= 1){
             in >> gamma_icvf;
 
+        }
+        else if(str_dist(tmp,"gamma_from_file") <= 1){
+            in >> gamma_from_file;
         }
         else if(str_dist(tmp,"c2") <= 1){
             in >> c2;

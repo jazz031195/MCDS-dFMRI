@@ -5,7 +5,7 @@ import getopt
 
 cur_path = os.getcwd()
 
-def write_conf_file_create_axons(N, T, exp_prefix, icvf , num_axons, c2):
+def write_conf_file_create_axons(N, T, exp_prefix, icvf , num_axons, c2, i):
     """
     Overwrites the configuration file gammaDistributedAxons.conf with the desired parameters
     Should be used in case we want to grow axons in a new substrate
@@ -33,8 +33,9 @@ def write_conf_file_create_axons(N, T, exp_prefix, icvf , num_axons, c2):
     lines.append("write_traj_file 0")
     lines.append("<obstacle>")
     lines.append("<axon_gamma_packing>")
-    lines.append("alpha 3.5")
-    lines.append("beta 0.1")
+    lines.append("alpha 0.0")
+    lines.append("beta 0.0")
+    lines.append("gamma_from_file /home/localadmin/Documents/MCDS_code/MCDS-dFMRI/gamma"+str(i)+".txt")
     lines.append("icvf "+str(icvf))
     lines.append("num_axons "+str(num_axons))
     lines.append("percentage_dynamic_axons 0.3")
@@ -46,7 +47,7 @@ def write_conf_file_create_axons(N, T, exp_prefix, icvf , num_axons, c2):
     lines.append("</obstacle>")
     lines.append("<voxels>")
     lines.append("0 0 0")
-    lines.append("0.05 0.05 0.05")
+    lines.append("0 0 0")
     lines.append("</voxels>")
     lines.append("ini_walkers_pos extra")
     lines.append("num_process 10")
@@ -90,7 +91,7 @@ def write_conf_file(N, T, activation, exp_prefix, location, axons_list_prefix):
     lines.append("</obstacle>")
     lines.append("<voxels>")
     lines.append("0 0 0")
-    lines.append("0.05 0.05 0.05")
+    lines.append("0 0 0")
     lines.append("</voxels>")
     lines.append("ini_walkers_pos "+ str(location))
     lines.append("num_process 10")
@@ -120,11 +121,12 @@ def get_variables():
     icvf = None
     concentration = 100000
     create_substrate_ = "true"
+    g = None
 
     argv = sys.argv[1:]
   
     try:
-        opts, args = getopt.getopt(argv, ":a:t:l:s:i:c:x:")
+        opts, args = getopt.getopt(argv, ":a:t:l:s:i:c:x:g:")
       
     except:
         print("Error")
@@ -150,6 +152,8 @@ def get_variables():
             c2 = float(arg)
         elif opt in ['-x']:
             create_substrate_ = arg
+        elif opt in ['-g']:
+            g = arg
         
     if (create_substrate_ == "true"):
         create_substrate = True
@@ -164,14 +168,15 @@ def get_variables():
 
         
         
-    return N, nbr_axons, T, loc, state,icvf, create_substrate, c2
+    return N, nbr_axons, T, loc, state,icvf, create_substrate, c2, g
         
       
 
-N, nbr_axons, T, location, activation, icvf, create_substrate, c2 = get_variables()
-axons_list_prefix = "nbr_axons_"+str(nbr_axons)+"_icvf_"+str(icvf)
+N, nbr_axons, T, location, activation, icvf, create_substrate, c2, g = get_variables()
+#axons_list_prefix = "nbr_axons_"+str(nbr_axons)+"_icvf_"+str(icvf)
+axons_list_prefix = str(nbr_axons) + "_"+str(g)+"_"
 if(create_substrate):
-    write_conf_file_create_axons(1, 1, axons_list_prefix, icvf , nbr_axons, c2)
+    write_conf_file_create_axons(1, 1, axons_list_prefix, icvf , nbr_axons, c2, g)
 else:
     exp_prefix = "nbr_axons_"+str(nbr_axons)+"_"+str(location)+"_"+str(activation)+"_icvf_"+str(icvf)
     write_conf_file(N, T, activation, exp_prefix, location, axons_list_prefix)

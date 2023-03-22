@@ -843,24 +843,28 @@ void ParallelMCSimulation::addObstaclesFromFiles()
 
         std::vector<Dynamic_Sphere> spheres_ ;
         Dynamic_Sphere sphere_;
-
+        int sph_id = 0;
+        int ax_id;
         for( std::string line; getline( in, line ); ){
             
             std::vector<std::string> jkr = _split_(line,' ');
-            int ax_id;
+            
             if(jkr.size() == 5){
                 x = stod(jkr[0]);
                 y = stod(jkr[1]);
                 z = stod(jkr[2]);
                 r = stod(jkr[3]);
                 s = stod(jkr[4]);
-                sphere_ = Dynamic_Sphere(Eigen::Vector3d(x,y,z), r, volume_inc_perc, s, ax_id, scale, params.active_state);
+                sphere_ = Dynamic_Sphere(Eigen::Vector3d(x,y,z), r, volume_inc_perc, s, ax_id, scale, params.active_state, sph_id);
+                cout << "sph_id : " << sphere_.id << endl;
                 spheres_.push_back(sphere_);
+                sph_id += 1; 
                 //cout << "adding sphere,  min radius :" << sphere_.min_radius <<", max radius :" << sphere_.max_radius <<", radius :" << sphere_.radius << ", swell : " << sphere_.swell << endl;
             
             }
 
             if(jkr.size() == 3 ){
+                sph_id = 0;
                 ax_id = stod(jkr[1]);
                 Eigen::Vector3d begin = {min_limits, min_limits, min_limits};
                 Eigen::Vector3d end = {max_limits, max_limits, max_limits};
@@ -868,7 +872,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 ax.set_spheres(spheres_);
                 axons_list.push_back(ax);
                 spheres_.clear();
-                cout << "adding axon, begin x:" << ax.begin[0] << ", end x :" << ax.end[0] <<", min radius :" << ax.min_radius <<", max radius :" << ax.max_radius <<", radius :" << ax.radius << ", swell : " << ax.swell << endl;
+                cout << "adding axon, id :" << ax.id <<" , begin x:" << ax.begin[0] << ", end x :" << ax.end[0] <<", min radius :" << ax.min_radius <<", max radius :" << ax.max_radius <<", radius :" << ax.radius << ", swell : " << ax.swell << endl;
             }
         }
 
@@ -1109,7 +1113,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
         SimErrno::info(message,cout);
 
         AxonGammaDistribution gamma_dist(params.dyn_perc, params.volume_inc_perc,  params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
-                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii, params.active_state, params.c2, params.tortuous, params.step_lenght);
+                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii, params.active_state, params.c2, params.tortuous, params.step_lenght, params.gamma_from_file);
 
 
         gamma_dist.displayGammaDistribution();
