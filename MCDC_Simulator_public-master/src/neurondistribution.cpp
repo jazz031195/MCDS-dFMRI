@@ -55,12 +55,18 @@ void NeuronDistribution::createSubstrate()
     while(!achieved){
 
         // double target_icvf = this->icvf+adjustments*adj_increase;
-
+        double soma_radius = 5e-3; //mm
+        // Let enough distance for the radius and for a step_length so that 
+        // mirroring border conditions are ok
+        double min_distance_from_border = barrier_tickness + soma_radius + step_length;
         for(uint t = 0 ;  t < repetition; t++){
             neurons.clear();
+            vector<Eigen::Vector3d> soma_centers;
+            soma_centers.clear();
+            
             for(int i = 0 ; i < num_obstacles; i++){
                 unsigned stuck = 0;
-                while(++stuck <= 1000){
+                while(++stuck <= 10000){
                     double t = udist(gen);
                     double x = (t*max_limits_vx[0] + (1-t)*min_limits_vx[0]);
                     t        = udist(gen);
@@ -69,10 +75,7 @@ void NeuronDistribution::createSubstrate()
                     double z = (t*max_limits_vx[2] + (1-t)*min_limits_vx[2]);
 
                     Eigen::Vector3d soma_center = {x, y, z};
-                    double soma_radius = 5e-3; //mm
-                    // Let enough distance for the radius and for a step_length so that 
-                    // mirroring border conditions are ok
-                    double min_distance_from_border = barrier_tickness + soma_radius + step_length;
+                   
                     // If too close to the border, discard
                     if ((x - min_limits_vx[0] <= min_distance_from_border) ||
                         (max_limits_vx[0] - x <= min_distance_from_border) ||
@@ -85,14 +88,22 @@ void NeuronDistribution::createSubstrate()
                         } 
                     if (!isSphereColliding(soma_center, soma_radius))
                     {
-                        Neuron neuron(soma_center, soma_radius);
-                        growDendrites(neuron); 
-                        neurons.push_back(neuron);
+                        soma_centers.push_back(soma_center);
                         break;
-                    }         
+                    }  
                 }
             } // end for neurons
-            icvf = computeICVF();
+            for(size_t i=0; i < soma_centers.size(); ++i)
+            {
+                Neuron neuron(soma_centers[i], soma_radius);
+                growDendrites(neuron); 
+                neurons.push_back(neuron);
+                cout << " End of neuron " << i << endl;
+            }
+                
+            icvf = computeICVF(min_distance_from_border);
+            cout << icvf << endl;
+            achieved = true;
 
             // if(this->icvf - best_icvf  < 0.0005){
             //     achieved = true;
@@ -156,7 +167,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
             // the boundary doesn't need to be checked if intra
             double min_distance_from_border = barrier_tickness + sphere_radius + step_length;
 
-            while(!isInVoxel(dendrite_start, min_distance_from_border))
+            while(!isInVoxel(dendrite_start, min_distance_from_border) || (isSphereColliding(dendrite_start, sphere_radius)))
             {
                 x = distribution(generator);
                 y = distribution(generator);
@@ -167,9 +178,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
             // If the vector is not already contained in start_dendrites, add it. 
             // Otherwise, decrement i and do one more round
             if((i != 0) && 
-               std::count(start_dendrites.begin(), start_dendrites.end(), dendrite_start) && 
-               (!isInVoxel(dendrite_start, min_distance_from_border)) &&
-               (isSphereColliding(dendrite_start, sphere_radius))){ i--; tries++; }
+               std::count(start_dendrites.begin(), start_dendrites.end(), dendrite_start)){ i--; tries++; }
             else
             {
                 start_dendrites.push_back(dendrite_start);
@@ -193,6 +202,8 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                     else
                         break; 
                 }
+                if (spheres_to_add.size() == 0)
+                    break;
                 dendrite.set_spheres(spheres_to_add, i);
                 neuron.add_dendrite(dendrite);
                 break;
@@ -204,7 +215,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
 bool NeuronDistribution::isSphereColliding(Dynamic_Sphere const& sph) 
 {
     Vector3d position = sph.center;
-    double distance_to_be_inside = sph.max_radius - 2 * barrier_tickness;
+    double distance_to_be_inside = sph.max_radius + 10 * barrier_tickness;
     int dummy, dummy2;
     for (unsigned i = 0; i < neurons.size() ; i++){
         bool isinside = neurons[i].isPosInsideNeuron(position, distance_to_be_inside, false, dummy, dummy2);
@@ -216,7 +227,7 @@ bool NeuronDistribution::isSphereColliding(Dynamic_Sphere const& sph)
 
 bool NeuronDistribution::isSphereColliding(Vector3d const& sphere_center, double const& sphere_radius) 
 {
-    double distance_to_be_inside = sphere_radius - 2 * barrier_tickness;
+    double distance_to_be_inside = sphere_radius + 10 * barrier_tickness;
     int dummy, dummy2;
     for (unsigned i = 0; i < neurons.size() ; i++){
         bool isinside = neurons[i].isPosInsideNeuron(sphere_center, distance_to_be_inside, false, dummy, dummy2);
@@ -281,13 +292,13 @@ bool NeuronDistribution::isInVoxel(Eigen::Vector3d const& pos, double const& dis
     return true;   
 }
 
-double NeuronDistribution::computeICVF() const
+double NeuronDistribution::computeICVF(double const& min_distance_from_border) const
 {
 
     if (neurons.size() == 0)
         return 0;
 
-    double VolumeVoxel = (max_limits_vx[0] - min_limits_vx[0]) * (max_limits_vx[1] - min_limits_vx[1]) * (max_limits_vx[2] - min_limits_vx[2]);
+    double VolumeVoxel = (max_limits_vx[0] - min_limits_vx[0] - min_distance_from_border) * (max_limits_vx[1] - min_limits_vx[1] - min_distance_from_border) * (max_limits_vx[2] - min_limits_vx[2] - min_distance_from_border);
     double VolumeNeurons = 0;
    
     for (size_t i = 0; i < neurons.size(); i++)

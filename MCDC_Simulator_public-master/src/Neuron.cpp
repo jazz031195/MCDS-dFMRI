@@ -100,7 +100,7 @@ vector<double> Neuron::Distances_to_Spheres(Vector3d const& pos) const
     vector<double> distances {distance_to_sphere};
 
     // Then iterate through dendrites
-    for (uint8_t i=0; i < nb_dendrites; ++i)
+    for (uint8_t i=0; i < dendrites.size(); ++i)
     {
         for (size_t j=0; j < dendrites[i].spheres.size(); ++j)
         {       
@@ -117,6 +117,7 @@ bool Neuron::isPosInsideNeuron(Eigen::Vector3d const& position,  double const& d
     // if position is in box with axon inside
     string neuron_part; // "soma", "dendrite" or "none"
     int part_id; // id of the soma or dendrite. -1 if not in neuron
+    // distance_to_be_inside = position.sphere.radius + constant
     tie(neuron_part, part_id) = isNearNeuron(position, distance_to_be_inside);
     std::vector<int> sphere_ids;
     if(!(neuron_part == "none")){
@@ -132,7 +133,7 @@ bool Neuron::isPosInsideNeuron(Eigen::Vector3d const& position,  double const& d
          } 
         else if (neuron_part == "soma")
         {
-            if(soma.isInside(position, -distance_to_be_inside))
+            if(soma.isInside(position, distance_to_be_inside))
             {
                 in_soma_index = 0;
                 in_dendrite_index = -1;
@@ -165,7 +166,7 @@ tuple<string, int> Neuron::isNearNeuron(Vector3d const& position,  double const&
         return tuple<string, int>{"soma", soma.id};
     
     // Check each dendrite's box
-    for (uint8_t i=0 ; i < nb_dendrites ; ++i)
+    for (uint8_t i=0 ; i < dendrites.size() ; ++i)
     {
         count_isnear = 0;
         for (uint8_t axis=0 ; axis < 3 ; ++axis)
@@ -262,7 +263,7 @@ bool Neuron::checkCollision(Walker &walker, Vector3d const& step_dir, double con
     // Check if collision with dendrites from outside.
     if(walker.location == Walker::extra)
     {
-        for(uint8_t i=0 ; i < nb_dendrites ; ++i)
+        for(uint8_t i=0 ; i < dendrites.size() ; ++i)
         {
             if(dendrites[i].checkCollision(walker, step_dir, step_lenght, colision))
                 return true;

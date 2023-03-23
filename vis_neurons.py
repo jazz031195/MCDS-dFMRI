@@ -5,10 +5,10 @@ import os
 
 wd = os.getcwd()
 
-plot_3d = False
-plot_traj = True
-
-with open(wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_neurons_list.txt') as f:
+plot_3d = True
+plot_traj = False
+slice_nb = [0]#[i/100 for i in range(10)]
+with open(wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_00_neurons_list.txt') as f:
     lines = f.readlines()
     
     if plot_3d:
@@ -21,38 +21,58 @@ with open(wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/
         ax.set_ylabel('Y [mm]')
         ax.set_zlabel('Z [mm]')
     else:
-        fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+        # fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+        fig, axs = plt.subplots(1, len(slice_nb), figsize=(20, 5))
 
     for i in range(len(lines)):
-        coords = lines[i].split(' ')
-        # If it is the soma, plot it in any case
-        if "Soma" in coords[0]:
-            coords = lines[i-1].split(' ')
-            # draw sphere
-            u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
-            x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
-            y = np.sin(u)*np.sin(v)*float(coords[3]) + float(coords[1])
-            z = np.cos(v)*float(coords[3]) + float(coords[2])
-            if plot_3d:
-                ax.plot_wireframe(x, y, z, color="r")
-            else:
-                axs[0].plot(x, y, color="r")
-                axs[1].plot(x, z, color="r")
-                axs[2].plot(z, y, color="r")
-        elif len(coords) > 2:
-            # Plot only one sphere out of four for the dendrites (otherwise, too expensive)
-            a = random.randint(1, 10)
-            if a==1:
+        for j, s in enumerate(slice_nb):
+  
+            coords = lines[i].split(' ')
+            # If it is the soma, plot it in any case
+            if "Soma" in coords[0]:
+                coords = lines[i-1].split(' ')
+                # draw sphere
                 u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
                 x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
                 y = np.sin(u)*np.sin(v)*float(coords[3]) + float(coords[1])
                 z = np.cos(v)*float(coords[3]) + float(coords[2])
+              
                 if plot_3d:
-                    ax.plot_wireframe(x, y, z, color="b")
+                    ax.plot_wireframe(x, y, z, color="r")
                 else:
-                    axs[0].plot(x, y, color="b")
-                    axs[1].plot(x, z, color="b")
-                    axs[2].plot(z, y, color="b")
+                    x = np.squeeze(x.reshape(1, -1))
+                    y = np.squeeze(y.reshape(1, -1))
+                    z = np.squeeze(z.reshape(1, -1))
+                    axs[j].set_xlim([0, 0.1])
+                    axs[j].set_ylim([0, 0.1])
+                    axs[j].set_xlabel('X [mm]')
+                    axs[j].set_ylabel('Y [mm]')
+                    # axs[0].plot(x, y, color="r")
+                    # axs[1].plot(x, z, color="r")
+                    # axs[2].plot(z, y, color="r")
+                    idx_to_plot = np.argwhere(abs(z - s) < 1e-5)
+                    axs[j].plot(x[idx_to_plot], y[idx_to_plot], color="r")
+    
+            elif len(coords) > 2:
+                # Plot only one sphere out of four for the dendrites (otherwise, too expensive)
+                a = random.randint(1, 20)
+                if a==1:
+                    u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+                    x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
+                    y = np.sin(u)*np.sin(v)*float(coords[3]) + float(coords[1])
+                    z = np.cos(v)*float(coords[3]) + float(coords[2])
+
+                    if plot_3d:
+                        ax.plot_wireframe(x, y, z, color="b")
+                    else:
+                        # axs[0].plot(x, y, color="b")
+                        # axs[1].plot(x, z, color="b")
+                        # axs[2].plot(z, y, color="b")
+                        x = np.squeeze(x.reshape(1, -1))
+                        y = np.squeeze(y.reshape(1, -1))
+                        z = np.squeeze(z.reshape(1, -1))
+                        idx_to_plot = np.argwhere(abs(z - s) < 1e-5)
+                        axs[j].plot(x[idx_to_plot], y[idx_to_plot], color="b")
     if not plot_3d:
         distance_from_borders = 0.0007
         

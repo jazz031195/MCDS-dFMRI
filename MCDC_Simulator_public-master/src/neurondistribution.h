@@ -65,7 +65,7 @@ private:
      *  Compute the intracompartment volume fraction (ICVF) of the substrate. 
      *  @return ICVF double.
     */
-    double computeICVF() const;
+    double computeICVF(double const& min_distance_from_border) const;
     /**
      *  Compute the max_limits_vx based on the target icvf and the radiis of the axons 
     */
