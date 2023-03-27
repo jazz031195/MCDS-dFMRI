@@ -1,6 +1,7 @@
 # To compare ADC between multiple DWI files with varying N values
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
@@ -16,7 +17,7 @@ warnings.filterwarnings("ignore")
 cur_path = os.getcwd()
 giro = 2.6751525e8 #Gyromagnetic radio given in rad/(ms*T)
 scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_sample_scheme_new.scheme"
-icvf = 0.7
+icvf = 0.38
 def get_dwi_array(dwi_path):
     # create array with dwi values
     signal = []
@@ -195,6 +196,23 @@ def get_total_dwi_array(path):
     dwi_tot = list(map(lambda x : np.log(x/dwi_tot[0]), dwi_tot))
     return bs, dwi_tot
 
+def get_total_adc_array(path):
+    
+    data_dwi = create_data(path)
+    data_x = data_dwi.loc[(data_dwi['x'] > 0.0) & (~data_dwi['adc [mm²/s]'].isnull())].sort_values(by = ["b"],ascending=True)
+    data_y = data_dwi.loc[(data_dwi['y'] > 0.0) & (~data_dwi['adc [mm²/s]'].isnull())].sort_values(by = ["b"],ascending=True)
+    data_z = data_dwi.loc[(data_dwi['z'] > 0.0) & (~data_dwi['adc [mm²/s]'].isnull())].sort_values(by = ["b"],ascending=True)
+    bs = list(data_z["b"])
+    datas = [data_x,data_y,data_z]
+
+    #x0 = list(dict.fromkeys(list(data_dwi["x"])))[0]
+    #data_dwi0 = list(data_dwi.loc[data_dwi.x == x0].sort_values(by = ["b"],ascending=True)["DWI"])
+    #x1 = list(dict.fromkeys(list(data_dwi["x"])))[1]
+    #data_dwi1 = list(["DWI"])
+    #bs = list(data_dwi.loc[data_dwi.x == x1].sort_values(by = ["b"])["b"])
+    dwi_tot = list(map(lambda x,y,z : (x+y+z)/3*1000, list(datas[0]["adc [mm²/s]"]),list(datas[1]["adc [mm²/s]"]),list(datas[2]["adc [mm²/s]"])))
+    return bs, dwi_tot
+
 
 
 def plot_adc_sanity_check(state, loc):
@@ -252,26 +270,51 @@ def plot_adc_sanity_check(state, loc):
 
     
 def combine_intra_extra_adc(folder_name, rest = True):
-    if rest:
-        type_ = "rest"
-    else :
-        type_ = "active"
-    extra_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/"+str(type_)+"/extra/"+str(folder_name)+"/dyn_cylinder_gamma_"+str(type_)+"_extra_DWI.txt"
-    intra_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/"+str(type_)+"/intra/"+str(folder_name)+"/dyn_cylinder_gamma_"+str(type_)+"_intra_DWI.txt"
-    bs_extra, extra_dwi = get_total_dwi_array(extra_file)
-    bs_intra, intra_dwi = get_total_dwi_array(intra_file)
+    # if rest:
+    #     type_ = "rest"
+    # else :
+    #     type_ = "active"
+
+
+    extra_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/"+str(folder_name)+"/extra/_DWI.txt"
+    intra_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/"+str(folder_name)+"/intra/_rep_00_DWI.txt"
+    bs_extra, extra_dwi = get_total_adc_array(extra_file)
+    bs_intra, intra_dwi = get_total_adc_array(intra_file)
+    bs_intra = [b/1000 for b in bs_intra]
     fig1 = plt.figure(1)
-    plt.plot(bs_extra, extra_dwi, label = "extra")
+    plt.plot(bs_intra, extra_dwi, label = "extra")
     plt.plot(bs_intra, intra_dwi, label = "intra")
     dwi_tot = list(map(lambda x,y : x*icvf+(1-icvf)*y, intra_dwi, extra_dwi))
     plt.plot(bs_intra, dwi_tot, label = "total")
-    plt.title('DWI Signal')
-    plt.ylabel('log(S/So)')
-    plt.xlabel('b')
-    path_ = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/"+str(type_)
-    name = path_ + "/DWI_extra_intra_" + str(folder_name)+".png"
+    plt.title('ADC Signal')
+    plt.ylabel('ADC ['r'$\mu$m²/ms]')
+    plt.xlabel('b ['r'ms/$\mu$m²]')
+    path_ = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/"+str(folder_name)
+    name = path_ + "/ADC_extra_intra_.png"
     plt.legend()
+    fig1.set_tight_layout(True)
     fig1.savefig(name)
+
+    extra_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/"+str(folder_name)+"/extra/_DWI.txt"
+    intra_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/"+str(folder_name)+"/intra/_rep_00_DWI.txt"
+    bs_extra, extra_dwi = get_total_dwi_array(extra_file)
+    bs_intra, intra_dwi = get_total_dwi_array(intra_file)
+    fig2 = plt.figure(2)
+    # extra_dwi = [dwi*1000 for dwi in extra_dwi]
+    # intra_dwi = [dwi*1000 for dwi in intra_dwi]
+    bs_intra = [b/1000 for b in bs_intra]
+    plt.plot(bs_intra, extra_dwi, label = "extra")
+    plt.plot(bs_intra, intra_dwi, label = "intra")
+    dwi_tot = list(map(lambda x,y : x*icvf+(1-icvf)*y, intra_dwi, extra_dwi)) 
+    plt.plot(bs_intra, dwi_tot, label = "total")
+    plt.title('DWI Signal')
+    plt.ylabel('DWI log(S/S0)')
+    plt.xlabel('b ['r'ms/$\mu$m²]')
+    path_ = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/"+str(folder_name)
+    name = path_ + "/DWI_extra_intra_.png"
+    plt.legend()
+    fig2.set_tight_layout(True)
+    fig2.savefig(name)
 
 
 
@@ -516,16 +559,39 @@ def get_adc_diff_rest_active(folder, conf):
     print("Change in ADC from rest to active : ", (active-rest))
 
 
-#dwi_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/DWI_intra_rest.txt"
+# combine_intra_extra_adc("neurons")
+dwi_intra_path = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_00_DWI.txt"
+dwi_intra = create_data(dwi_intra_path)
+dwi_intra["loc"] = ["intra"]*dwi_intra["x"].size
+data_x = dwi_intra.loc[(dwi_intra['x'] > 0.0) ].sort_values(by = ["b"],ascending=True)
+data_y = dwi_intra.loc[(dwi_intra['y'] > 0.0) ].sort_values(by = ["b"],ascending=True)
+data_z = dwi_intra.loc[(dwi_intra['z'] > 0.0) ].sort_values(by = ["b"],ascending=True)
+bs = list(data_z["b"])
+datas = [data_x,data_y,data_z]
+std = list(map(lambda x,y,z : np.std([x,y,z]), list(datas[0]["log(Sb/So)"]),list(datas[1]["log(Sb/So)"]),list(datas[2]["log(Sb/So)"])))
 
-#data = create_data(dwi_path)
+print(std)
+dwi_extra_path = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/extra/_DWI.txt"
+dwi_extra = create_data(dwi_extra_path)
+dwi_extra["loc"] = ["extra"]*dwi_extra["x"].size
+data_x = dwi_extra.loc[(dwi_extra['x'] > 0.0) ].sort_values(by = ["b"],ascending=True)
+data_y = dwi_extra.loc[(dwi_extra['y'] > 0.0) ].sort_values(by = ["b"],ascending=True)
+data_z = dwi_extra.loc[(dwi_extra['z'] > 0.0) ].sort_values(by = ["b"],ascending=True)
+bs = list(data_z["b"])
+datas = [data_x,data_y,data_z]
+std = list(map(lambda x,y,z : np.std([x,y,z]), list(datas[0]["log(Sb/So)"]),list(datas[1]["log(Sb/So)"]),list(datas[2]["log(Sb/So)"])))
+print(std)
+dwi = dwi_intra.append(dwi_extra)
 
-intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_active__DWI.txt"
-extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_active__DWI.txt"
-intra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra__DWI.txt"
-extra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra__DWI.txt"               
-data2 = assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_rest_path)
+import plotly.express as px
+fig = px.box(dwi[~dwi['b'].isnull()], x='b', y='log(Sb/So)', color='loc')
+fig.show()
+# intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_active__DWI.txt"
+# extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_active__DWI.txt"
+# intra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra__DWI.txt"
+# extra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra__DWI.txt"               
+# data2 = assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_rest_path)
 
-#print(data)
+# print(data)
 
-plot(data2)
+# plot(data2)

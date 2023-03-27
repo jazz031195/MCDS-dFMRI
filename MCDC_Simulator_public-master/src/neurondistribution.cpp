@@ -215,7 +215,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
 bool NeuronDistribution::isSphereColliding(Dynamic_Sphere const& sph) 
 {
     Vector3d position = sph.center;
-    double distance_to_be_inside = sph.max_radius + 10 * barrier_tickness;
+    double distance_to_be_inside = sph.max_radius + 2 * barrier_tickness;
     int dummy, dummy2;
     for (unsigned i = 0; i < neurons.size() ; i++){
         bool isinside = neurons[i].isPosInsideNeuron(position, distance_to_be_inside, false, dummy, dummy2);
@@ -227,7 +227,7 @@ bool NeuronDistribution::isSphereColliding(Dynamic_Sphere const& sph)
 
 bool NeuronDistribution::isSphereColliding(Vector3d const& sphere_center, double const& sphere_radius) 
 {
-    double distance_to_be_inside = sphere_radius + 10 * barrier_tickness;
+    double distance_to_be_inside = sphere_radius + 2 * barrier_tickness;
     int dummy, dummy2;
     for (unsigned i = 0; i < neurons.size() ; i++){
         bool isinside = neurons[i].isPosInsideNeuron(sphere_center, distance_to_be_inside, false, dummy, dummy2);

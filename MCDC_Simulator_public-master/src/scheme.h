@@ -10,6 +10,7 @@
 #define SCHEME_H
 #include <vector>
 #include <string>
+#include "constants.h"
 
 class Scheme
 {

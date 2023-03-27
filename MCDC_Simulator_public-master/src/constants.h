@@ -45,7 +45,8 @@ typedef unsigned int uint;
     #define M_PI 3.14159265358979323846
 #endif
 #elif __APPLE__
-typedef unsigned int ulong;
+typedef unsigned long ulong;
+typedef unsigned int uint;
 #endif
 
 /*!< Colision optimization parameters                                                                           */
