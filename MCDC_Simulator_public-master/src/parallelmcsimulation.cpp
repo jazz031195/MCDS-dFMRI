@@ -180,7 +180,7 @@ void ParallelMCSimulation::initializeUnitSimulations()
         simulation_->plyObstacles_list = &this->plyObstacles_list;
         simulation_->cylinder_list = &this->cylinders_list;
         simulation_->dyn_cylinder_list = &this->dyn_cylinders_list;
-        simulation_->sphere_list = &this->spheres_list;
+        simulation_->dyn_sphere_list = &this->dyn_spheres_list;
         simulation_->axon_list = &this->axons_list;
         simulation_->dynamicsEngine->print_expected_time = 0;
         simulations.push_back(simulation_);
@@ -202,7 +202,7 @@ void ParallelMCSimulation::initializeUnitSimulations()
     simulation_->plyObstacles_list = &this->plyObstacles_list;
     simulation_->cylinder_list = &this->cylinders_list;
     simulation_->dyn_cylinder_list = &this->dyn_cylinders_list;
-    simulation_->sphere_list    = &this->spheres_list;
+    simulation_->dyn_sphere_list    = &this->dyn_spheres_list;
     simulation_->axon_list = &this->axons_list;
     simulations.push_back(simulation_);
 
@@ -856,8 +856,8 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 r = stod(jkr[3]);
                 s = stod(jkr[4]);
                 sphere_ = Dynamic_Sphere(Eigen::Vector3d(x,y,z), r, volume_inc_perc, s, ax_id, scale, params.active_state, sph_id);
-                cout << "sph_id : " << sphere_.id << endl;
                 spheres_.push_back(sphere_);
+                dyn_spheres_list.push_back(sphere_);
                 sph_id += 1; 
                 //cout << "adding sphere,  min radius :" << sphere_.min_radius <<", max radius :" << sphere_.max_radius <<", radius :" << sphere_.radius << ", swell : " << sphere_.swell << endl;
             
@@ -872,7 +872,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 ax.set_spheres(spheres_);
                 axons_list.push_back(ax);
                 spheres_.clear();
-                cout << "adding axon, id :" << ax.id <<" , begin x:" << ax.begin[0] << ", end x :" << ax.end[0] <<", min radius :" << ax.min_radius <<", max radius :" << ax.max_radius <<", radius :" << ax.radius << ", swell : " << ax.swell << endl;
+                //cout << "adding axon, id :" << ax.id <<" , begin x:" << ax.begin[0] << ", end x :" << ax.end[0] <<", min radius :" << ax.min_radius <<", max radius :" << ax.max_radius <<", radius :" << ax.radius << ", swell : " << ax.swell << endl;
             }
         }
 

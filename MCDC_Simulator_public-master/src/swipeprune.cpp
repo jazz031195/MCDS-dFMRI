@@ -51,7 +51,7 @@ void Projections::append_right_place(Projections::projection_pt p1, Projections:
                 
     // And then insert the new element at this position
     axon_projection_on_axis.insert(pos2, p2);
-
+    
     if (axis == 0){
         sph_projections_x = axon_projection_on_axis;
     }

@@ -78,7 +78,7 @@ public:
 
     std::vector<Dynamic_Sphere>  closestSpheres (Walker &w);
 
-    bool checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision);
+    bool checkCollision(Walker &walker, std::vector<int> ind_close_spheres, Eigen::Vector3d &step, double &step_lenght, Collision &colision);
 
     std::vector<Dynamic_Sphere>  closestSpheres (Eigen::Vector3d pos);
 
@@ -89,7 +89,7 @@ public:
 
     double minDistance(Eigen::Vector3d pos);
 
-    bool intersection_sphere_vector(double &t1, double &t2,Dynamic_Sphere &s, Eigen::Vector3d &step, double &step_length, Eigen::Vector3d &pos, bool isintra, double &c);
+    bool intersection_sphere_vector(double &t1, double &t2,Dynamic_Sphere &s, Eigen::Vector3d &step, double &step_length, Eigen::Vector3d &pos, double &c);
     void set_spheres(std::vector<Dynamic_Sphere> spheres_to_add);
     void add_projection();
     bool isNearAxon(Eigen::Vector3d &position,  double distance_to_be_inside);

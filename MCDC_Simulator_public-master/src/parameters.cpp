@@ -52,7 +52,7 @@ Parameters::Parameters()
     for (auto i= 0;i<3; i++)
         min_sampling_area[i] = max_sampling_area[i] = 0.0;
 
-    step_lenght = sqrt(6.0*diffusivity*sim_duration/num_steps);
+
 }
 
 void Parameters::readSchemeFile(std::string conf_file_path)
@@ -231,13 +231,19 @@ void Parameters::readSchemeFile(std::string conf_file_path)
         }
     }
 
+    // if nbr of obstacles is not defined, estimate numbe of obstacles by taking 
+    // 0.5 um being the approx mean value of axons radii
+    if (gamma_num_obstacles == 0 && max_limits[0] >EPS_VAL && gamma_icvf >EPS_VAL) {
+            gamma_num_obstacles = unsigned(gamma_icvf*max_limits[0]*max_limits[1]/(M_PI*(0.35e-3)*(0.35e-3)));
+            std::cout << " Num axons :" << gamma_num_obstacles << endl;
+    }
+
     if(scale_from_stu){
         //m^2/s to mm^2/ms
         diffusivity*=m2_to_mm2/s_to_ms;
         //seconds to ms
         sim_duration*=s_to_ms;
     }
-
 
 
     in.close();
@@ -672,8 +678,9 @@ void Parameters::readGammaParams(ifstream &in)
         else if(str_dist(tmp,"num_dyn_cylinders") <= 1){
             in >> gamma_num_obstacles;
         }
-        else if(str_dist(tmp,"num_axons") <= 1){
+        else if(str_dist(tmp,"num_spheres") <= 1){
             in >> gamma_num_obstacles;
+
         }
         else if(str_dist(tmp,"tortuous") <= 1){
             string tortuous_str;
@@ -685,9 +692,7 @@ void Parameters::readGammaParams(ifstream &in)
                 tortuous = true;
             }
         }
-        else if(str_dist(tmp,"num_spheres") <= 1){
-            in >> gamma_num_obstacles;
-        }
+
         else if(str_dist(tmp,"min_radius") <= 1){
             in >> min_obstacle_radii;
         }
@@ -712,6 +717,11 @@ void Parameters::readGammaParams(ifstream &in)
 
         }
 
+        else if(str_dist(tmp,"num_axons") <= 1){
+            in >> gamma_num_obstacles;
+        }
+
+
         else if(str_dist(tmp,"") == 0){
             in.clear();
             //in.ignore();
@@ -719,6 +729,7 @@ void Parameters::readGammaParams(ifstream &in)
         else if(str_dist(tmp,"</cylinder_gamma_packing>") ==0 ||str_dist(tmp,"</axon_gamma_packing>") ==0 || str_dist(tmp,"</sphere_gamma_packing>") == 0 || str_dist(tmp,"</dyn_cylinder_gamma_packing>") == 0 ){
             break;
         }
+
 
         tmp = "";
     }

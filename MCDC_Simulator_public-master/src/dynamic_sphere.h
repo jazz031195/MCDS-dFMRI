@@ -69,7 +69,7 @@ public:
      *  \return true only if there was a Collision::hit status. \see Collision.
      *  \brief Basic collision function. Returns the if there was any collision on against the obstacle.
      */
-    bool checkCollision_(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision, bool &isintra);
+    bool checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision);
 
     /*! \fn  minDistance
      *  \param walker, Walker instance in the simulation.
@@ -81,6 +81,7 @@ public:
     bool isInside(Eigen::Vector3d pos, double distance_to_be_inside);
     bool distSmallerThan(Eigen::Vector3d pos, double distance);
     void set_center(Eigen::Vector3d center_);
+    double minDistance(Eigen::Vector3d O);
 private:
 
     /*! \fn  handleCollition
@@ -89,7 +90,7 @@ private:
      *  \param step, step vector where to move.
      *  \brief Returns true if it was any analytical collision to the infinite plane
      */
-    inline bool handleCollition(Walker& walker, Collision &colision, Eigen::Vector3d& step,double& a,double& b, double& c,double& discr,double& step_length, bool& isintra);
+    inline bool handleCollition(Walker& walker, Collision &colision, Eigen::Vector3d& step,double& a,double& b, double& c,double& discr,double& step_length);
 
 };  
 

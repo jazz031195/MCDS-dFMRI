@@ -63,7 +63,7 @@ public:
      *  \param scale scale factor for the values passed. Useful when reading a file.
      *  \brief Initialize everything.
      */
-    AxonGammaDistribution(double, double, unsigned, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, double min_radius = 0.001, bool active_state = false, double c2 = 1.0, bool tortuous = false, double step_length_ = barrier_tickness, std::string gamma_from_file = "");
+    AxonGammaDistribution(double, double, unsigned&, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, double min_radius = 0.001, bool active_state = false, double c2 = 1.0, bool tortuous = false, double step_length_ = barrier_tickness, std::string gamma_from_file = "");
      
      /*!
      *  \brief Shows a small histogram of the gamma distribution
@@ -84,7 +84,8 @@ public:
     bool check_borders(Eigen::Vector3d pos, double distance_to_border, Eigen::Vector2d& twin_delta_pos);
     //void add_periodic_voxel(int nbr_small_voxels, Eigen::Vector3d small_voxel_size);
     //void flip(int flip_nbr, int j, int k, Eigen::Vector3d small_voxel_size, Eigen::Vector3d& initial_pos);
-    void combine_axons_and_save(Axon axon1, Axon axon2, int id_);
+    void combine_axons_and_save(Axon axon1, Axon axon2, int id_, std::vector<Axon>& axons_);
+    void get_begin_end_point(Eigen::Vector3d& Q,Eigen::Vector3d& D, double radius);
 private:
 
     /*!

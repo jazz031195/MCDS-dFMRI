@@ -7,6 +7,7 @@
 
 
 
+
 using namespace std;
 using namespace Eigen;
 using namespace std::chrono;
@@ -28,11 +29,10 @@ std::vector<std::string> _split_line(const std::string &s, char delim) {
     return elems;
 }
 
-AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc_perc_, unsigned num_ax, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, double min_radius, bool active_state_, double c2_, bool tortuous_, double step_length_, string gamma_from_file_)
+AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc_perc_, unsigned& num_ax, double a, double b,double icvf_,Eigen::Vector3d & min_l, Eigen::Vector3d &max_l, double min_radius, bool active_state_, double c2_, bool tortuous_, double step_length_, string gamma_from_file_)
 {
     dyn_perc = dyn_perc_;
     volume_inc_perc = volume_inc_perc_;
-    num_obstacles = num_ax;
     alpha = a;
     beta  = b;
     icvf = icvf_;
@@ -49,6 +49,8 @@ AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc
     small_voxel_size = max_limits;
     step_length = step_length_;
     gamma_from_file = gamma_from_file_;
+    num_obstacles = num_ax;
+
 
 }
 void AxonGammaDistribution::computeMinimalSize(std::vector<double> radiis, double icvf_, Eigen::Vector3d &l)
@@ -298,6 +300,27 @@ void AxonGammaDistribution::add_periodic_voxel(int nbr_small_voxels, Eigen::Vect
 }
 */
 
+void AxonGammaDistribution::get_begin_end_point(Eigen::Vector3d& Q, Eigen::Vector3d& D, double radius) {
+    std::random_device rd;   
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> udist(0, 1);
+    if (c2 == 1){
+        double t = udist(gen);
+        //double distance_to_border = radiis[i]*sqrt(1+volume_inc_perc) + step_length;
+        double x = (t * (small_voxel_size[0])) ;
+        t = udist(gen);
+        double y = (t * (small_voxel_size[1]));
+
+        Q = {x, y, min_limits[2]};
+        D = {x, y, small_voxel_size[2]};
+    }
+    else{
+
+        find_target_point (c2, radius, Q, D);
+
+    }
+}
+
 void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 {
     /* 
@@ -312,6 +335,9 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> udist(0, 1);
+
+    
+
     std::vector<double> radiis(num_obstacles, 0);
 
     int number_swelling_axons = int(num_obstacles * dyn_perc);
@@ -325,7 +351,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
     auto start = high_resolution_clock::now();
     std::cout << " Growing axons " << endl;
-    
+
 
     // create list bools that show whether an axon has the potential to swell
     for (unsigned i = 0; i < number_swelling_axons; ++i)
@@ -387,12 +413,13 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
     std::sort(radiis.begin(), radiis.end(), [](const double a, double b) -> bool
               { return a > b; });
 
-    int number_axons_placed = 0;
 
     while (!achieved)
     {
+        
 
         computeMinimalSize(radiis, icvf, small_voxel_size);
+        std::cout << " voxel size :" << small_voxel_size[0] << endl;
         // in case the voxel size input in parameters is too small 
         if (small_voxel_size[2] > max_limits[2]){
             max_limits = small_voxel_size;
@@ -404,108 +431,113 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
         // make this small voxel a rectangle
         small_voxel_size[2] = max_limits[2];
         axons.clear();
-
-        unsigned stuck = 0;
-
+        
         Vector3d Q;
         Vector3d D;
 
-        int number_axons_wo_twins = 0;
+        std::vector<Growth*> growths;
+        std::vector<std::thread> growing_threads;
 
+
+        int number_axons_wo_twins = 0;
+        int stuck;
+        int stuck_thr = 10000;
+        
 
         for (unsigned i = 0; i < num_obstacles; i++)
         {
-            bool axon_placed = false;
-            if(stuck < 1000000 && !axon_placed){
+            out << "axon :" <<i << endl;
 
-                if (c2 == 1){
-                    double t = udist(gen);
-                    //double distance_to_border = radiis[i]*sqrt(1+volume_inc_perc) + step_length;
-                    double x = (t * (small_voxel_size[0])) + (1 - t) * (min_limits[0]);
-                    t = udist(gen);
-                    double y = (t * (small_voxel_size[1]) + (1 - t) * (min_limits[1]));
+            stuck = 0;
+            bool success = false;
 
-                    Q = {x, y, min_limits[2]};
-                    D = {x, y, small_voxel_size[2]};
-                }
-                else{
+            while(!(success) && stuck < stuck_thr){
 
-                    find_target_point (c2, radiis[i], Q, D);
-
-                }
+ 
                 int id_ = axons.size();
-                Axon ax  = Axon (id_, radiis[i], Q, D, volume_inc_perc, active_state, bool_swell_ax_id[i], 1);
+                
+                //std::cout << "nbr axons :" << axons.size() << endl;
+                int nbr_threads = 1;
 
-                Growth* growth1 = new Growth (ax, axons, small_voxel_size, tortuous);
-                
-                Growth* growth2 = new Growth (ax, axons, small_voxel_size, tortuous);
-                
-                std::vector<std::thread> growing_threads;
-                
-                // grow in parallel towards begin and end
-                growing_threads.push_back(std::thread(&Growth::GrowInParallel,growth1, ax.end));
-                growing_threads.push_back(std::thread(&Growth::GrowInParallel, growth2, ax.begin));
+                if (stuck > 2 and stuck < 20){
+                    nbr_threads = stuck;
+                }  
+    
+                for (unsigned int j =0; j < nbr_threads; j++){
+                    get_begin_end_point(Q, D, radiis[i]);
+                    
+                    growths.push_back(new Growth (new Axon (id_, radiis[i], Q, D, volume_inc_perc, active_state, bool_swell_ax_id[i], 1), axons, small_voxel_size, tortuous));
+                    growing_threads.push_back(std::thread(&Growth::GrowInParallel, growths.at(j), D));
 
-                for (unsigned int j =0; j < growing_threads.size(); j++){
+                }
+  
+                out << "grow in parallel" << endl;
+
+                // Wait until all threads stop
+                //for (unsigned int j =0; j < growths.size(); j++){
+                //    if (growing_threads[j].joinable()){
+                //        growing_threads[j].join();
+                //    }
+                //}
+                //growing_threads.clear();
+
+                int succes_ind;
+                success = false;
+                bool stop = false;
+                
+                for (unsigned int j =0; j < growths.size(); j++){
                     growing_threads[j].join();
-                }
-                out << "growth1 axon :" << growth1->axon_to_grow.spheres.size() << endl;
-                out << "growth2 axon :" << growth2->axon_to_grow.spheres.size()<< endl;
-
-                // if didn't manage to grow both sides
-                if(!(growth1->success) || !(growth2->success)){
-                    out << "didn't manage" <<endl;
-
-                    i -= 1; 
-                    stuck += 1;
-                    delete growth1;
-                    delete growth2;
-                    continue;
-                }
-                else{
-                    combine_axons_and_save(growth1->axon_to_grow, growth2->axon_to_grow, axons.size());
-                    number_axons_wo_twins += 2;
-                    int min_nbr_twins;
-                    if(growth1->twin_axons.size() > growth2->twin_axons.size()) {
-                        min_nbr_twins = growth2->twin_axons.size();
-                    }
-                    else {
-                        min_nbr_twins = growth1->twin_axons.size();
-                    }
-                    // add paired twins as one axon
-                    for (unsigned j = 0; j < min_nbr_twins; j++){
-                        // check if there are some pairs in twins to combine them
-                        if (growth1->twin_axons[j].spheres[-1].center[2] == growth2->twin_axons[j].spheres[-1].center[2] ) {
-                            combine_axons_and_save(growth1->twin_axons[j], growth2->twin_axons[j], axons.size());
-                            // delete from list of twins
-                            growth1->twin_axons.erase(growth1->twin_axons.begin() + j);
-                            growth2->twin_axons.erase(growth2->twin_axons.begin() + j);
+                    if (growths[j]->finished) {
+                        if (growths[j]->success) {
+                            success =true;
+                            succes_ind = j;
+                            stop = true;
                         }
                     }
-                    // add rest of the twins
-                    for (unsigned j = 0; j < growth1->twin_axons.size(); j++){
-                        growth1->twin_axons[j].id = axons.size();
-                        axons.push_back(growth1->twin_axons[j]);
-                    }
-                    for (unsigned j = 0; j < growth2->twin_axons.size(); j++){
-                        growth2->twin_axons[j].id = axons.size();
-                        axons.push_back(growth2->twin_axons[j]);
-                    }
-                    delete growth1;
-                    delete growth2;
-                    out << "new axons size :" << axons.size()<<endl;
                 } 
-            }
-            display_progress(number_axons_wo_twins, num_obstacles*2);
-                    
+                growing_threads.clear();
+                
 
+                if(success) {
+                    axons.push_back(*growths[succes_ind] ->axon_to_grow);
+                    
+                    for (unsigned i = 0 ; i < growths[succes_ind]->twin_axons.size(); i++) {
+                        growths[succes_ind]->twin_axons[i].id = axons.size();
+                        axons.push_back(growths[succes_ind]->twin_axons[i]);
+                        }
+                }
+
+                else{
+                    stuck += 1;
+                    out << stuck<< endl;
+                }
+
+                for (auto a : growths)
+                {
+                    delete a;
+                } 
+                growths.clear();
+                
+
+            }
+
+            if (success) {
+                number_axons_wo_twins += 1;
+                display_progress(number_axons_wo_twins, num_obstacles);
+            }
+            else{
+                std::cout<< "stuck ! : " << stuck << endl;
+            }
+
+
+            
+            
         } // end for axons
 
         // check ICVF 
         icvf_current = computeICVF();
         achieved = true;
     }
-    num_obstacles = number_axons_placed;
 
     std::sort(axons.begin(), axons.end(), [](const Axon a, Axon b) -> bool
               { return a.id < b.id; });
@@ -530,7 +562,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
 }
 
-void AxonGammaDistribution::combine_axons_and_save(Axon axon1, Axon axon2, int id_) 
+void AxonGammaDistribution::combine_axons_and_save(Axon axon1, Axon axon2, int id_, std::vector<Axon>& axons_) 
 {
     Eigen::Vector3d D = axon1.spheres[axon1.spheres.size()-1].center;
     Eigen::Vector3d Q = axon2.spheres[axon2.spheres.size()-1].center;
@@ -554,7 +586,7 @@ void AxonGammaDistribution::combine_axons_and_save(Axon axon1, Axon axon2, int i
     }
 
     ax->set_spheres(combined_spheres);
-    axons.push_back(*ax);
+    axons_.push_back(*ax);
 
 }
 
@@ -600,7 +632,7 @@ double AxonGammaDistribution::computeICVF()
 
         // if twin 
         if (i > 0 && axons[i].radius ==  axons[i-1].radius){
-            tortuosities.push_back(tortuosities[-1]);
+            tortuosities.push_back(tortuosities[tortuosities.size()-1]);
             continue;
         } 
         else if (axons[i].spheres.size() > 1){
