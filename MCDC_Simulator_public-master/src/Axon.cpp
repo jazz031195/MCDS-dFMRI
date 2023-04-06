@@ -399,7 +399,7 @@ Vector3d find_nearest_point_on_skeleton(Vector3d collision_point, Vector3d spher
 
 bool check_inside(vector<double> list_c){
     for (unsigned i=0 ; i< list_c.size(); ++i){
-        if (list_c[i] < -1e-10 && list_c[i] > 1e-10){
+        if (list_c[i] < -1e-10){
             return true;
             break;        
         }
@@ -409,7 +409,7 @@ bool check_inside(vector<double> list_c){
 
 bool check_on_edge(vector<double> list_c){
     for (unsigned i=0 ; i< list_c.size(); ++i){
-        if (list_c[i] < 1e-10){
+        if (list_c[i] < 1e-10 && list_c[i] > -1e-10){
             return true;
             break;        
         }

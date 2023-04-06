@@ -269,7 +269,7 @@ bool DynamicsSimulation::finalPositionCheck()
 
     if( sentinela.deport_illegals and params.obstacle_permeability <=0 and walker.status != Walker::bouncing and walker.status != Walker::on_object){
 
-        bool isIntra = isInIntra(this->walker.pos_v,cyl_id,ply_id,sph_id,ax_id,0);
+        bool isIntra = isInIntra(this->walker.pos_v,cyl_id,ply_id,sph_id,ax_id,barrier_tickness);
 
         //cout << isIntra << " " << this->walker.location << "  " << walker.initial_location << endl;
 
@@ -546,8 +546,8 @@ void DynamicsSimulation::initWalkerObstacleIndexes()
     
 
     // The inner collision sphere has radius l*T*collision_sphere_distance
-    //float inner_col_dist_factor = step_lenght*sqrt(params.num_steps)*params.collision_sphere_distance;
-    float inner_col_dist_factor = step_lenght*sqrt(params.num_steps);
+    float inner_col_dist_factor = step_lenght*sqrt(params.num_steps)*params.collision_sphere_distance;
+    //float inner_col_dist_factor = step_lenght*10;
     walker.cylinders_collision_sphere.setSmallSphereSize(inner_col_dist_factor);
 
     //std::cout << inner_col_dist_factor << endl;
@@ -1163,11 +1163,11 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
 
         }// end for t
 
-        if (!back_tracking){
-            if(finalPositionCheck()){
-                back_tracking = true;
-            }
-        }
+        //if (!back_tracking){
+        //    if(finalPositionCheck()){
+        //        back_tracking = true;
+        //    }
+        //}
 
         //If there was an error, we don't compute the signal or write anything.
         if(back_tracking){
@@ -1465,13 +1465,27 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
 
     if (walker.location== Walker::extra && (*axons_list).size()>0){  
         //For each Sphere Obstacle
-        for(unsigned int i = 0 ; i < walker.dyn_spheres_collision_sphere.small_sphere_list_end; i++ )
+        Vector3d O;
+        walker.getVoxelPosition(O);
+        int n = 0;
+        for(unsigned int i = 0 ; i < walker.axons_collision_sphere.small_sphere_list_end; i++ )
         {
-            unsigned index = walker.dyn_spheres_collision_sphere.collision_list->at(i);
-            (*dyn_spheres_list)[index].checkCollision(walker,bounced_step,tmax,colision_tmp);
-            handleCollisions(colision,colision_tmp,max_collision_distance,index);
-        }
+            unsigned ax_index = walker.axons_collision_sphere.collision_list->at(i);
+             
+            for(unsigned int j = 0 ; j < walker.dyn_spheres_collision_sphere.small_sphere_list_end; j++ )
+            {
+                unsigned index = walker.dyn_spheres_collision_sphere.collision_list->at(j);
+                if ((*dyn_spheres_list)[index].ax_id == (*axons_list)[ax_index].id){
+                    (*dyn_spheres_list)[index].checkCollision(walker,bounced_step,tmax,colision_tmp);
+                    handleCollisions(colision,colision_tmp,max_collision_distance,index);
+                    n += 1;
+                    //std::cout << n << endl;
+                } 
+            } 
+            
+        } 
     } 
+     
 
     //For each PLY Obstacles
     for(unsigned int i = 0 ; i < walker.ply_collision_sphere.collision_list->size(); i++ )

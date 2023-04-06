@@ -103,7 +103,7 @@ std::tuple<double, double>  phi_theta_to_target (Eigen::Vector3d new_pos, Eigen:
     // varies between 0 and 2pi
     theta_to_target = atan2(vector_to_target[1],vector_to_target[0]);
     if (theta_to_target < 0){
-        phi_to_target += 2*M_PI;
+        theta_to_target += 2*M_PI;
     } 
     
     // phi is angle between (0,0,1) and (x,y,z)
@@ -360,11 +360,6 @@ void Growth::fill_with_spheres(Axon* ax, std::vector<Dynamic_Sphere>& spheres_to
             }
             sphere_in_between = sphere_;
             spheres_to_add.push_back(sphere_in_between);
-            if (i == centers.size()-1 && j== 2 ){
-                Dynamic_Sphere sphere (centers[i], sph_radii[i] ,ax->volume_inc_perc, ax->swell, ax->id, 1, ax->active_state, (i-1)*4+j+2);  
-                spheres_to_add.push_back(sphere);
-
-            } 
             /*
             
             bool last_sphere_add =false;
@@ -396,7 +391,12 @@ void Growth::fill_with_spheres(Axon* ax, std::vector<Dynamic_Sphere>& spheres_to
                 }
             } 
             */
-        } 
+        }
+        if (i == centers.size()-1){
+            Dynamic_Sphere sphere (centers[i], sph_radii[i] ,ax->volume_inc_perc, ax->swell, ax->id, 1, ax->active_state, i*4);  
+            spheres_to_add.push_back(sphere);
+
+        }  
     } 
 } 
 
