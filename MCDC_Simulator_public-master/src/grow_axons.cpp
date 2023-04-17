@@ -139,6 +139,7 @@ bool Growth::isSphereColliding(Dynamic_Sphere sph){
 
     for (unsigned i = 0; i < env_axons.size() ; i++){
 
+
         bool isinside = env_axons[i].isPosInsideAxon(position, distance_to_be_inside, true, col_sphere_ids);
         
         if (isinside){

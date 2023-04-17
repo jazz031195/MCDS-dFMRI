@@ -1467,21 +1467,21 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
         //For each Sphere Obstacle
         Vector3d O;
         walker.getVoxelPosition(O);
-        int n = 0;
+      
         for(unsigned int i = 0 ; i < walker.axons_collision_sphere.small_sphere_list_end; i++ )
         {
             unsigned ax_index = walker.axons_collision_sphere.collision_list->at(i);
-             
-            for(unsigned int j = 0 ; j < walker.dyn_spheres_collision_sphere.small_sphere_list_end; j++ )
-            {
-                unsigned index = walker.dyn_spheres_collision_sphere.collision_list->at(j);
-                if ((*dyn_spheres_list)[index].ax_id == (*axons_list)[ax_index].id){
-                    (*dyn_spheres_list)[index].checkCollision(walker,bounced_step,tmax,colision_tmp);
-                    handleCollisions(colision,colision_tmp,max_collision_distance,index);
-                    n += 1;
-                    //std::cout << n << endl;
+            if ((*axons_list)[ax_index].isNearAxon(O, step_lenght*2)){
+                for(unsigned int j = 0 ; j < walker.dyn_spheres_collision_sphere.small_sphere_list_end; j++ )
+                {
+                    unsigned index = walker.dyn_spheres_collision_sphere.collision_list->at(j);
+                    if ((*dyn_spheres_list)[index].ax_id == (*axons_list)[ax_index].id){
+                        (*dyn_spheres_list)[index].checkCollision(walker,bounced_step,tmax,colision_tmp);
+                        handleCollisions(colision,colision_tmp,max_collision_distance,index);
+                
+                    } 
                 } 
-            } 
+            }
             
         } 
     } 

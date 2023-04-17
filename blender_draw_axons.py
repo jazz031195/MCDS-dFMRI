@@ -23,10 +23,10 @@ axons = get_spheres_array(file)
 for i in range(len(axons)):
     spheres = axons[i]
     for ii in range(len(spheres)):
-        r = spheres[ii][3]*10
-        x = spheres[ii][0]*10
-        y = spheres[ii][1]*10
-        z = spheres[ii][2]*10
+        r = spheres[ii][3]*1000
+        x = spheres[ii][0]*1000
+        y = spheres[ii][1]*1000
+        z = spheres[ii][2]*1000
 
         bpy.ops.mesh.primitive_uv_sphere_add(radius=r, enter_editmode=False, align='WORLD', location=(x, y, z), scale=(1, 1, 1))
 

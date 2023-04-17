@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore")
 cur_path = os.getcwd()
 giro = 2.6751525e8 #Gyromagnetic radio given in rad/(ms*T)
 scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_sample_scheme_new.scheme"
-icvf = 0.7
+
 def get_dwi_array(dwi_path):
     # create array with dwi values
     signal = []
@@ -53,7 +53,7 @@ def get_psge_data():
 
     return data_dwi
 
-def create_data(dwi_path):
+def create_data(dwi_path, b0):
     dwi_signal = get_dwi_array(dwi_path)
     data_psge = get_psge_data()
     data_psge["DWI"] = list(dwi_signal)
@@ -65,7 +65,7 @@ def create_data(dwi_path):
     #data_1 = data_psge.loc[data_psge['x'] != x1]
     datas = [data_x,data_y,data_z]
     for i in range(len(datas)):
-        b0 = list(datas[i]["b [ms/um²]"])[0]
+        datas[i]["b [ms/um²]"] = [round(n,1) for n in list(datas[i]["b [ms/um²]"])]
         Sb0 = list(datas[i].loc[datas[i]["b [ms/um²]"]== b0]["DWI"])[0]
         signal = list(map(lambda Sb : np.log(Sb/Sb0), list(datas[i]["DWI"])))
         adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(datas[i]["b [ms/um²]"]),list(datas[i]["DWI"])))
@@ -76,15 +76,14 @@ def create_data(dwi_path):
 
     return data_dwi
 
-def get_adc(dwi_path):
-    data = create_data(dwi_path)
+def get_adc(dwi_path, b, b0):
+    data = create_data(dwi_path, b0)
     axes = ["x","y","z"]
     orientations = ["radial","radial","axial"]
     adcs = []
     for a in axes:
         ax_data = data.loc[data[a]>0]
-        b1 = list(ax_data["b [ms/um²]"])[-1]
-        ax_data = ax_data.loc[ax_data["b [ms/um²]"] == b1]
+        ax_data = ax_data.loc[ax_data["b [ms/um²]"] == b]
         adcs.append(list(ax_data["adc [um²/ms]"])[0])
     new_data = pd.DataFrame(columns = ["axis", "adc [um²/ms]"])
     new_data["orientations"] = orientations
@@ -131,7 +130,7 @@ def get_axons_array(file):
 
     with open(file) as f:
         for line in f.readlines():
-            if (len(line.split(' ')) > 3):
+            if (len(line.split(' ')) > 4):
                 spheres.append([float(i) for i in line.split(' ')[:]])
             else :
                 if (len(spheres)!= 0):
@@ -197,7 +196,7 @@ def plot_tortuosity_angle(file):
 
         df = pd.DataFrame()
         df["index"] = [i]*len(xs)
-        df["theta"]= list(map(lambda x,y:np.arctan(y/x)/np.pi if x!= 0 else np.pi/2, xs, ys))
+        df["theta"]= list(map(lambda x,y:np.arctan2(y,x)/np.pi if np.arctan2(y,x)/np.pi>0 else np.arctan2(y,x)/np.pi+2, xs, ys))
         df["phi"]= list(map(lambda x,y,z:np.arctan(np.sqrt(x**2+y**2)/z)/np.pi if z!= 0 else np.pi/2, xs, ys, zs))  
         dfs.append(df)
         del df
@@ -227,7 +226,7 @@ def plot_DWI(intra_rest_path,extra_rest_path, extra_active_path, intra_active_pa
 
 
 
-axons_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_gamma_distributed_axon_list.txt"
+#axons_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_list_icvf_0.3_gamma_distributed_axon_list.txt"
 
 #intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_intra_active_DWI.txt"
 #extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_extra_active_DWI.txt"
@@ -237,10 +236,58 @@ axons_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output
 
 
 #plot_DWI(intra_rest_path,extra_rest_path, extra_active_path, intra_active_path)
+b0 = 0.2
+b1 = 1
+locs = ["intra", "extra"]
+swell = [0.0, 0.3, 0.4, 0.5, 0.6, 0.7]
+datas = []
+swell_ = []
+locs_ = []
+diff_ = []
+w_diff_ = []
+for n in [1, 2]:
+    for s in swell:
+        for l in locs:
+            ref_file = f'/home/localadmin/localdata/juradata/ijelescu/micmap/jasmine/DWI/try{n}/icvf_0.3_swell_0.0_{l}_DWI.txt'
+            if (Path(ref_file)).exists():
+                ref_data = get_adc(ref_file, b1, b0)
+                file = f'/home/localadmin/localdata/juradata/ijelescu/micmap/jasmine/DWI/try{n}/icvf_0.3_swell_{s}_{l}_DWI.txt'
+                print(file)
+                if (Path(file)).exists():
+                    print("exists")
+                    data = get_adc(file, b1, b0)
+                    datas.append(get_adc(file, b1, b0))
+                    if l == "intra":
+                        diff = list((data["adc [um²/ms]"]-ref_data["adc [um²/ms]"])*100/ref_data["adc [um²/ms]"])
+                        w_diff_.extend([d*0.3 for d in diff])
+                        diff_.extend(diff)
+                    else:
+                        diff = list((data["adc [um²/ms]"]-ref_data["adc [um²/ms]"])*100/ref_data["adc [um²/ms]"])
+                        w_diff_.extend([d*0.7 for d in diff])
+                        diff_.extend(diff)
+                    for i in range(3):
+                        swell_.append(s)
+                        locs_.append(l)
 
-file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/_DWI.txt"
+data = pd.concat(datas)
+data["location"] = locs_
+data["swell_perc"] = swell_
+data["adc difference [%]"] = diff_
+data["weighted adc difference [%]"] = w_diff_
 
-data = create_data(file)
-print(data)
-ax = sns.lineplot(data=data, x = "b [ms/um²]", y= "DWI")
+
+sns.lineplot(data = data.reset_index(), x = "swell_perc",y = "weighted adc difference [%]")
 plt.show()
+
+sns.lineplot(data = data.reset_index(), hue = "orientations", x = "swell_perc",y = "weighted adc difference [%]")
+plt.show()
+
+sns.lineplot(data = data.reset_index(), hue = "location", x = "swell_perc",y = "adc difference [%]")
+plt.show()
+
+data = data.loc[data["swell_perc"] != 0]
+print(data)
+sns.boxplot(data = data.reset_index(),x = "axis",hue = "location",y = "adc difference [%]")
+plt.show()
+
+

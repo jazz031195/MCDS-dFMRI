@@ -110,13 +110,20 @@ void Axon::set_spheres(std::vector<Dynamic_Sphere> spheres_to_add){
 
 }
 
+
 bool Axon::isNearAxon(Vector3d &position,  double distance_to_be_inside){
     bool isnear = false;
     Vector2d x_limits = projections.axon_projections[0];
     Vector2d y_limits = projections.axon_projections[1];
 
-    if (position[0] >= x_limits[0]-distance_to_be_inside && position[0] <= x_limits[1]+distance_to_be_inside){
-        if (position[1] >= y_limits[0]-distance_to_be_inside && position[1] <= y_limits[1]+distance_to_be_inside){
+    if ((abs(position[0]-x_limits[0]) <= distance_to_be_inside && (abs(position[0]-x_limits[1]) <= distance_to_be_inside))){
+        if ((abs(position[1]-y_limits[0]) <=distance_to_be_inside && abs(position[1] - y_limits[1]) <= distance_to_be_inside)){
+            return true;
+        }
+    }
+    // close after crossing border
+    else if  ((abs(abs(position[0]-x_limits[0])- end[2]) <= distance_to_be_inside) && (abs(abs(position[0]-x_limits[1])- end[2]) <= distance_to_be_inside)){
+        if ((abs(abs(position[1]-y_limits[0])- end[2]) <= distance_to_be_inside) && (abs(abs(position[1]-y_limits[1])- end[2]) <= distance_to_be_inside)){
             return true;
         }
     }
@@ -136,12 +143,12 @@ bool Axon::isPosInsideAxon(Vector3d &position,  double distance_to_be_inside, bo
         // find all projections in between the two projections of the edges
         if (swell_){
             // the radius taken here is the max between the axon's radius and the sphere's radius
-            rad = max(max_radius, distance_to_be_inside );
+            rad = max(max_radius+10*barrier_tickness, distance_to_be_inside );
             coliding_projs = projections_max.find_collisions_all_axes(position, rad, id);
         }
         else{
             // the radius taken here is the max between the axon's radius and the sphere's radius
-            rad = max(radius, distance_to_be_inside ) ;
+            rad = max(radius+10*barrier_tickness, distance_to_be_inside ) ;
             coliding_projs = projections.find_collisions_all_axes(position, rad, id);
         }
 
@@ -429,6 +436,11 @@ bool Axon::checkCollision(Walker &walker, std::vector<int> ind_close_spheres, Ve
     std::vector<double> cs;
     std::vector<int> sph_ids;
     std::vector<double> all_cs;
+
+    if (!isNearAxon(O, step_lenght*2)){
+        colision.type = Collision::null;
+        return false; 
+    }
 
     if (ind_close_spheres.size() == 0){
         colision.type = Collision::null;
