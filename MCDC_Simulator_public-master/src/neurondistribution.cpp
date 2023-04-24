@@ -55,10 +55,10 @@ void NeuronDistribution::createSubstrate()
     while(!achieved){
 
         // double target_icvf = this->icvf+adjustments*adj_increase;
-        double soma_radius = 5e-3; //mm
+        double soma_radius = 10e-3; //mm
         // Let enough distance for the radius and for a step_length so that 
         // mirroring border conditions are ok
-        double min_distance_from_border = barrier_tickness + soma_radius + step_length;
+        double min_distance_from_border = barrier_tickness + soma_radius;
         for(uint t = 0 ;  t < repetition; t++){
             neurons.clear();
             vector<Eigen::Vector3d> soma_centers;
@@ -86,7 +86,7 @@ void NeuronDistribution::createSubstrate()
                         {
                             continue;
                         } 
-                    if (!isSphereColliding(soma_center, soma_radius))
+                    if (!isSphereColliding(soma_center, soma_radius, soma_centers))
                     {
                         soma_centers.push_back(soma_center);
                         break;
@@ -100,9 +100,10 @@ void NeuronDistribution::createSubstrate()
                 neurons.push_back(neuron);
                 cout << " End of neuron " << i << endl;
             }
-                
-            icvf = computeICVF(min_distance_from_border);
-            cout << icvf << endl;
+
+            double icvf, somaFraction, dendritesFraction;
+            tie(icvf, somaFraction, dendritesFraction) = computeICVF(0);
+            cout << icvf << somaFraction << dendritesFraction << endl;
             achieved = true;
 
             // if(this->icvf - best_icvf  < 0.0005){
@@ -132,47 +133,24 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
 {
     // Store all the starting points of dendrites, on the soma of the neuron
     std::vector<Eigen::Vector3d> start_dendrites;
-    std::random_device rd{};
-    std::mt19937 generator{rd()};
-    std::normal_distribution<double> distribution(0.0, 1.0);
     int max_tries = 10000;
 
     for(uint8_t i = 0; i < neuron.nb_dendrites; ++i)
     {   
         int tries = 0;
-
+        int nb_branching = generateNbBranching();
+        // Radius of each dendrite sphere [mm]
+        double sphere_radius = 0.5e-3;
+        // Don't initiate dendrite too close from the borders
+        double min_distance_from_border = barrier_tickness + sphere_radius;
+        
         while(tries < max_tries)
         {
-            // Radius of each dendrite sphere [mm]
-            double sphere_radius = 0.5e-3;
-            // Find a point at the surface of the soma
-            double x = distribution(generator); 
-            double y = distribution(generator);
-            double z = distribution(generator);
-
-            // Avoid division by 0 while normalizing
-            while(x==0 && y==0 && z==0)
-            {
-                x = distribution(generator);
-                y = distribution(generator);
-                z = distribution(generator);
-            }
-            double normalization_factor = sqrt(x*x + y*y + z*z);
-            x = x/normalization_factor*neuron.soma.radius + neuron.soma.center[0];
-            y = y/normalization_factor*neuron.soma.radius + neuron.soma.center[1];
-            z = z/normalization_factor*neuron.soma.radius + neuron.soma.center[2];
-            Eigen::Vector3d dendrite_start(x, y, z);
-            
-            // Keep the neuron one step length away from the border so that water mirroring at
-            // the boundary doesn't need to be checked if intra
-            double min_distance_from_border = barrier_tickness + sphere_radius + step_length;
+            Vector3d dendrite_start = generatePointOnSphere(neuron.soma.center, neuron.soma.radius);
 
             while(!isInVoxel(dendrite_start, min_distance_from_border) || (isSphereColliding(dendrite_start, sphere_radius)))
             {
-                x = distribution(generator);
-                y = distribution(generator);
-                z = distribution(generator);
-                dendrite_start = {x, y, z};
+               dendrite_start = generatePointOnSphere(neuron.soma.center, neuron.soma.radius);
             }
 
             // If the vector is not already contained in start_dendrites, add it. 
@@ -184,32 +162,184 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                 start_dendrites.push_back(dendrite_start);
                 Eigen::Vector3d dendrite_direction = dendrite_start - neuron.soma.center;
                 dendrite_direction.normalize();
-                int nb_spheres = neuron.span_radius / (sphere_radius/4); //Let's assume that dendrites have a radius of 0.5microns so far
+                Dendrite dendrite;
+                // Tuple xyz center and center id
+                vector<tuple<Vector3d, int>> parent_centers {{dendrite_start, 0}};
                 
-                Eigen::Vector3d begin;
-                Axon dendrite(sphere_radius, begin, begin, 0, false, false , 1);
-                std::vector<Dynamic_Sphere> spheres_to_add;
-                spheres_to_add.clear();
-
-                for(int j=0; j < nb_spheres; ++j)
+                // Create the subbranches
+                for(int b=0; b < nb_branching; ++b)
                 {
-                    Eigen::Vector3d center = j*dendrite_direction*sphere_radius/4 + dendrite_start;
-                    if (isInVoxel(center, min_distance_from_border) && !isSphereColliding(center, sphere_radius))
+                    // Length of a segment before branching
+                    int l_segment = generateLengthSegment();
+                    // Number of spheres per segment
+                    int nb_spheres = l_segment / (sphere_radius/4); //Let's assume that dendrites have a radius of 0.5microns so far
+
+                    if(b == 0)
                     {
-                        Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, false);
-                        spheres_to_add.push_back(sphere_to_add);
+                        vector<int> proximal_branch {0};
+                        vector<int> distal_branch {1, 2};
+                        growSubbranch(dendrite, parent_centers[0], dendrite_direction, nb_spheres, sphere_radius, proximal_branch, distal_branch, 
+                                      min_distance_from_border);
                     }
-                    else
-                        break; 
-                }
-                if (spheres_to_add.size() == 0)
-                    break;
-                dendrite.set_spheres(spheres_to_add, i);
-                neuron.add_dendrite(dendrite);
-                break;
+
+                    for(size_t p=0; parent_centers.size(); p++)
+                    {
+                        Eigen::Vector3d begin;
+                        Axon subbranch(sphere_radius, begin, begin, 0, false, false , 1);
+                        std::vector<Dynamic_Sphere> spheres_to_add;
+                        spheres_to_add.clear();
+
+                        Eigen::Vector3d center = {0, 0, 0};
+                        bool discard_dendrite  = false;
+                        
+                        Vector3d origin;
+                        int parent_id;
+                        tie(origin, parent_id) = parent_centers[p];
+
+                        for(int j=0; j < nb_spheres; ++j)
+                        {
+                            center = j*dendrite_direction*sphere_radius/4 + origin;
+
+                            if(isInVoxel(center, min_distance_from_border))
+                            {
+                                if (!isSphereColliding(center, sphere_radius))
+                                {
+                                    Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, false);
+                                    spheres_to_add.push_back(sphere_to_add);
+                                }
+                            }
+                            // else
+                            // {
+                            //     discard_dendrite = true;
+                            //     createTwinSphere(center, sphere_radius, discard_dendrite, j);
+                            //     if(!discard_dendrite)
+                            //     {
+                            //         Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, false);
+                            //         spheres_to_add.push_back(sphere_to_add);
+                            //     }
+                            //     else
+                            //         break;
+                            // } 
+                        }
+                        if (spheres_to_add.size() == 0)
+                            break;
+                        if (!discard_dendrite)
+                        {
+                            subbranch.set_spheres(spheres_to_add, i);
+                            dendrite.add_subbranch(subbranch);
+                            neuron.add_dendrite(dendrite);
+                            break;
+                        }  
+                    }   
+                }  
             }
         }
     } 
+}
+
+void NeuronDistribution::growSubbranch(Dendrite& dendrite, tuple<Vector3d, int> const& parent, Vector3d const& dendrite_direction, 
+                                      int const& nb_spheres, double const& sphere_radius, vector<int> const& proximal_end, 
+                                      vector<int> const& distal_end, double const& min_distance_from_border)
+{
+    Eigen::Vector3d begin;
+    Axon subbranch(sphere_radius, begin, begin, 0, false, false , 1);
+    std::vector<Dynamic_Sphere> spheres_to_add;
+    spheres_to_add.clear();
+
+    Eigen::Vector3d center = {0, 0, 0};
+    bool discard_dendrite  = false;
+    
+    Vector3d origin_branch;
+    int parent_id;
+    tie(origin_branch, parent_id) = parent;
+
+    for(int j=0; j < nb_spheres; ++j)
+    {
+        center = j*dendrite_direction*sphere_radius/4 + origin_branch;
+
+        if(isInVoxel(center, min_distance_from_border))
+        {
+            if (!isSphereColliding(center, sphere_radius))
+            {
+                Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, false);
+                spheres_to_add.push_back(sphere_to_add);
+            }
+        }
+    }
+
+    if (!discard_dendrite)
+    {
+        int subbranch_id = dendrite.get_nb_subbranches() + 1;
+        subbranch.set_spheres(spheres_to_add, subbranch_id);
+        dendrite.add_subbranch(subbranch);
+    }  
+}
+
+int NeuronDistribution::generateNbBranching(int const& lower_bound, int const& upper_bound)
+{
+    random_device dev;
+    mt19937 rng(dev());
+    uniform_int_distribution<int> nbBranching(lower_bound, upper_bound);
+
+    return nbBranching(rng);
+}
+
+int NeuronDistribution::generateLengthSegment(double const& lower_bound, double const& upper_bound)
+{
+    random_device dev;
+    mt19937 rng(dev());
+    uniform_real_distribution<double> segmentLength(lower_bound, upper_bound);
+
+    return segmentLength(rng);
+}
+
+Vector3d NeuronDistribution::generatePointOnSphere(Vector3d const& center, double const& radius) const
+{
+    std::random_device rd{};
+    std::mt19937 generator{rd()};
+    std::normal_distribution<double> distribution(0.0, 1.0);
+
+    // Find a point at the surface of the soma
+    double x = distribution(generator); 
+    double y = distribution(generator);
+    double z = distribution(generator);
+
+    // Avoid division by 0 while normalizing
+    while(x==0 && y==0 && z==0)
+    {
+        x = distribution(generator);
+        y = distribution(generator);
+        z = distribution(generator);
+    }
+    double normalization_factor = sqrt(x*x + y*y + z*z);
+    x = x/normalization_factor*radius + center[0];
+    y = y/normalization_factor*radius + center[1];
+    z = z/normalization_factor*radius + center[2];
+    
+    return {x, y, z};   
+}
+
+void NeuronDistribution::createTwinSphere(Vector3d &center, double const& sphere_radius, bool &discard_dendrite, size_t const& j)
+{
+    Vector3d new_center = center;
+    for (size_t axis=0; axis < 3; ++axis)
+    {
+        double distance_from_min_lim = center[axis] - min_limits_vx[axis];
+        if (distance_from_min_lim < sphere_radius)
+        {
+            new_center[axis] = max_limits_vx[axis] + distance_from_min_lim;
+        }
+        double distance_from_max_lim = max_limits_vx[axis] - center[axis];
+        if (distance_from_max_lim < sphere_radius)
+        {
+            new_center[axis] = min_limits_vx[axis] - distance_from_max_lim;
+        }
+    }
+    if(!isSphereColliding(new_center, sphere_radius))
+    {
+        discard_dendrite = false;
+        center = new_center;
+    }
 }
 
 bool NeuronDistribution::isSphereColliding(Dynamic_Sphere const& sph) 
@@ -223,6 +353,25 @@ bool NeuronDistribution::isSphereColliding(Dynamic_Sphere const& sph)
             return true;
     }
     return false;
+}
+
+bool NeuronDistribution::isSphereColliding(Vector3d const& sphere_center, double const& sphere_radius, vector<Vector3d> const& soma_centers) 
+{
+    double distance_to_be_inside = 2 * barrier_tickness;
+    for (unsigned i = 0; i < soma_centers.size() ; i++){
+        bool isinside = isSphereCollidingSphere(sphere_center, soma_centers[i], sphere_radius, sphere_radius, distance_to_be_inside);
+        if (isinside)
+            return true;
+    }
+    return false;
+}
+
+bool NeuronDistribution::isSphereCollidingSphere(Vector3d const& pos1, Vector3d const& pos2, double const& radius1, double const& radius2, double const& minDistance) const 
+{
+    Vector3d m = pos1 - pos2;
+    double distance_to_sphere = m.norm() - radius1 - radius2;
+
+    return distance_to_sphere < minDistance;
 }
 
 bool NeuronDistribution::isSphereColliding(Vector3d const& sphere_center, double const& sphere_radius) 
@@ -259,17 +408,20 @@ void NeuronDistribution::printSubstrate(ostream &out) const
 
         for (size_t j = 0; j < neurons[i].dendrites.size(); j++)
         {
-            for (size_t k = 0; k < neurons[i].dendrites[j].spheres.size(); k++)
+            for (size_t k = 0; k < neurons[i].dendrites[j].subbranches.size(); k++)
             {
-                // Print for each dendrite, each sphere
-                out << neurons[i].dendrites[j].spheres[k].center[0] << " "
-                << neurons[i].dendrites[j].spheres[k].center[1] << " "
-                << neurons[i].dendrites[j].spheres[k].center[2] << " "
-                << neurons[i].dendrites[j].spheres[k].radius << " "
-                << neurons[i].dendrites[j].spheres[k].swell << endl; 
+                for (size_t l = 0; l < neurons[i].dendrites[j].subbranches[k].spheres.size(); l++)
+                {
+                    // Print for each dendrite, each sphere
+                    out << neurons[i].dendrites[j].subbranches[k].spheres[l].center[0] << " "
+                    << neurons[i].dendrites[j].subbranches[k].spheres[l].center[1] << " "
+                    << neurons[i].dendrites[j].subbranches[k].spheres[l].center[2] << " "
+                    << neurons[i].dendrites[j].subbranches[k].spheres[l].radius << " "
+                    << neurons[i].dendrites[j].subbranches[k].spheres[l].swell << endl; 
+                }
+                out << "Segment " + to_string(k) << endl;
             }
             out << "Dendrite " + to_string(j) << endl;
-
         }
         out << "Neuron " + to_string(i) << endl;
     }
@@ -292,25 +444,30 @@ bool NeuronDistribution::isInVoxel(Eigen::Vector3d const& pos, double const& dis
     return true;   
 }
 
-double NeuronDistribution::computeICVF(double const& min_distance_from_border) const
+tuple<double, double, double> NeuronDistribution::computeICVF(double const& min_distance_from_border) const
 {
 
     if (neurons.size() == 0)
-        return 0;
+        return make_tuple(0, 0, 0);
 
     double VolumeVoxel = (max_limits_vx[0] - min_limits_vx[0] - min_distance_from_border) * (max_limits_vx[1] - min_limits_vx[1] - min_distance_from_border) * (max_limits_vx[2] - min_limits_vx[2] - min_distance_from_border);
-    double VolumeNeurons = 0;
+    double VolumeSoma = 0;
+    double VolumeDendrites = 0;
    
     for (size_t i = 0; i < neurons.size(); i++)
     {
         // Calculate the volume of the soma
-        VolumeNeurons += 4/3*M_PI*pow(neurons[i].soma.radius, 3);
+        VolumeSoma += 4/3*M_PI*pow(neurons[i].soma.radius, 3);
 
         // Calculate the cylindrical volume of each dendrite
         for (uint8_t j = 0; j < neurons[i].nb_dendrites; j++)
         {
-            VolumeNeurons += neurons[i].dendrites[j].volumeAxon();
+            VolumeDendrites += neurons[i].dendrites[j].volumeDendrite();
         }      
     }
-    return VolumeNeurons / VolumeVoxel;
+    
+    double somaFraction      = VolumeSoma / VolumeVoxel;
+    double dendritesFraction = VolumeDendrites/ VolumeVoxel;
+    double ICVF              = somaFraction + dendritesFraction;
+    return make_tuple(ICVF, somaFraction, dendritesFraction);
 }

@@ -770,7 +770,7 @@ double Axon::volumeAxon() const
     }
     else
     {
-        //TODO : throw an error
+        //TODO [ines]: throw an error
     }
     
     return volume;

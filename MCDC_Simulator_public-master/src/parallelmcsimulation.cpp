@@ -8,6 +8,8 @@
 #include "spheregammadistribution.h"
 #include "axongammadistribution.h"
 #include "neurondistribution.h"
+#include <chrono>
+using namespace std::chrono;
 
 
 //* Auxiliare method to split words in a line using the spaces*//
@@ -973,7 +975,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 {
                     Eigen::Vector3d begin = {min_limits, min_limits, min_limits};
                     Eigen::Vector3d end   = {max_limits, max_limits, max_limits};
-                    Axon axon (r, begin, end, volume_inc_perc, params.active_state, s, scale);
+                    Dendrite axon (r, begin, end, volume_inc_perc, params.active_state, s, scale);
                     axon.set_spheres(spheres_, id);
                     spheres_.clear();
                     axons_.push_back(axon);
@@ -998,6 +1000,13 @@ void ParallelMCSimulation::addObstaclesFromFiles()
         params.dyn_perc        = dyn_perc;
 
         in.close();
+
+
+        // double somaFraction, dendritesFraction;
+        // double min_distance_from_border = barrier_tickness + 5e-3 + params.sim_duration / params.num_steps / 1000;
+        // std::cout << params.sim_duration << params.num_steps << std::endl;
+        // tie(icvf, somaFraction, dendritesFraction) = computeICVF(min_distance_from_border);
+        // std::cout << icvf << somaFraction << dendritesFraction << std::endl;
     }
     
     for(unsigned i = 0; i < params.spheres_files.size(); i++){
@@ -1035,6 +1044,36 @@ void ParallelMCSimulation::addObstaclesFromFiles()
         params.voxels_list[0].first =  params.min_limits;
         params.voxels_list[0].second = params.max_limits;
     }
+}
+
+
+tuple<double, double, double> ParallelMCSimulation::computeICVF(double const& min_distance_from_border) const
+{
+
+    if (neurons_list.size() == 0)
+        return make_tuple(0, 0, 0);
+
+    double VolumeVoxel = (params.max_limits[0] - params.min_limits[0] - min_distance_from_border) * (params.max_limits[1] - params.min_limits[1] - min_distance_from_border) * (params.max_limits[2] - params.min_limits[2] - min_distance_from_border);
+    double VolumeSoma = 0;
+    double VolumeDendrites = 0;
+   
+    for (size_t i = 0; i < neurons_list.size(); i++)
+    {
+        // Calculate the volume of the soma
+        VolumeSoma += 4/3*M_PI*pow(neurons_list[i].soma.radius, 3);
+        if (i==0)
+         std::cout << VolumeSoma << std::endl;
+        // Calculate the cylindrical volume of each dendrite
+        for (uint8_t j = 0; j < neurons_list[i].nb_dendrites; j++)
+        {
+            VolumeDendrites += neurons_list[i].dendrites[j].volumeAxon();
+        }      
+    }
+    
+    double somaFraction      = VolumeSoma / VolumeVoxel;
+    double dendritesFraction = VolumeDendrites/ VolumeVoxel;
+    double ICVF              = somaFraction + dendritesFraction;
+    return make_tuple(ICVF, somaFraction, dendritesFraction);
 }
 
 void ParallelMCSimulation::addObstacleConfigurations()

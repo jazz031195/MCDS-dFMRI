@@ -16,8 +16,6 @@
 #include "simerrno.h"
 #include "obstacle.h"
 
-using namespace std;
-
 /// @brief 
 class Axon : public Obstacle
 {
@@ -36,6 +34,8 @@ public:
     double tortuosity; /* Total length of an axon divided by the distance between begin and end (as if it was a straight cylinder)*/
     Projections projections;
     Projections projections_max;
+    std::vector <int> proximal_branching; /* Contains the parent axon id as well as the other child id at the proximal branching */
+    std::vector <int> distal_branching;   /* Contains the child.ren id at the distal branching */
 
 
     /*!
@@ -70,6 +70,8 @@ public:
 
         projections.clear_projections();
         projections_max.clear_projections();
+        proximal_branching.clear();
+        distal_branching.clear();
 
         id = count++;
     }

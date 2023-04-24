@@ -10,8 +10,7 @@
 #ifndef NEURON_H
 #define NEURON_H
 
-#include "Axon.h"
-#include "dynamic_sphere.h"
+#include "Dendrite.h"
 #include "simerrno.h"
 #include <iostream>
 #include <random>
@@ -26,7 +25,7 @@ public:
 
 uint8_t nb_dendrites;                   /* Number of dendrites */
 double span_radius;                     /* Radius [mm] inside which all the dendrites are contained */
-std::vector<Axon> dendrites;            /* Contains all the dendrites of the neuron*/
+std::vector<Dendrite> dendrites;        /* Contains all the dendrites of the neuron*/
 Dynamic_Sphere soma;                    /* Soma of the neuron */
 
 /*! Default constructor.*/
@@ -35,13 +34,13 @@ Neuron();
 *  \param dendrites Vector3d<Axon>, dendrites of This.
 *  \param soma Dynamic_Sphere     , soma of This.
 */
-Neuron(std::vector<Axon> const& dendrites, Dynamic_Sphere const& soma);
+Neuron(std::vector<Dendrite> const& dendrites, Dynamic_Sphere const& soma);
 /*! Constructor
 *  \param dendrites Vector3d<Axon>  , dendrites of This.
 *  \param soma_center Vector3d<Axon>, center of the soma.
 *  \param soma_radius double        , radius of the soma.
 */
-Neuron(std::vector<Axon> const& dendrites, Eigen::Vector3d const& soma_center, double const& soma_radius);
+Neuron(std::vector<Dendrite> const& dendrites, Eigen::Vector3d const& soma_center, double const& soma_radius);
 /*! Constructor
 *  \param soma_center Vector3d<Axon>, center of the soma.
 *  \param soma_radius double        , radius of the soma.
@@ -90,9 +89,9 @@ double minDistance(Walker const& walker) const;
 /**
  * Add dendrite to dendrites. 
  *
- * @param dendrite_to_add Axon.
+ * @param dendrite_to_add Dendrite.
  */
-void add_dendrite(Axon const& dendrite_to_add);
+void add_dendrite(Dendrite const& dendrite_to_add);
 
 private:
 
@@ -102,7 +101,8 @@ private:
      * 
      * @param pos Eigen::Vector3d, position of the walker.
      * @return std::vector<double>, all the distances. 
-     */    std::vector<double> Distances_to_Spheres(Eigen::Vector3d const& pos) const;
+     */    
+    std::vector<double> Distances_to_Spheres(Eigen::Vector3d const& pos) const;
     /**
      * Vector of all distances between the walker w and the spheres of the this.
      * 
@@ -116,28 +116,8 @@ private:
      *                                       neuron_part : "soma", "dendrite" or "none",
      *                                       part_id     : soma_id, dendrite_id or -1.
     */
-    std::tuple<std::string, int> isNearNeuron(Eigen::Vector3d const& position,  double const& barrier_thickness) const;
-    /**
-     *  Find the closest sphere between a walker at walker_pos and the dendrite dendrite_id,
-     *  with dichotomy method.
-     * 
-     * @param dendrite_id            int, index of the dendrite.           
-     * @param walker_pos Eigen::Vector3d, position of the walker.
-     * @return i                     int, index of the closest sphere.
-     */
-    int closest_sphere_dichotomy(int const& dendrite_id, Eigen::Vector3d const& walker_pos) const;
-    /**
-     *  Find the closest sphere between a walker and this.
-     * 
-     * @param walker            Walker, object from which to calculate the closest sphere 
-     *                                  from this.
-     * @param barrier_thickness double, thickness of the cellular barrier.
-     * @return std::tuple<std::string, int, int>, {neuron_part, part_id, sphere_id},
-     *                                            neuron_part : "soma", "dendrite" or "none",
-     *                                            part_id     : soma_id, dendrite_id or -1,
-     *                                            sphere_id   : 0      , sphere_id   or -1.
-     */
-    std::tuple<std::string, int, int> closest_sphere(Walker const& walker, double const& barrier_tickness) const;
+    std::tuple<std::string, int> isNearSoma(Eigen::Vector3d const& position,  double const& barrier_thickness) const;
+    std::tuple<std::string, int> isNearDendrite(Eigen::Vector3d const& position,  double const& barrier_thickness) const;
     /**
      * Calculates if there is/are intersection(s) between the sphere s and a walker
      * starting at traj_orig, with a direction step_dir. 
@@ -152,30 +132,30 @@ private:
      * @param traj_orig Eigen::Vector3d, trajectory origin of the walker
      * @param c                  double, ||traj.orig - s.center||² - s.radius²
      */
-    bool intersection_sphere_vector(double &intercept1, double &intercept2, Dynamic_Sphere const&s, Eigen::Vector3d const&step_dir, 
-                                    double const&step_length, Eigen::Vector3d const&traj_orig, double &c) const;
+    bool intersection_sphere_vector(double& intercept1, double& intercept2, Dynamic_Sphere const& s, Eigen::Vector3d const& step_dir, 
+                                    double const& step_length, Eigen::Vector3d const& traj_orig, double & c) const;
     /**
-     * Assign axons to dendrites. 
+     * Assign Dendrites to dendrites. 
      *
-     * @param axons std::vector<Axon>, set of axons.
+     * @param Dendrites std::vector<Dendrite>, set of Dendrites.
      */
-    void set_axons(std::vector<Axon> const& axons);
+    void set_dendrites(std::vector<Dendrite> const& Dendrites);
     /**
      * Generate a random span radius in [mm], in the interval [lower_bound, upper_bound].
      *
-     * @param lower_bound int, lower bound of the interval, in [10*mm].
-     * @param upper_bound int, upper bound of the interval, in [10*mm].
+     * @param lower_bound int, lower bound of the interval, in [mm]. 
+     * @param upper_bound int, upper bound of the interval, in [mm].
      */
-    void generateSpanRadius(int const& lower_bound=2, int const& upper_bound=5);
+    void generateSpanRadius(double const& lower_bound=0.2, double const& upper_bound=0.5);
     /**
-     * Find the closest dendrite/axon from the soma. Indeed, the walker can go from the 
+     * Find the closest dendrite from the soma. Indeed, the walker can go from the 
      * soma to the dendrites.
      *
      * @param position Eigen::Vector3d, initial position of the walker.
      * @param step_length       double, length of the step of the walker.
-     * @returns            axon_id int, index of the dendrite. 
+     * @returns        dendrite_id int, index of the dendrite. 
      */
-    int closest_axon_from_soma(Eigen::Vector3d const& position, double const& step_length);
+    int closest_dendrite_from_soma(Eigen::Vector3d const& position, double const& step_length);
 };
 
 

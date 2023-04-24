@@ -90,6 +90,11 @@ private:
      *  \brief Used to initialize the hexagonal packing
     */
     void addObstacleConfigurations();
+    /**
+     *  Compute the intracompartment volume fraction (ICVF) of the substrate. 
+     *  @return ICVF double.
+    */
+    std::tuple<double, double, double> computeICVF(double const& min_distance_from_border) const;
 
 };
 

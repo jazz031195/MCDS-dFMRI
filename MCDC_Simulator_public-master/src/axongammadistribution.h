@@ -68,7 +68,7 @@ public:
     /*!
      *  \brief Samples and constructs a Gamma distribution
     */
-    void createGammaSubstrate(ostream& out);
+    void createGammaSubstrate(std::ostream& out);
 
 
     /*!
@@ -76,13 +76,13 @@ public:
      *  \param out ostream where to write the info.
     */
     void printSubstrate(std::ostream& out);
-    std::vector<Dynamic_Sphere> GrowAxon(Axon ax, double distance_to_be_inside, int axon_id,  ostream& out);
+    std::vector<Dynamic_Sphere> GrowAxon(Axon ax, double distance_to_be_inside, int axon_id,  std::ostream& out);
     bool check_borders(Eigen::Vector3d pos, double distance_to_border);
     bool isSphereColliding(Dynamic_Sphere sph);
-    bool find_next_center(Axon ax, Dynamic_Sphere& s, double dist_, double& rad, Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, int axon_id, ostream& out);
-    void fiber_collapse(Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, std::vector<Eigen::Vector3d>& centers, uint& fibre_collapsed_nbr, ostream& out);
-    bool fill_spheres_in_between(Axon ax, Dynamic_Sphere& added_sphere, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii, ostream& out);
-    void shrink_sphere_rad(double& rad, double axon_rad, double& shrink_perc, ostream& out);
+    bool find_next_center(Axon ax, Dynamic_Sphere& s, double dist_, double& rad, Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, int axon_id, std::ostream& out);
+    void fiber_collapse(Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, std::vector<Eigen::Vector3d>& centers, uint& fibre_collapsed_nbr, std::ostream& out);
+    bool fill_spheres_in_between(Axon ax, Dynamic_Sphere& added_sphere, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii, std::ostream& out);
+    void shrink_sphere_rad(double& rad, double axon_rad, double& shrink_perc, std::ostream& out);
     void find_target_point (double c2, double radius, Eigen::Vector3d& initial_point , Eigen::Vector3d& target_point);
 
 private:

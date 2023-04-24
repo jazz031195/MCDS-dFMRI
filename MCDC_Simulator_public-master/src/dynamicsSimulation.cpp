@@ -1435,8 +1435,13 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
         // Vector3d voxel_tmp = voxel_pos;
         walker.setVoxelPosition(voxel_pos + tmax*bounced_step);
         int a, b, c, d, e;
-        if(walker.initial_location == Walker::intra && !isInIntra(walker.pos_v, a, b, c, d, e))
-            cout << "Warning: Walker crossed the boundary : intra to extra" << endl;
+        // if(!isInIntra(walker.pos_v, a, b, c, d, e))
+        //     if(walker.initial_location == Walker::intra)
+        //     {
+        //         cout << "Warning: Walker crossed the boundary : intra to extra" << endl;
+        //         // assert(0);
+        //     }
+                
     }
 
     return false;

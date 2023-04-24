@@ -65,11 +65,12 @@ private:
      *  Compute the intracompartment volume fraction (ICVF) of the substrate. 
      *  @return ICVF double.
     */
-    double computeICVF(double const& min_distance_from_border) const;
+    std::tuple<double, double, double> computeICVF(double const& min_distance_from_border) const;
     /**
      *  Compute the max_limits_vx based on the target icvf and the radiis of the axons 
     */
     // void computeMinimalSize(std::vector<double> const& radiis, double &icvf_, Eigen::Vector3d &l) const;
+    bool isSphereColliding(Eigen::Vector3d const& sphere_center, double const& sphere_radius, vector<Eigen::Vector3d> const& soma_centers);
     /**
      * Check if a sphere sph is colliding with this.
      * 
@@ -84,6 +85,8 @@ private:
      * @param sphere_radius double         , radius of the sphere.
     */
     bool isSphereColliding(Eigen::Vector3d const& sphere_center, double const& sphere_radius);
+    bool isSphereCollidingSphere(Eigen::Vector3d const& pos1, Eigen::Vector3d const& pos2, double const& radius1, double const& radius2, double const& minDistance) const; 
+    void createTwinSphere(Eigen::Vector3d &center, double const& sphere_radius, bool &discard_dendrite, size_t const& j);
     /**
      * Check if a position pos is inside the simulation voxel
      * 
@@ -99,6 +102,36 @@ private:
      * @param neuron Neuron.
     */
     void growDendrites(Neuron& neuron);
+    /**
+     * Generate the number of consecutive branching of a dendrite.
+     *
+     * @param lower_bound int, lower bound of the interval, in [mm]. 
+     * @param upper_bound int, upper bound of the interval, in [mm].
+     */
+    int generateNbBranching(int const& lower_bound=5, int const& upper_bound=7);
+    /**
+     * Generate the length of a segment/subbranch of the dendrite.
+     *
+     * @param lower_bound int, lower bound of the interval, in [mm]. 
+     * @param upper_bound int, upper bound of the interval, in [mm].
+     */
+    int generateLengthSegment(double const& lower_bound=60e-3, double const& upper_bound=100e-3);
+    /**
+     * Grow a subbranch/segment of dendrite.
+     *
+     * @param dendrite                  Dendrite, dendrite to grow. 
+     * @param parent  tuple<Eigen::Vector3d,int>, < origin of the subbranch, parent subbranch id>.
+     * @param dendrite_direction Eigen::Vector3d, direction of the dendrite / attractor point.
+     * @param nb_spheres                     int, number of spheres in the segment.
+     * @param sphere_radius               double, radius of the spheres in the segment.
+     * @param proximal_end          TODO : to complete [ines]
+     * @param distal_end
+     * @param min_distance_from_border
+     */
+    Eigen::Vector3d generatePointOnSphere(Eigen::Vector3d const& center, double const& radius) const;
+    void growSubbranch(Dendrite& dendrite, tuple<Eigen::Vector3d, int> const& parent, Eigen::Vector3d const& dendrite_direction, 
+                       int const& nb_spheres, double const& sphere_radius, std::vector<int> const& proximal_end, std::vector<int> const& distal_end,
+                       double const& min_distance_from_border);
 
 };
 
