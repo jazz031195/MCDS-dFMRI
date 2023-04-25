@@ -67,12 +67,15 @@ void NeuronDistribution::createSubstrate()
             for(int i = 0 ; i < num_obstacles; i++){
                 unsigned stuck = 0;
                 while(++stuck <= 10000){
-                    double t = udist(gen);
-                    double x = (t*max_limits_vx[0] + (1-t)*min_limits_vx[0]);
-                    t        = udist(gen);
-                    double y = (t*max_limits_vx[1] + (1-t)*min_limits_vx[1]);
-                    t        = udist(gen);
-                    double z = (t*max_limits_vx[2] + (1-t)*min_limits_vx[2]);
+                    // double t = udist(gen);
+                    // double x = (t*max_limits_vx[0] + (1-t)*min_limits_vx[0]);
+                    // t        = udist(gen);
+                    // double y = (t*max_limits_vx[1] + (1-t)*min_limits_vx[1]);
+                    // t        = udist(gen);
+                    // double z = (t*max_limits_vx[2] + (1-t)*min_limits_vx[2]);
+                    double x = 0.5;
+                    double y = 0.5;
+                    double z = 0.5;
 
                     Eigen::Vector3d soma_center = {x, y, z};
                    
@@ -137,6 +140,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
 
     for(uint8_t i = 0; i < neuron.nb_dendrites; ++i)
     {   
+        cout << "dendrite " << i << endl;
         int tries = 0;
         int nb_branching = generateNbBranching();
         // Radius of each dendrite sphere [mm]
@@ -148,6 +152,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
         {
             Vector3d dendrite_start = generatePointOnSphere(neuron.soma.center, neuron.soma.radius);
             int subbranch_id = 0;
+            Dendrite dendrite;
 
             while(!isInVoxel(dendrite_start, min_distance_from_border) || (isSphereColliding(dendrite_start, sphere_radius)))
             {
@@ -163,105 +168,74 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                 start_dendrites.push_back(dendrite_start);
                 Eigen::Vector3d dendrite_direction = dendrite_start - neuron.soma.center;
                 dendrite_direction.normalize();
-                Dendrite dendrite;
-                // Tuple xyz center and center id
-                vector<tuple<Vector3d, int>> parent_centers {{dendrite_start, 0}};
+                vector<Vector3d> children_dir;
+                vector<branching_pt> branching_points     = {{dendrite_start, dendrite_direction, children_dir, 0}};
+                vector<branching_pt> branching_points_new;
                 
                 // Create the subbranches
                 for(int b=0; b < nb_branching; ++b)
                 {
                     // Length of a segment before branching
-                    int l_segment = generateLengthSegment();
+                    double l_segment = generateLengthSegment();
                     // Number of spheres per segment
                     int nb_spheres = l_segment / (sphere_radius/4); //Let's assume that dendrites have a radius of 0.5microns so far
-
+                    vector<int> proximal_branch;
+                    vector<int> distal_branch;
                     if(b == 0)
                     {
-                        vector<int> proximal_branch {0};
-                        vector<int> distal_branch {1, 2};
-                        growSubbranch(dendrite, parent_centers[0], dendrite_direction, nb_spheres, sphere_radius, proximal_branch, distal_branch, 
-                                      min_distance_from_border, subbranch_id);
+                        proximal_branch = {0};
+                        distal_branch = {1, 2};
+                        branching_pt branching_pt_new = growSubbranch(dendrite, branching_points[0], nb_spheres, sphere_radius, proximal_branch, distal_branch, 
+                                                                      min_distance_from_border);
                         subbranch_id++;
+                        branching_points[0] = branching_pt_new;
+                        cout << "Subbranch 0 added " << endl;
                     }
                     else
                     {
-                        for(size_t p=0; parent_centers.size(); p++)
+                        for(size_t p=0; p < branching_points.size(); p++)
                         {
-                            Eigen::Vector3d begin;
-                            Axon subbranch(sphere_radius, begin, begin, 0, false, false , 1);
-                            std::vector<Dynamic_Sphere> spheres_to_add;
-                            spheres_to_add.clear();
-
-                            Eigen::Vector3d center = {0, 0, 0};
-                            bool discard_dendrite  = false;
-                            
-                            Vector3d origin;
-                            int parent_id;
-                            tie(origin, parent_id) = parent_centers[p];
-
-                            for(int j=0; j < nb_spheres; ++j)
+                            int begin_subbranch_id = subbranch_id;
+                            // The branching point is split into 2 children
+                            for(int c=0; c < branching_points[p].children_direction.size(); c++)
                             {
-                                center = j*dendrite_direction*sphere_radius/4 + origin;
-
-                                if(isInVoxel(center, min_distance_from_border))
-                                {
-                                    if (!isSphereColliding(center, sphere_radius))
-                                    {
-                                        Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, false);
-                                        spheres_to_add.push_back(sphere_to_add);
-                                    }
-                                }
-                                // else
-                                // {
-                                //     discard_dendrite = true;
-                                //     createTwinSphere(center, sphere_radius, discard_dendrite, j);
-                                //     if(!discard_dendrite)
-                                //     {
-                                //         Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, false);
-                                //         spheres_to_add.push_back(sphere_to_add);
-                                //     }
-                                //     else
-                                //         break;
-                                // } 
+                                proximal_branch = {branching_points[p].subbranch_id, begin_subbranch_id + 1 - c};
+                                distal_branch = {subbranch_id + 2, subbranch_id + 3};
+                                branching_points[p].direction = branching_points[p].children_direction[c];
+                                branching_pt branching_pt_new = growSubbranch(dendrite, branching_points[p], nb_spheres, sphere_radius, 
+                                                                                proximal_branch, distal_branch, min_distance_from_border);
+                                branching_points_new.push_back(branching_pt_new);
+                                subbranch_id++; 
                             }
-                            if (spheres_to_add.size() == 0)
-                                break;
-                            if (!discard_dendrite)
-                            {
-                                subbranch.set_spheres(spheres_to_add, i);
-                                dendrite.add_subbranch(subbranch);
-                                neuron.add_dendrite(dendrite);
-                                break;
-                            }  
                         }
+
+                        branching_points = branching_points_new;
+                        branching_points_new = {};
                     }   
-                }  
+                }        
             }
+            neuron.add_dendrite(dendrite);
+            break;
         }
     } 
 }
 
-void NeuronDistribution::growSubbranch(Dendrite& dendrite, tuple<Vector3d, int> const& parent, Vector3d const& dendrite_direction, 
+NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& dendrite, NeuronDistribution::branching_pt const& parent, 
                                       int const& nb_spheres, double const& sphere_radius, vector<int> const& proximal_end, 
-                                      vector<int> const& distal_end, double const& min_distance_from_border,
-                                      int const& subbranch_id)
+                                      vector<int> const& distal_end, double const& min_distance_from_border)
 {
     Eigen::Vector3d begin;
     Axon subbranch(sphere_radius, begin, begin, 0, false, false , 1);
-    subbranch.id = subbranch_id;
+    subbranch.id = parent.subbranch_id;
     std::vector<Dynamic_Sphere> spheres_to_add;
     spheres_to_add.clear();
 
     Eigen::Vector3d center = {0, 0, 0};
     bool discard_dendrite  = false;
-    
-    Vector3d origin_branch;
-    int parent_id;
-    tie(origin_branch, parent_id) = parent;
 
     for(int j=0; j < nb_spheres; ++j)
     {
-        center = j*dendrite_direction*sphere_radius/4 + origin_branch;
+        center = j*parent.direction*sphere_radius/4 + parent.origin;
 
         if(isInVoxel(center, min_distance_from_border))
         {
@@ -275,10 +249,21 @@ void NeuronDistribution::growSubbranch(Dendrite& dendrite, tuple<Vector3d, int> 
 
     if (!discard_dendrite)
     {
-        int subbranch_id = dendrite.get_nb_subbranches() + 1;
-        subbranch.set_spheres(spheres_to_add, subbranch_id);
+        subbranch.set_spheres(spheres_to_add, parent.subbranch_id);
         dendrite.add_subbranch(subbranch);
-    }  
+    } 
+    
+    double bifurcationAngle = generateBifurcationAngle();
+    vector<Vector3d> children_dir;
+    for(int c=0; c < 2; c++)
+    {
+        Vector3d rotatedDir = rotateDirection(parent.direction, bifurcationAngle);
+        children_dir.push_back(rotatedDir);
+        bifurcationAngle = -bifurcationAngle;
+    }
+    
+    // Return the next branching point
+    return {spheres_to_add[spheres_to_add.size()-1].center, parent.direction, children_dir, parent.subbranch_id};
 }
 
 int NeuronDistribution::generateNbBranching(int const& lower_bound, int const& upper_bound)
@@ -290,13 +275,23 @@ int NeuronDistribution::generateNbBranching(int const& lower_bound, int const& u
     return nbBranching(rng);
 }
 
-int NeuronDistribution::generateLengthSegment(double const& lower_bound, double const& upper_bound)
+double NeuronDistribution::generateLengthSegment(double const& lower_bound, double const& upper_bound)
 {
     random_device dev;
     mt19937 rng(dev());
-    uniform_real_distribution<double> segmentLength(lower_bound, upper_bound);
+    uniform_real_distribution<> segmentLength(lower_bound, upper_bound);
 
     return segmentLength(rng);
+}
+
+
+double NeuronDistribution::generateBifurcationAngle(double const& lower_bound, double const& upper_bound)
+{
+    random_device dev;
+    mt19937 rng(dev());
+    uniform_real_distribution<double> bifurcationAngle(lower_bound, upper_bound);
+
+    return bifurcationAngle(rng);
 }
 
 Vector3d NeuronDistribution::generatePointOnSphere(Vector3d const& center, double const& radius) const
@@ -323,6 +318,28 @@ Vector3d NeuronDistribution::generatePointOnSphere(Vector3d const& center, doubl
     z = z/normalization_factor*radius + center[2];
     
     return {x, y, z};   
+}
+
+Vector3d NeuronDistribution::rotateDirection(Vector3d const& direction, double const& angle) const
+{
+
+    // Compute a unit vector v1 that makes the desired angle with "direction"
+    // Define a random unit vector u
+    Vector3d u;
+    random_device dev;
+    mt19937 rng(dev());
+    uniform_real_distribution<double> generator(-1, 1);
+    for (int i=0; i < u.size(); i++)
+        u[i] = generator(rng);
+    u /= sqrt(u[0]*u[0] + u[1]*u[1] + u[2]*u[2]);
+
+    // v1 has an angle "angle" with direction
+    Vector3d v1;
+    for (int i=0; i < u.size(); i++)
+        v1[i] = cos(angle)*direction[i] + sin(angle)*u[i];
+    v1 /= sqrt(v1[0]*v1[0] + v1[1]*v1[1] + v1[2]*v1[2]);
+    
+    return v1;
 }
 
 void NeuronDistribution::createTwinSphere(Vector3d &center, double const& sphere_radius, bool &discard_dendrite, size_t const& j)

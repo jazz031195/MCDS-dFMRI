@@ -22,6 +22,13 @@ public:
     Eigen::Vector3d min_limits_vx;                  /*!< voxel min limits (if any) (bottom left corner)                             */
     Eigen::Vector3d max_limits_vx;                  /*!< voxel max limits (if any)                                                  */
     
+    struct branching_pt{
+        Eigen::Vector3d origin;
+        Eigen::Vector3d direction;
+        vector<Eigen::Vector3d> children_direction;
+        int subbranch_id;
+    };
+
     NeuronDistribution(){}
     /**
      *  @brief Constructor.
@@ -108,10 +115,17 @@ private:
     /**
      * Generate the length of a segment/subbranch of the dendrite.
      *
-     * @param lower_bound int, lower bound of the interval, in [mm]. 
-     * @param upper_bound int, upper bound of the interval, in [mm].
+     * @param lower_bound double, lower bound of the interval, in [mm]. 60e-3
+     * @param upper_bound double, upper bound of the interval, in [mm]. 100e-3
      */
-    int generateLengthSegment(double const& lower_bound=60e-3, double const& upper_bound=100e-3);
+    double generateLengthSegment(double const& lower_bound=10e-3, double const& upper_bound=30e-3);
+    /**
+     * Generate the bifurcation angle between two segments/subbranchs at a branching point.
+     *
+     * @param lower_bound double, lower bound of the interval, in [rad]. 
+     * @param upper_bound double, upper bound of the interval, in [rad].
+     */
+    double generateBifurcationAngle(double const& lower_bound=(M_PI/4 - M_PI/16), double const& upper_bound=(M_PI/4 + M_PI/16));
     /**
      * Grow a subbranch/segment of dendrite.
      *
@@ -125,9 +139,10 @@ private:
      * @param min_distance_from_border
      */
     Eigen::Vector3d generatePointOnSphere(Eigen::Vector3d const& center, double const& radius) const;
-    void growSubbranch(Dendrite& dendrite, tuple<Eigen::Vector3d, int> const& parent, Eigen::Vector3d const& dendrite_direction, 
-                       int const& nb_spheres, double const& sphere_radius, std::vector<int> const& proximal_end, std::vector<int> const& distal_end,
-                       double const& min_distance_from_border, int const& subbranch_id);
+    branching_pt growSubbranch(Dendrite& dendrite, branching_pt const& parent, int const& nb_spheres, double const& sphere_radius, 
+                               std::vector<int> const& proximal_end, std::vector<int> const& distal_end, double const& min_distance_from_border);
+
+    Eigen::Vector3d rotateDirection(Eigen::Vector3d const& direction, double const& angle) const;
 
 };
 
