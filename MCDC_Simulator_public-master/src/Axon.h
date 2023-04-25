@@ -13,8 +13,6 @@
 
 #include "dynamic_sphere.h"
 #include "swipeprune.h"
-#include "simerrno.h"
-#include "obstacle.h"
 
 /// @brief 
 class Axon : public Obstacle

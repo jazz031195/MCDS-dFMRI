@@ -9,7 +9,6 @@
 #define PARAMETERS_H
 
 #include <vector>
-#include "Eigen/Core"
 #include "subdivision.h"
 #include <utility>
 

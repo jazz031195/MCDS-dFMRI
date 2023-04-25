@@ -940,7 +940,8 @@ void ParallelMCSimulation::addObstaclesFromFiles()
         in >> max_limits;
 
         std::vector<Dynamic_Sphere> spheres_ ;
-        std::vector<Axon> axons_ ;
+        std::vector<Axon> subbranches_ ;
+        std::vector<Dendrite> dendrites_ ;
         Dynamic_Sphere sphere_;
         Dynamic_Sphere soma;
         string part;
@@ -970,23 +971,32 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                     soma = spheres_[0];
                     spheres_.clear();
                 }
-                // If dendrite, create it from spheres_ and store it into axons_
-                else if( part.find("Dendrite") != std::string::npos && spheres_.size() > 0)
+                // If Segment, create it from spheres_ and store it into axons_
+                else if( part.find("Segment") != std::string::npos && spheres_.size() > 0)
                 {
                     Eigen::Vector3d begin = {min_limits, min_limits, min_limits};
                     Eigen::Vector3d end   = {max_limits, max_limits, max_limits};
-                    Dendrite axon (r, begin, end, volume_inc_perc, params.active_state, s, scale);
-                    axon.set_spheres(spheres_, id);
+                    Axon subbranch (r, begin, end, volume_inc_perc, params.active_state, s, scale);
+                    subbranch.id = id;
+                    subbranch.set_spheres(spheres_, id);
                     spheres_.clear();
-                    axons_.push_back(axon);
-                    cout << "adding axon: "  << id << ", radius: " << axon.radius << endl;
+                    subbranches_.push_back(subbranch);
+                    cout << "adding segment "  << endl;
+                }
+                // If dendrite, create it from spheres_ and store it into axons_
+                else if( part.find("Dendrite") != std::string::npos && subbranches_.size() > 0)
+                {
+                    Dendrite dendrite;
+                    dendrite.set_dendrite(subbranches_);
+                    subbranches_.clear();
+                    cout << "adding dendrite : "  << id << endl;
                 }
                 // If neuron, create it from soma and axons
-                else if( part.find("Neuron") != std::string::npos && axons_.size() > 0)
+                else if( part.find("Neuron") != std::string::npos && dendrites_.size() > 0)
                 {
-                    Neuron neuron(axons_, soma);
+                    Neuron neuron(dendrites_, soma);
                     neurons_list.push_back(neuron);
-                    axons_.clear();
+                    dendrites_.clear();
                     // TODO : why nb_dendrites not printed ? [ines]
                     cout << "adding neuron: "  << id << ", nb_dendrites: " << neuron.nb_dendrites << endl;
                 }
@@ -1046,7 +1056,6 @@ void ParallelMCSimulation::addObstaclesFromFiles()
     }
 }
 
-
 tuple<double, double, double> ParallelMCSimulation::computeICVF(double const& min_distance_from_border) const
 {
 
@@ -1061,12 +1070,11 @@ tuple<double, double, double> ParallelMCSimulation::computeICVF(double const& mi
     {
         // Calculate the volume of the soma
         VolumeSoma += 4/3*M_PI*pow(neurons_list[i].soma.radius, 3);
-        if (i==0)
-         std::cout << VolumeSoma << std::endl;
+
         // Calculate the cylindrical volume of each dendrite
         for (uint8_t j = 0; j < neurons_list[i].nb_dendrites; j++)
         {
-            VolumeDendrites += neurons_list[i].dendrites[j].volumeAxon();
+            VolumeDendrites += neurons_list[i].dendrites[j].volumeDendrite();
         }      
     }
     

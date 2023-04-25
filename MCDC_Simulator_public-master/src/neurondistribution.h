@@ -12,11 +12,7 @@
 #include "Eigen/Core"
 #include <vector>
 #include "constants.h"
-#include "simerrno.h"
-#include <iostream>
 #include "Neuron.h"
-#include "dynamic_sphere.h"
-#include <tuple>
 
 
 class NeuronDistribution 
@@ -131,7 +127,7 @@ private:
     Eigen::Vector3d generatePointOnSphere(Eigen::Vector3d const& center, double const& radius) const;
     void growSubbranch(Dendrite& dendrite, tuple<Eigen::Vector3d, int> const& parent, Eigen::Vector3d const& dendrite_direction, 
                        int const& nb_spheres, double const& sphere_radius, std::vector<int> const& proximal_end, std::vector<int> const& distal_end,
-                       double const& min_distance_from_border);
+                       double const& min_distance_from_border, int const& subbranch_id);
 
 };
 

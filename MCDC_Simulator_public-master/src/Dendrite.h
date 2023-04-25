@@ -10,7 +10,6 @@
 #define DENDRITE_H
 
 #include "Axon.h"
-
 #include <iostream>
 #include <random>
 #include <tuple>
@@ -77,7 +76,7 @@ double minDistance(Walker const& walker) const;
  *
  * @param subbranch Axon.
  */
-void add_subbranch(Axon const& subbranch);
+void add_subbranch(Axon& subbranch);
 /**
  * Get the number of subbranches of a dendrite 
  */
@@ -86,6 +85,12 @@ int get_nb_subbranches();
  * Get the volume of a dendrite. 
  */
 double volumeDendrite() const;
+/**
+ * Assign subbranches to subbranches. 
+ *
+ * @param subbranches std::vector<Axon>, set of axons.
+ */
+void set_dendrite(std::vector<Axon> const& subbranches);
 
 private:
 
@@ -126,12 +131,7 @@ private:
     //  */
     // bool intersection_sphere_vector(double &intercept1, double &intercept2, Dynamic_Sphere const&s, Eigen::Vector3d const&step_dir, 
     //                                 double const&step_length, Eigen::Vector3d const&traj_orig, double &c) const;
-    /**
-     * Assign subbranches to subbranches. 
-     *
-     * @param subbranches std::vector<Axon>, set of axons.
-     */
-    void set_dendrite(std::vector<Axon> const& subbranches);
+    
     
 
 };

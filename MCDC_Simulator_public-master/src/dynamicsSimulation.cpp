@@ -1434,7 +1434,7 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
         walker.getVoxelPosition(voxel_pos);
         // Vector3d voxel_tmp = voxel_pos;
         walker.setVoxelPosition(voxel_pos + tmax*bounced_step);
-        int a, b, c, d, e;
+        // int a, b, c, d, e;
         // if(!isInIntra(walker.pos_v, a, b, c, d, e))
         //     if(walker.initial_location == Walker::intra)
         //     {

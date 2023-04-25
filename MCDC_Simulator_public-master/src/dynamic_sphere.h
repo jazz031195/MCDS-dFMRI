@@ -10,7 +10,6 @@
 #ifndef DYN_SPHERE_H
 #define DYN_SPHERE_H
 
-#include "obstacle.h"
 #include "sphere.h"
 
 class Dynamic_Sphere : public Sphere

@@ -27,6 +27,11 @@ Dendrite::Dendrite(Dendrite const& dendrite)
     subbranches = dendrite.subbranches;
 }
 
+Dendrite::~Dendrite()
+{
+    nb_dendrites--;
+}
+
 bool Dendrite::checkCollision(Walker &walker, Vector3d const&step_dir, double const&step_lenght, Collision &collision)
 {
     // TO IMPLEMENT
@@ -51,9 +56,10 @@ double Dendrite::minDistance(Walker const& walker) const
     return 0;
 }
 
-void Dendrite::add_subbranch(Axon const& subbranch)
+void Dendrite::add_subbranch(Axon& subbranch)
 {
     subbranches.push_back(subbranch);
+    subbranch.id = subbranches.size() - 1;
 }
 
 void Dendrite::set_dendrite(vector<Axon> const& subbranches_)

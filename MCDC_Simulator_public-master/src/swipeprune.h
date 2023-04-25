@@ -9,8 +9,6 @@
 #ifndef PROJECTIONS_H
 #define PROJECTIONS_H
 
-#include "Eigen/Core"
-#include <vector>
 #include "constants.h"
 #include "simerrno.h"
 #include <iostream>

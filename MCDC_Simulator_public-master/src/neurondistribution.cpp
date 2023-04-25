@@ -147,6 +147,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
         while(tries < max_tries)
         {
             Vector3d dendrite_start = generatePointOnSphere(neuron.soma.center, neuron.soma.radius);
+            int subbranch_id = 0;
 
             while(!isInVoxel(dendrite_start, min_distance_from_border) || (isSphereColliding(dendrite_start, sphere_radius)))
             {
@@ -179,57 +180,60 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                         vector<int> proximal_branch {0};
                         vector<int> distal_branch {1, 2};
                         growSubbranch(dendrite, parent_centers[0], dendrite_direction, nb_spheres, sphere_radius, proximal_branch, distal_branch, 
-                                      min_distance_from_border);
+                                      min_distance_from_border, subbranch_id);
+                        subbranch_id++;
                     }
-
-                    for(size_t p=0; parent_centers.size(); p++)
+                    else
                     {
-                        Eigen::Vector3d begin;
-                        Axon subbranch(sphere_radius, begin, begin, 0, false, false , 1);
-                        std::vector<Dynamic_Sphere> spheres_to_add;
-                        spheres_to_add.clear();
-
-                        Eigen::Vector3d center = {0, 0, 0};
-                        bool discard_dendrite  = false;
-                        
-                        Vector3d origin;
-                        int parent_id;
-                        tie(origin, parent_id) = parent_centers[p];
-
-                        for(int j=0; j < nb_spheres; ++j)
+                        for(size_t p=0; parent_centers.size(); p++)
                         {
-                            center = j*dendrite_direction*sphere_radius/4 + origin;
+                            Eigen::Vector3d begin;
+                            Axon subbranch(sphere_radius, begin, begin, 0, false, false , 1);
+                            std::vector<Dynamic_Sphere> spheres_to_add;
+                            spheres_to_add.clear();
 
-                            if(isInVoxel(center, min_distance_from_border))
+                            Eigen::Vector3d center = {0, 0, 0};
+                            bool discard_dendrite  = false;
+                            
+                            Vector3d origin;
+                            int parent_id;
+                            tie(origin, parent_id) = parent_centers[p];
+
+                            for(int j=0; j < nb_spheres; ++j)
                             {
-                                if (!isSphereColliding(center, sphere_radius))
+                                center = j*dendrite_direction*sphere_radius/4 + origin;
+
+                                if(isInVoxel(center, min_distance_from_border))
                                 {
-                                    Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, false);
-                                    spheres_to_add.push_back(sphere_to_add);
+                                    if (!isSphereColliding(center, sphere_radius))
+                                    {
+                                        Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, false);
+                                        spheres_to_add.push_back(sphere_to_add);
+                                    }
                                 }
+                                // else
+                                // {
+                                //     discard_dendrite = true;
+                                //     createTwinSphere(center, sphere_radius, discard_dendrite, j);
+                                //     if(!discard_dendrite)
+                                //     {
+                                //         Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, false);
+                                //         spheres_to_add.push_back(sphere_to_add);
+                                //     }
+                                //     else
+                                //         break;
+                                // } 
                             }
-                            // else
-                            // {
-                            //     discard_dendrite = true;
-                            //     createTwinSphere(center, sphere_radius, discard_dendrite, j);
-                            //     if(!discard_dendrite)
-                            //     {
-                            //         Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, false);
-                            //         spheres_to_add.push_back(sphere_to_add);
-                            //     }
-                            //     else
-                            //         break;
-                            // } 
+                            if (spheres_to_add.size() == 0)
+                                break;
+                            if (!discard_dendrite)
+                            {
+                                subbranch.set_spheres(spheres_to_add, i);
+                                dendrite.add_subbranch(subbranch);
+                                neuron.add_dendrite(dendrite);
+                                break;
+                            }  
                         }
-                        if (spheres_to_add.size() == 0)
-                            break;
-                        if (!discard_dendrite)
-                        {
-                            subbranch.set_spheres(spheres_to_add, i);
-                            dendrite.add_subbranch(subbranch);
-                            neuron.add_dendrite(dendrite);
-                            break;
-                        }  
                     }   
                 }  
             }
@@ -239,10 +243,12 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
 
 void NeuronDistribution::growSubbranch(Dendrite& dendrite, tuple<Vector3d, int> const& parent, Vector3d const& dendrite_direction, 
                                       int const& nb_spheres, double const& sphere_radius, vector<int> const& proximal_end, 
-                                      vector<int> const& distal_end, double const& min_distance_from_border)
+                                      vector<int> const& distal_end, double const& min_distance_from_border,
+                                      int const& subbranch_id)
 {
     Eigen::Vector3d begin;
     Axon subbranch(sphere_radius, begin, begin, 0, false, false , 1);
+    subbranch.id = subbranch_id;
     std::vector<Dynamic_Sphere> spheres_to_add;
     spheres_to_add.clear();
 

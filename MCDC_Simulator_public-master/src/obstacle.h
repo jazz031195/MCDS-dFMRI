@@ -8,9 +8,10 @@
 
 #ifndef OBSTACLE_H
 #define OBSTACLE_H
+
 #include "collision.h"
 #include "walker.h"
-#include "Eigen/Core"
+
 class Obstacle
 {
 public:

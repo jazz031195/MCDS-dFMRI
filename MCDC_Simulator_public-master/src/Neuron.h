@@ -11,11 +11,7 @@
 #define NEURON_H
 
 #include "Dendrite.h"
-#include "simerrno.h"
-#include <iostream>
-#include <random>
-#include <tuple>
-#include <string>
+
 using namespace std;
 
 /// @brief 
