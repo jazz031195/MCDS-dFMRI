@@ -33,7 +33,13 @@ Dendrite::~Dendrite()
 
 bool Dendrite::checkCollision(Walker &walker, Vector3d const&step_dir, double const&step_lenght, Collision &collision)
 {
-    // TO IMPLEMENT
+    bool bool_collision = false;
+    for(size_t i=0; i < subbranches.size(); i++)
+    {
+        bool_collision = checkCollision(walker, step_dir, step_lenght, collision);
+        if(bool_collision)
+            return true;
+    }
     return false;
 }
 
@@ -78,4 +84,38 @@ double Dendrite::volumeDendrite() const
         volume += subbranches[i].volumeAxon();
     
     return volume;
+}
+
+void Dendrite::add_projection(int const& dendrite_id)
+{
+    // Contains the minimum axis projection of the subbranches axon_projections
+    double min_axis_projection     = 1000;
+    // Contains the minimum axis projection of the subbranches axon_projections_max
+    double min_axis_projection_max = 1000;
+    // Contains the maximum axis projection of the subbranches axon_projections
+    double max_axis_projection     = 0;
+    // Contains the maximum axis projection of the subbranches axon_projections_max
+    double max_axis_projection_max = 0;
+    for(int axis=0; axis < 3 ; axis++)
+    {
+            for(size_t b=0; b < subbranches.size(); b++)
+            {        
+                double min_axis_projection_tmp     = subbranches[0].projections.axon_projections[axis][0];
+                double min_axis_projection_max_tmp = subbranches[0].projections_max.axon_projections[axis][0];
+                if(min_axis_projection_tmp < min_axis_projection)
+                    min_axis_projection = min_axis_projection_tmp;
+                if(min_axis_projection_max_tmp < min_axis_projection_max)
+                    min_axis_projection_max = min_axis_projection_max_tmp;
+
+                double max_axis_projection_tmp     = subbranches[0].projections.axon_projections[axis][1];
+                double max_axis_projection_max_tmp = subbranches[0].projections_max.axon_projections[axis][1];
+                if(max_axis_projection_tmp > max_axis_projection)
+                    max_axis_projection = max_axis_projection_tmp;
+                if(max_axis_projection_max_tmp > max_axis_projection_max)
+                    max_axis_projection_max = max_axis_projection_max_tmp;
+            }
+        cout << min_axis_projection << "ffff " << max_axis_projection << endl;
+        projections.axon_projections.push_back({min_axis_projection, max_axis_projection});  
+        projections_max.axon_projections.push_back({min_axis_projection_max, max_axis_projection_max});  
+    }
 }

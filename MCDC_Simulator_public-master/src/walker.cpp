@@ -15,17 +15,15 @@ Walker::Walker()
     steps_count = 0;
     initial_location = location = unknown;
     intra_extra_consensus = intra_coll_count = extra_coll_count = rejection_count = steps_count = 0;
-    steps_per_second = 0;
-    in_ply_index     = -1;
-    in_obj_index     = -1;
-    in_ax_index      = -1;
-    in_neuron_index  = -1;
-    in_soma_index    = -1;
-    in_dendrite_index= -1;
-    in_sph_index     = -1;
-    in_cyl_index     = -1;
-    next_step_in_dendrite = 0;
-    next_step_in_soma     = 0;
+    steps_per_second      = 0;
+    in_ply_index          = -1;
+    in_obj_index          = -1;
+    in_ax_index           = -1;
+    in_neuron_index       = -1;
+    in_soma_index         = -1;
+    in_dendrite_index     = -1;
+    in_sph_index          = -1;
+    in_subbranch_index    = -1;
 }
 
 Walker::Walker(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax)
@@ -48,16 +46,15 @@ Walker::Walker(double xmin, double xmax, double ymin, double ymax, double zmin, 
     index           = 0;
     initial_location  = location = unknown;
     intra_extra_consensus = intra_coll_count = extra_coll_count =0;
-    steps_per_second = 0;
-    in_ply_index     = -1;
-    in_obj_index     = -1;
-    in_ax_index      = -1;
-    in_neuron_index  = -1;
-    in_soma_index    = -1;
-    in_dendrite_index= -1;
-    in_sph_index     = -1;
-    next_step_in_dendrite = 0;
-    next_step_in_soma     = 0;
+    steps_per_second      = 0;
+    in_ply_index          = -1;
+    in_obj_index          = -1;
+    in_ax_index           = -1;
+    in_neuron_index       = -1;
+    in_soma_index         = -1;
+    in_dendrite_index     = -1;
+    in_sph_index          = -1;
+    in_subbranch_index    = -1;
 }
 
 void Walker::getRealPosition(double &x_, double &y_, double &z_) const

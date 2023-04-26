@@ -64,10 +64,13 @@ bool checkCollision(Walker &walker, Eigen::Vector3d const&step_dir, double const
  * @param position Eigen::Vector3d, position of the walker.
  * @param barrier_thickness double, thickness of the cellular barrier.
  * @param swell_              bool, if this swells or not. 
- * @param w                 Walker, if this swells or not. 
+ * @param in_soma_index        int, 0 if in soma, -1 otherwise. 
+ * @param in_dendrite_index    int, id of the dendrite it is in, -1 if outside dendrite. 
+ * @param in_subbranch_index   int, id of the dendrite subbranch it is in, -1 if outside dendrite. 
  * @return                    bool, true if position is inside this.
  */
-bool isPosInsideNeuron(Eigen::Vector3d const& position,  double const& barrier_thickness, bool const& swell_, int& in_soma_index, int& in_dendrite_index);
+bool isPosInsideNeuron(Eigen::Vector3d const& position,  double const& barrier_thickness, bool const& swell_, int& in_soma_index, 
+                       int& in_dendrite_index, int& in_subbranch_index);
 /**
  * Minimal distance between a position pos and this.
  *
@@ -87,7 +90,8 @@ double minDistance(Walker const& walker) const;
  *
  * @param dendrite_to_add Dendrite.
  */
-void add_dendrite(Dendrite const& dendrite_to_add);
+void add_dendrite(Dendrite& dendrite_to_add);
+std::vector <int> closest_subbranch(Eigen::Vector3d const& position, int const& dendrite_id, int const& subbranch_id, double const& step_length);
 
 private:
 
@@ -107,12 +111,18 @@ private:
      */
     std::vector<double> Distances_to_Spheres(Walker const& w) const;
     /**
-     * Check if the position is in the close vicinity (bounding boxes) of this.
+     * Check if the position is in the close vicinity (bounding boxes) of the soma.
      * @return std::tuple<std::string, int>, {'neuron_part', part_id}
      *                                       neuron_part : "soma", "dendrite" or "none",
      *                                       part_id     : soma_id, dendrite_id or -1.
     */
     std::tuple<std::string, int> isNearSoma(Eigen::Vector3d const& position,  double const& barrier_thickness) const;
+    /**
+     * Check if the position is in the close vicinity (bounding boxes) of a denrite.
+     * @return std::tuple<std::string, int>, {'neuron_part', dendrite_id}
+     *                                       neuron_part : "dendrite" or "none",
+     *                                       dendrite_id : dendrite_id or -1.
+    */
     std::tuple<std::string, int> isNearDendrite(Eigen::Vector3d const& position,  double const& barrier_thickness) const;
     /**
      * Calculates if there is/are intersection(s) between the sphere s and a walker

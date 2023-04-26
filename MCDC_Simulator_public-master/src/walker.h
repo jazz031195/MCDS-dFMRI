@@ -65,10 +65,8 @@ public:
     int in_soma_index;                                               /*!< Auxiliar index to save if walker is in the soma of Neuron               */
     
     int in_dendrite_index;                                           /*!< Auxiliar index to save in which dendrite of the Neuron the walker is    */
-
-    bool next_step_in_soma;                                          /*!< Auxiliar index to save if the walker goes from dendrite to soma         */
     
-    bool next_step_in_dendrite;                                      /*!< Auxiliar index to save if the walker goes from soma to dendrite         */
+    int in_subbranch_index;                                          /*!< Auxiliar index to save in which subbranch of the dendrite of the Neuron the walker is    */
     
     //ObstacleCollisionSphere cylinders_collision_sphere;             /*!< Collision sphere for collition against cylidners                       */
 

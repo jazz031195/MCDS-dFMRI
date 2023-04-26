@@ -106,7 +106,7 @@ void NeuronDistribution::createSubstrate()
 
             double icvf, somaFraction, dendritesFraction;
             tie(icvf, somaFraction, dendritesFraction) = computeICVF(0);
-            cout << icvf << somaFraction << dendritesFraction << endl;
+            // cout << icvf << somaFraction << dendritesFraction << endl;
             achieved = true;
 
             // if(this->icvf - best_icvf  < 0.0005){
@@ -187,10 +187,10 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                         distal_branch = {largest_node + 1, largest_node + 2};
                         largest_node  = largest_node + 2;
                         bool stop_growth = false;
-                        cout << "P id " << branching_points[0].subbranch_id << endl;
-                        cout << "C id " << branch_id << endl;
-                        cout << "prox " << proximal_branch[0] << endl;
-                        cout << "dist " << distal_branch[0] << distal_branch[1] << endl;
+                        // cout << "P id " << branching_points[0].subbranch_id << endl;
+                        // cout << "C id " << branch_id << endl;
+                        // cout << "prox " << proximal_branch[0] << endl;
+                        // cout << "dist " << distal_branch[0] << distal_branch[1] << endl;
                         branching_pt branching_pt_new = growSubbranch(dendrite, branching_points[0], nb_spheres, sphere_radius, proximal_branch, distal_branch, 
                                                                       min_distance_from_border, stop_growth, branch_id);
                         branch_id++;
@@ -211,10 +211,10 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                                 largest_node  = largest_node + 2;
                                 branching_points[p].direction = branching_points[p].children_direction[c];
                                 bool stop_growth = false;
-                                cout << "P id " << branching_points[p].subbranch_id << endl;
-                                cout << "C id " << branch_id << endl;
-                                cout << "prox " << proximal_branch[0] << proximal_branch[1] << endl;
-                                cout << "dist " << distal_branch[0] << distal_branch[1] << endl;
+                                // cout << "P id " << branching_points[p].subbranch_id << endl;
+                                // cout << "C id " << branch_id << endl;
+                                // cout << "prox " << proximal_branch[0] << proximal_branch[1] << endl;
+                                // cout << "dist " << distal_branch[0] << distal_branch[1] << endl;
                                 branching_pt branching_pt_new = growSubbranch(dendrite, branching_points[p], nb_spheres, sphere_radius, 
                                                                               proximal_branch, distal_branch, min_distance_from_border, 
                                                                               stop_growth, branch_id);
@@ -400,9 +400,9 @@ bool NeuronDistribution::isSphereColliding(Dynamic_Sphere const& sph)
 {
     Vector3d position = sph.center;
     double distance_to_be_inside = sph.max_radius + 2 * barrier_tickness;
-    int dummy, dummy2;
+    int dummy;
     for (unsigned i = 0; i < neurons.size() ; i++){
-        bool isinside = neurons[i].isPosInsideNeuron(position, distance_to_be_inside, false, dummy, dummy2);
+        bool isinside = neurons[i].isPosInsideNeuron(position, distance_to_be_inside, false, dummy, dummy, dummy);
         if (isinside)
             return true;
     }
@@ -431,9 +431,9 @@ bool NeuronDistribution::isSphereCollidingSphere(Vector3d const& pos1, Vector3d 
 bool NeuronDistribution::isSphereColliding(Vector3d const& sphere_center, double const& sphere_radius) 
 {
     double distance_to_be_inside = sphere_radius + 2 * barrier_tickness;
-    int dummy, dummy2;
+    int dummy;
     for (unsigned i = 0; i < neurons.size() ; i++){
-        bool isinside = neurons[i].isPosInsideNeuron(sphere_center, distance_to_be_inside, false, dummy, dummy2);
+        bool isinside = neurons[i].isPosInsideNeuron(sphere_center, distance_to_be_inside, false, dummy, dummy, dummy);
         if (isinside)
             return true;
     }
@@ -462,6 +462,8 @@ void NeuronDistribution::printSubstrate(ostream &out) const
 
         for (size_t j = 0; j < neurons[i].dendrites.size(); j++)
         {
+            // vector<double> min = {10, 10, 10};
+            // vector<double> max = {0, 0, 0};
             for (size_t k = 0; k < neurons[i].dendrites[j].subbranches.size(); k++)
             {
                 for (size_t l = 0; l < neurons[i].dendrites[j].subbranches[k].spheres.size(); l++)
@@ -472,10 +474,21 @@ void NeuronDistribution::printSubstrate(ostream &out) const
                     << neurons[i].dendrites[j].subbranches[k].spheres[l].center[2] << " "
                     << neurons[i].dendrites[j].subbranches[k].spheres[l].radius << " "
                     << neurons[i].dendrites[j].subbranches[k].spheres[l].swell << endl; 
+                    // for(int axis=0; axis < 3; axis++)
+                    // {
+                    //     if(neurons[i].dendrites[j].subbranches[k].spheres[l].center[axis] < min[axis])
+                    //         min[axis] = neurons[i].dendrites[j].subbranches[k].spheres[l].center[axis];
+                    //     if(neurons[i].dendrites[j].subbranches[k].spheres[l].center[axis] > max[axis])
+                    //         max[axis] = neurons[i].dendrites[j].subbranches[k].spheres[l].center[axis];
+                    // }
+                        
                 }
                 out << "Segment " + to_string(k) << endl;
+                
             }
             out << "Dendrite " + to_string(j) << endl;
+            // cout << "min " << min[0] << " " << min[1] << " " << min[2] << endl;
+            // cout << "max " << max[0] << " " << max[1] << " " << max[2] << endl;
         }
         out << "Neuron " + to_string(i) << endl;
     }

@@ -1043,7 +1043,7 @@ bool DynamicsSimulation::isInsideNeurons(Vector3d &position, int &neuron_id, dou
 {
     for (unsigned i = 0; i < neurons_list->size() ; i++)
     {
-        bool isinside = neurons_list->at(i).isPosInsideNeuron(position, barrier_thickness, false, walker.in_soma_index, walker.in_dendrite_index);
+        bool isinside = neurons_list->at(i).isPosInsideNeuron(position, barrier_thickness, false, walker.in_soma_index, walker.in_dendrite_index, walker.in_subbranch_index);
         if (isinside)
         {
             walker.in_neuron_index = i;

@@ -90,6 +90,12 @@ double volumeDendrite() const;
  * @param subbranches std::vector<Axon>, set of axons.
  */
 void set_dendrite(std::vector<Axon> const& subbranches);
+/**
+ * Adds the projection (the bounding box) around the whole dendrite.
+ * 
+ * @param dendrite_id int, id of the dendrite
+*/
+void add_projection(int const& dendrite_id);
 
 private:
 
@@ -131,8 +137,6 @@ private:
     // bool intersection_sphere_vector(double &intercept1, double &intercept2, Dynamic_Sphere const&s, Eigen::Vector3d const&step_dir, 
     //                                 double const&step_length, Eigen::Vector3d const&traj_orig, double &c) const;
     
-    
-
 };
 
 
