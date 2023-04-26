@@ -73,9 +73,9 @@ void NeuronDistribution::createSubstrate()
                     // double y = (t*max_limits_vx[1] + (1-t)*min_limits_vx[1]);
                     // t        = udist(gen);
                     // double z = (t*max_limits_vx[2] + (1-t)*min_limits_vx[2]);
-                    double x = 0.5;
-                    double y = 0.5;
-                    double z = 0.5;
+                    double x = 0.05;
+                    double y = 0.05;
+                    double z = 0.05;
 
                     Eigen::Vector3d soma_center = {x, y, z};
                    
@@ -151,7 +151,6 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
         while(tries < max_tries)
         {
             Vector3d dendrite_start = generatePointOnSphere(neuron.soma.center, neuron.soma.radius);
-            int subbranch_id = 0;
             Dendrite dendrite;
 
             while(!isInVoxel(dendrite_start, min_distance_from_border) || (isSphereColliding(dendrite_start, sphere_radius)))
@@ -171,7 +170,8 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                 vector<Vector3d> children_dir;
                 vector<branching_pt> branching_points     = {{dendrite_start, dendrite_direction, children_dir, 0}};
                 vector<branching_pt> branching_points_new;
-                
+                int branch_id = 1;
+                int largest_node = 1;
                 // Create the subbranches
                 for(int b=0; b < nb_branching; ++b)
                 {
@@ -184,28 +184,48 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                     if(b == 0)
                     {
                         proximal_branch = {0};
-                        distal_branch = {1, 2};
+                        distal_branch = {largest_node + 1, largest_node + 2};
+                        largest_node  = largest_node + 2;
+                        bool stop_growth = false;
+                        cout << "P id " << branching_points[0].subbranch_id << endl;
+                        cout << "C id " << branch_id << endl;
+                        cout << "prox " << proximal_branch[0] << endl;
+                        cout << "dist " << distal_branch[0] << distal_branch[1] << endl;
                         branching_pt branching_pt_new = growSubbranch(dendrite, branching_points[0], nb_spheres, sphere_radius, proximal_branch, distal_branch, 
-                                                                      min_distance_from_border);
-                        subbranch_id++;
+                                                                      min_distance_from_border, stop_growth, branch_id);
+                        branch_id++;
                         branching_points[0] = branching_pt_new;
-                        cout << "Subbranch 0 added " << endl;
+                        cout << "Subbranch 1 added " << endl;
+                        if(stop_growth)
+                            break;
                     }
                     else
                     {
                         for(size_t p=0; p < branching_points.size(); p++)
                         {
-                            int begin_subbranch_id = subbranch_id;
-                            // The branching point is split into 2 children
+                                                        // The branching point is split into 2 children
                             for(int c=0; c < branching_points[p].children_direction.size(); c++)
                             {
-                                proximal_branch = {branching_points[p].subbranch_id, begin_subbranch_id + 1 - c};
-                                distal_branch = {subbranch_id + 2, subbranch_id + 3};
+                                proximal_branch = {branching_points[p].subbranch_id, branch_id + 1 - 2*c};
+                                distal_branch = {largest_node + 1, largest_node + 2};
+                                largest_node  = largest_node + 2;
                                 branching_points[p].direction = branching_points[p].children_direction[c];
+                                bool stop_growth = false;
+                                cout << "P id " << branching_points[p].subbranch_id << endl;
+                                cout << "C id " << branch_id << endl;
+                                cout << "prox " << proximal_branch[0] << proximal_branch[1] << endl;
+                                cout << "dist " << distal_branch[0] << distal_branch[1] << endl;
                                 branching_pt branching_pt_new = growSubbranch(dendrite, branching_points[p], nb_spheres, sphere_radius, 
-                                                                                proximal_branch, distal_branch, min_distance_from_border);
-                                branching_points_new.push_back(branching_pt_new);
-                                subbranch_id++; 
+                                                                              proximal_branch, distal_branch, min_distance_from_border, 
+                                                                              stop_growth, branch_id);
+                                
+                                branch_id++; 
+                                if(stop_growth)
+                                {
+                                    cout << "border reached" << endl;
+                                    break;
+                                }
+                                    
                             }
                         }
 
@@ -222,11 +242,12 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
 
 NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& dendrite, NeuronDistribution::branching_pt const& parent, 
                                       int const& nb_spheres, double const& sphere_radius, vector<int> const& proximal_end, 
-                                      vector<int> const& distal_end, double const& min_distance_from_border)
+                                      vector<int> const& distal_end, double const& min_distance_from_border, bool& stop_growth,
+                                      int const& branch_id)
 {
     Eigen::Vector3d begin;
     Axon subbranch(sphere_radius, begin, begin, 0, false, false , 1);
-    subbranch.id = parent.subbranch_id;
+    subbranch.id = branch_id;
     std::vector<Dynamic_Sphere> spheres_to_add;
     spheres_to_add.clear();
 
@@ -245,12 +266,22 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
                 spheres_to_add.push_back(sphere_to_add);
             }
         }
+        else
+        {
+            if(spheres_to_add.size() > 0)
+            {
+                subbranch.set_spheres(spheres_to_add, branch_id);
+                dendrite.add_subbranch(subbranch);
+            }
+            return {};
+        }          
     }
 
     if (!discard_dendrite)
     {
-        subbranch.set_spheres(spheres_to_add, parent.subbranch_id);
+        subbranch.set_spheres(spheres_to_add, branch_id);
         dendrite.add_subbranch(subbranch);
+        cout << dendrite.subbranches[dendrite.subbranches.size()-1].id << endl;
     } 
     
     double bifurcationAngle = generateBifurcationAngle();
@@ -263,7 +294,7 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
     }
     
     // Return the next branching point
-    return {spheres_to_add[spheres_to_add.size()-1].center, parent.direction, children_dir, parent.subbranch_id};
+    return {spheres_to_add[spheres_to_add.size()-1].center, parent.direction, children_dir, branch_id};
 }
 
 int NeuronDistribution::generateNbBranching(int const& lower_bound, int const& upper_bound)

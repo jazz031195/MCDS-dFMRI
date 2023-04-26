@@ -21,7 +21,6 @@ class Dendrite : public Obstacle
 public:
 
 std::vector<Axon> subbranches;          /* Contains all the subbranches of the dendrite*/
-int dendrite_id;                        /* ID of the dendrite */
 Projections projections;                /* Contains the bounding box around the whole dendrite */
 Projections projections_max;            /* Contains the bounding box around the whole dendrite, in the swollen/active state */
 

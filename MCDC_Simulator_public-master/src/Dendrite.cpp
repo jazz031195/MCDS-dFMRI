@@ -14,7 +14,6 @@ int Dendrite::nb_dendrites = 0;
 Dendrite::Dendrite()
 {
     id          = nb_dendrites++;
-    dendrite_id = -1;
 }
 
 Dendrite::Dendrite(std::vector<Axon> const& subbranches_):Dendrite()
