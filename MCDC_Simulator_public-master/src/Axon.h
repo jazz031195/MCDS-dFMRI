@@ -73,6 +73,17 @@ public:
 
         id = count++;
     }
+    
+    Axon(double const& min_radius_,  Eigen::Vector3d const& begin_, Eigen::Vector3d const& end_, double const& volume_inc_perc_, 
+         bool const& active_state_, bool const& swell_, double const& scale, std::vector <int> proximal_branching_, std::vector <int> distal_branching_,
+         int const& id_):
+    Axon(min_radius_, begin_, end_, volume_inc_perc_, active_state_ , swell_ , scale)
+    {
+        proximal_branching = proximal_branching_;
+        distal_branching   = distal_branching_;
+        id                 = id_;
+    }
+
     Axon(Axon const &ax);
 
     bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision);

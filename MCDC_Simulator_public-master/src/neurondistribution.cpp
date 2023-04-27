@@ -104,8 +104,8 @@ void NeuronDistribution::createSubstrate()
                 cout << " End of neuron " << i << endl;
             }
 
-            double icvf, somaFraction, dendritesFraction;
-            tie(icvf, somaFraction, dendritesFraction) = computeICVF(0);
+            // double icvf, somaFraction, dendritesFraction;
+            // tie(icvf, somaFraction, dendritesFraction) = computeICVF(0);
             // cout << icvf << somaFraction << dendritesFraction << endl;
             achieved = true;
 
@@ -246,10 +246,7 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
                                       int const& branch_id)
 {
     Eigen::Vector3d begin;
-    Axon subbranch(sphere_radius, begin, begin, 0, false, false , 1);
-    subbranch.id = branch_id;
-    subbranch.proximal_branching = proximal_end;
-    subbranch.distal_branching   = distal_end;
+    Axon subbranch(sphere_radius, begin, begin, 0, false, false , 1, proximal_end, distal_end, branch_id);
     std::vector<Dynamic_Sphere> spheres_to_add;
     spheres_to_add.clear();
 
