@@ -73,9 +73,9 @@ void NeuronDistribution::createSubstrate()
                     // double y = (t*max_limits_vx[1] + (1-t)*min_limits_vx[1]);
                     // t        = udist(gen);
                     // double z = (t*max_limits_vx[2] + (1-t)*min_limits_vx[2]);
-                    double x = 0.05;
-                    double y = 0.05;
-                    double z = 0.05;
+                    double x = (max_limits_vx[0] - min_limits_vx[0])/2;
+                    double y = (max_limits_vx[1] - min_limits_vx[1])/2;
+                    double z = (max_limits_vx[2] - min_limits_vx[2])/2;
 
                     Eigen::Vector3d soma_center = {x, y, z};
                    
@@ -225,7 +225,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                                     cout << "border reached" << endl;
                                     break;
                                 }
-                                    
+                                branching_points_new.push_back(branching_pt_new);  
                             }
                         }
 
@@ -282,7 +282,7 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
         dendrite.add_subbranch(subbranch);
     } 
     
-    double bifurcationAngle = generateBifurcationAngle();
+    double bifurcationAngle = generateBifurcationAngle()/2.0;
     vector<Vector3d> children_dir;
     for(int c=0; c < 2; c++)
     {

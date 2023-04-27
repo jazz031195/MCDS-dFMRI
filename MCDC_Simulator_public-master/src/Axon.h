@@ -86,7 +86,7 @@ public:
 
     Axon(Axon const &ax);
 
-    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision);
+    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision) const;
     /**
      * Check the collision within a dendrite and with the soma of the neuron.
      * 

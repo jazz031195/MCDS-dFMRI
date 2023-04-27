@@ -415,7 +415,7 @@ bool check_negatif(vector<double> const& list) {
     return false;
 }
 
-bool Axon::checkCollision(Walker &walker, Vector3d const&step, double const&step_lenght, Collision &colision)
+bool Axon::checkCollision(Walker &walker, Vector3d const&step, double const&step_lenght, Collision &colision) const
 {
     string message;
     Vector3d O;

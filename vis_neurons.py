@@ -4,32 +4,26 @@ import numpy as np
 import os
 import plotly.graph_objs as go
 wd = os.getcwd()
-plot_3d = True
-plot_traj = False
-projection = False
+plot_3d = False
+plot_traj = True
+projection = True
 z_slice = [0.02, 0.04, 0.06, 0.08]
-max_lim = 1
-with open(wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_00_neurons_list.txt') as f:
+max_lim = 0
+neuron_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_00_neurons_list.txt'
+traj_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_00.traj.txt'
+with open(neuron_file) as f:
     lines = f.readlines()
     if plot_3d:
         plt.figure()
         ax = plt.axes(projection='3d')
-        ax.set_xlim([0, max_lim])
-        ax.set_ylim([0, max_lim])
-        ax.set_zlim([0, max_lim])
         ax.set_xlabel('X [mm]')
         ax.set_ylabel('Y [mm]')
         ax.set_zlabel('Z [mm]')
     elif projection:
         fig, axs = plt.subplots(1, 3, figsize=(15, 5))
-        for k in range(3):
-            axs[k].set_xlim([0, max_lim])
-            axs[k].set_ylim([0, max_lim])
     else:
         fig, axs = plt.subplots(1, len(z_slice), figsize=(15, 5))
         for k in range(len(z_slice)):
-            axs[k].set_xlim([0, max_lim])
-            axs[k].set_ylim([0, max_lim])
             axs[k].set_xlabel("X [mm]")
             axs[k].set_ylabel("Y [mm]")
     # lines_plot = []
@@ -40,8 +34,8 @@ with open(wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/
             if "Soma" in coords[0]:
                 coords = lines[i-1].split(' ')
                 coords = [float(coord) for coord in coords]
-                if (abs(coords[0] - 0.051055) < 0.005) and (abs(coords[1] - 0.086681) < 0.005) and (abs(coords[2] - 0.089385) < 0.005):
-                    print(coords[0])
+                if max_lim < coords[0]:
+                    max_lim = coords[0]
                 # draw sphere
                 u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
                 x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
@@ -71,10 +65,10 @@ with open(wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/
                         z = np.squeeze(z.reshape(1, -1))
             elif len(coords) > 2:
                 coords = [float(coord) for coord in coords]
-                if (abs(coords[0] - 0.051055) < 0.0005) and (abs(coords[1] - 0.086681) < 0.0005) and (abs(coords[2] - 0.089385) < 0.0005):
-                    print(coords[0])
+                if max_lim < coords[0]:
+                    max_lim = coords[0]
                 # Plot only one sphere out of four for the dendrites (otherwise, too expensive)
-                a = random.randint(1, 5)
+                a = random.randint(1, 50)
                 if a==1:
                     # draw sphere
                     u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
@@ -133,7 +127,7 @@ with open(wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/
     #     fig = go.Figure(data=lines_plot, layout=layout)
     #     fig.show()
     if plot_traj:
-        with open(wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/.traj.txt') as f:
+        with open(traj_file) as f:
             lines = f.readlines()
             xp = []
             yp = []
@@ -175,4 +169,16 @@ with open(wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/
                 axs[2].axhline(y=0.1-distance_from_borders, xmin=0, xmax=1)
             else:
                 ax.scatter(xp, yp, zp, color="g")
+    if plot_3d:
+        ax.set_xlim([0, max_lim])
+        ax.set_ylim([0, max_lim])
+        ax.set_zlim([0, max_lim])
+    elif projection:
+        for k in range(3):
+            axs[k].set_xlim([0, max_lim])
+            axs[k].set_ylim([0, max_lim])
+    else:
+        for k in range(len(z_slice)):
+            axs[k].set_xlim([0, max_lim])
+            axs[k].set_ylim([0, max_lim])
     plt.show()

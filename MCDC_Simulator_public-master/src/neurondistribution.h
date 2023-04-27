@@ -118,7 +118,7 @@ private:
      * @param lower_bound double, lower bound of the interval, in [mm]. 60e-3
      * @param upper_bound double, upper bound of the interval, in [mm]. 100e-3
      */
-    double generateLengthSegment(double const& lower_bound=10e-3, double const& upper_bound=30e-3);
+    double generateLengthSegment(double const& lower_bound=5e-3, double const& upper_bound=15e-3);
     /**
      * Generate the bifurcation angle between two segments/subbranchs at a branching point.
      *

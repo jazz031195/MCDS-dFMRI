@@ -22,7 +22,7 @@ Neuron::Neuron()
 
     uniform_int_distribution<mt19937::result_type> dist_dendrites(lb, ub);
     // Generate int number in [lb, ub]
-    nb_dendrites = 3;//dist_dendrites(rng);
+    nb_dendrites = dist_dendrites(rng);
 
     // Create a random span radius and set its value to this
     generateSpanRadius();
@@ -261,6 +261,12 @@ bool Neuron::checkCollision(Walker &walker, Vector3d const& step_dir, double con
         const auto& subbranches  = dendrites[walker.in_dendrite_index].subbranches;
         bool next_step_in_subbranch = subbranches[walker.in_subbranch_index].isPosInsideAxon(next_step, -barrier_tickness, false, sphere_ids);
 
+        // cout << walker.in_dendrite_index << endl;
+        // cout << subbranches.size() << endl;
+        // cout << branching_id[0] << endl;
+
+        // if (branching_id.size()>1)
+        //     cout << branching_id[1] << endl;
         // The next step is in the same subbranch => no collision
         if(branching_id[0] == -1 && next_step_in_subbranch)
         {
@@ -271,14 +277,14 @@ bool Neuron::checkCollision(Walker &walker, Vector3d const& step_dir, double con
         // The next step is in the outside => collision
         else if(branching_id[0] == -1 && !next_step_in_subbranch)
         {
-            if(subbranches[walker.in_subbranch_index].checkCollision(walker, step_dir, step_lenght, colision, soma))
+            if(subbranches[walker.in_subbranch_index].checkCollision(walker, step_dir, step_lenght, colision))
             {   
                 return true;
             }
-            cout << "why here" << endl;
+            // cout << "why here" << endl;
         }
         // The walker is close to soma
-        else if (branching_id[0] == 0)
+        else if (branching_id[0] == 0 && branching_id.size() == 1)
         {
             // Next step in the same subbranch
             if (next_step_in_subbranch)
@@ -364,7 +370,7 @@ vector <int> Neuron::closest_subbranch(Vector3d const& position, int const& dend
         return distal_branching;
     }   
     else
-        return {-1, -1};
+        return {-1};
 }
 
 int Neuron::closest_dendrite_from_soma(Vector3d const& position, double const& step_length)
