@@ -32,6 +32,8 @@ Axon::Axon(const Axon &ax)
     active_state = ax.active_state;
     projections = ax.projections;
     projections_max = ax.projections_max;
+    distal_branching = ax.distal_branching;
+    proximal_branching = ax.proximal_branching;
 }
 
 void Axon::add_projection(int const& axon_id){
@@ -131,7 +133,7 @@ bool Axon::isNearAxon(Vector3d const&position,  double const& distance_to_be_ins
     return false;
 }
 
-bool Axon::isPosInsideAxon(Vector3d const& position,  double const& distance_to_be_inside, bool const& swell_, std::vector<int> sphere_ids){
+bool Axon::isPosInsideAxon(Vector3d const& position,  double const& distance_to_be_inside, bool const& swell_, std::vector<int> sphere_ids) const{
     // when checking collision with walker -> check with normal radius
     // when checking with collisions of other axons -> check with max_radius so there is room for swelling
     std::vector<std::vector<Projections::projection_pt>> coliding_projs;
@@ -600,7 +602,7 @@ bool Axon::checkCollision(Walker &walker, Vector3d const&step, double const&step
 
 }
 
-bool Axon::checkCollision(Walker &walker, Vector3d const&step, double const&step_lenght, Collision &colision, Dynamic_Sphere const& soma)
+bool Axon::checkCollision(Walker &walker, Vector3d const&step, double const&step_lenght, Collision &colision, Dynamic_Sphere const& soma) const
 {
     string message;
     Vector3d O;

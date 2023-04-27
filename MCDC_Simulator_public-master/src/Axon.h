@@ -86,7 +86,7 @@ public:
      * @param Soma  Dynamic_Sphere, soma of the neuron.
      * @return true if there is a collision, else false.    
      * */
-    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision, Dynamic_Sphere const& Soma);
+    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision, Dynamic_Sphere const& Soma) const;
 
     std::vector<Dynamic_Sphere>  closestSpheres (Eigen::Vector3d const& pos) const;
     std::vector<Dynamic_Sphere>  closestSpheres (Walker const& w) const;
@@ -103,7 +103,7 @@ public:
     void set_spheres(std::vector<Dynamic_Sphere> const& spheres_to_add, int const& axon_id);
     void add_projection(int const& axon_id);
     bool isNearAxon(Eigen::Vector3d const&position,  double const& distance_to_be_inside) const;
-    bool isPosInsideAxon(Eigen::Vector3d const&position,  double const& distance_to_be_inside, bool const& swell_, std::vector<int> sphere_ids);
+    bool isPosInsideAxon(Eigen::Vector3d const&position,  double const& distance_to_be_inside, bool const& swell_, std::vector<int> sphere_ids) const;
     /* Calculate the volume of the current axon and update its tortuosity */
     double volumeAxon() const;
 };

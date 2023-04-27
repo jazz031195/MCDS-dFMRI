@@ -248,6 +248,8 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
     Eigen::Vector3d begin;
     Axon subbranch(sphere_radius, begin, begin, 0, false, false , 1);
     subbranch.id = branch_id;
+    subbranch.proximal_branching = proximal_end;
+    subbranch.distal_branching   = distal_end;
     std::vector<Dynamic_Sphere> spheres_to_add;
     spheres_to_add.clear();
 
@@ -281,7 +283,6 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
     {
         subbranch.set_spheres(spheres_to_add, branch_id);
         dendrite.add_subbranch(subbranch);
-        cout << dendrite.subbranches[dendrite.subbranches.size()-1].id << endl;
     } 
     
     double bifurcationAngle = generateBifurcationAngle();

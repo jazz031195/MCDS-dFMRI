@@ -1,6 +1,5 @@
 #include "Dendrite.h"
 
-#include "Eigen/Dense"
 #include <iostream>
 
 #include <cmath>
@@ -24,6 +23,8 @@ Dendrite::Dendrite(std::vector<Axon> const& subbranches_):Dendrite()
 Dendrite::Dendrite(Dendrite const& dendrite)
 {
     subbranches = dendrite.subbranches;
+    projections = dendrite.projections;
+    projections_max = dendrite.projections_max;
 }
 
 Dendrite::~Dendrite()
@@ -114,8 +115,7 @@ void Dendrite::add_projection(int const& dendrite_id)
                 if(max_axis_projection_max_tmp > max_axis_projection_max)
                     max_axis_projection_max = max_axis_projection_max_tmp;
             }
-        cout << min_axis_projection << "ffff " << max_axis_projection << endl;
         projections.axon_projections.push_back({min_axis_projection, max_axis_projection});  
-        projections_max.axon_projections.push_back({min_axis_projection_max, max_axis_projection_max});  
+        projections_max.axon_projections.push_back({min_axis_projection_max, max_axis_projection_max}); 
     }
 }

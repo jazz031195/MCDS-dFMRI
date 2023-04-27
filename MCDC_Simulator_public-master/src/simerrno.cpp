@@ -251,7 +251,7 @@ bool SimErrno::checkSimulationParameters(Parameters &params)
 
     if(!(params.write_bin || params.write_txt)){
         error(" No output will be written; write_bin and write_txt flags are deactivated.",cout);
-        assert(0);
+        // assert(0);
         return true;
 
     }
