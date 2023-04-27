@@ -1052,8 +1052,12 @@ bool DynamicsSimulation::isInsideNeurons(Vector3d &position, int &neuron_id, dou
             return true;
         }
     }
+    // cout << "neuron in extra" << endl;
     // Quick fix in case it goes in extra. TODO: correct it [ines]
     walker.in_neuron_index = -1;
+    walker.in_soma_index = -1;
+    walker.in_dendrite_index = -1;
+    walker.in_subbranch_index = -1;
     walker.location = Walker::extra;
     return false;
 }
@@ -1182,10 +1186,6 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
         //Initial position;
         walker.setRealPosLog(walker.pos_r, 0);
         walker.setVoxPosLog (walker.pos_v, 0);
-
-        //cout << "\n Iniatial postionl                                                                  ";
-        //cout << walker.ini_pos[0] << " "  << walker.ini_pos[1] << " "  << walker.ini_pos[2] << endl;
-        // reinitialise dynamic cylinders
 
         for(unsigned t = 1 ; t <= params.num_steps; t++) //T+1 steps in total (avoid errors)
         {

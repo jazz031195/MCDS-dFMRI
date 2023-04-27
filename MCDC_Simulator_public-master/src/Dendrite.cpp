@@ -37,16 +37,21 @@ bool Dendrite::checkCollision(Walker &walker, Vector3d const&step_dir, double co
     bool bool_collision = false;
     for(size_t i=0; i < subbranches.size(); i++)
     {
-        bool_collision = checkCollision(walker, step_dir, step_lenght, collision);
+        bool_collision = subbranches[i].checkCollision(walker, step_dir, step_lenght, collision);
         if(bool_collision)
             return true;
     }
     return false;
 }
 
-bool Dendrite::isPosInsideDendrite(Vector3d const& position,  double const& barrier_thickness, bool const& swell_, int& in_soma_index, int& in_dendrite_index)
+bool Dendrite::isPosInsideDendrite(Vector3d const& position,  double const& barrier_thickness, bool const& swell_)
 {
-    // TO IMPLEMENT
+    vector<int> dummy;
+    for(size_t s=0; s < subbranches.size(); ++s)
+    {
+        if(subbranches[s].isPosInsideAxon(position, barrier_thickness, false, dummy))
+            return true;
+    }
     return false;
 }
 

@@ -113,7 +113,7 @@ void Axon::set_spheres(std::vector<Dynamic_Sphere> const& spheres_to_add, int co
     add_projection(axon_id);
 }
 
-bool Axon::isNearAxon(Vector3d const&position,  double const& distance_to_be_inside) const {
+bool Axon::isNearAxon(Vector3d const& position,  double const& distance_to_be_inside) const {
 
     size_t count_isnear = 0;
     for (size_t axis=0 ; axis < 3 ; axis++)

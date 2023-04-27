@@ -55,7 +55,7 @@ bool checkCollision(Walker &walker, Eigen::Vector3d const&step_dir, double const
  * @param w                 Walker, if this swells or not. 
  * @return                    bool, true if position is inside this.
  */
-bool isPosInsideDendrite(Eigen::Vector3d const& position,  double const& barrier_thickness, bool const& swell_, int& in_soma_index, int& in_dendrite_index);
+bool isPosInsideDendrite(Eigen::Vector3d const& position,  double const& barrier_thickness, bool const& swell_);
 /**
  * Minimal distance between a position pos and this.
  *
