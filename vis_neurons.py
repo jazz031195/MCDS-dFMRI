@@ -9,9 +9,9 @@ plot_traj = True
 projection = True
 z_slice = [0.02, 0.04, 0.06, 0.08]
 position = np.array([0.0431963, 0.0456198, 0.0431084])
-max_lim = 0
-neuron_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_01_neurons_list.txt'
-traj_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_01.traj.txt'
+max_lim = 0.1
+neuron_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_02_neurons_list.txt'
+traj_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_02.traj.txt'
 with open(neuron_file) as f:
     lines = f.readlines()
     if plot_3d:
@@ -35,8 +35,8 @@ with open(neuron_file) as f:
             if "Soma" in coords[0]:
                 coords = lines[i-1].split(' ')
                 coords = [float(coord) for coord in coords]
-                if max_lim < coords[0]:
-                    max_lim = coords[0]
+                # if max_lim < coords[0]:
+                #     max_lim = coords[0]
                 # draw sphere
                 u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
                 x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
@@ -67,10 +67,10 @@ with open(neuron_file) as f:
                             axs[j].plot(x, y, '.',color="darkgray")
                     else:
                         z = np.squeeze(z.reshape(1, -1))
-            elif len(coords) > 2:
+            elif len(coords) > 2 and len(coords) < 6:
                 coords = [float(coord) for coord in coords]
-                if max_lim < coords[0]:
-                    max_lim = coords[0]
+                # if max_lim < coords[0]:
+                #     max_lim = coords[0]
                 # Plot only one sphere out of four for the dendrites (otherwise, too expensive)
                 a = random.randint(1, 50)
                 # draw sphere
@@ -105,6 +105,31 @@ with open(neuron_file) as f:
                                 axs[j].plot(x, y, color="darkgray")
                         else:
                             z = np.squeeze(z.reshape(1, -1))
+            elif len(coords) == 6:
+                coords = [float(coord) for coord in coords]
+                xmin = coords[0]
+                xmax = coords[1]
+                ymin = coords[2]
+                ymax = coords[3]
+                zmin = coords[4]
+                zmax = coords[5]
+                print(coords)
+
+                if plot_3d:
+                    ax.plot(xmin, ymin, zmin, color="g")
+                    ax.plot(xmax, ymax, zmax, color="g")
+                        # # Creating the plot
+                        # line_marker = dict(color='blue', width=2)
+                        # for l, m, n in zip(x, y, z):
+                        #     lines_plot.append(go.Scatter3d(x=l, y=m, z=n, mode='lines', line=line_marker))
+                elif projection:
+                    axs[0].plot(xmin, ymin, color="g")
+                    axs[0].plot(xmax, ymax, color="g")
+                    axs[1].plot(xmin, zmin, color="g")
+                    axs[1].plot(xmax, zmax, color="g")
+                    axs[2].plot(zmin, ymin, color="g")
+                    axs[2].plot(zmax, ymax, color="g")
+
     if not plot_3d:
         distance_from_borders = 0.0007
     # if plot_3d:

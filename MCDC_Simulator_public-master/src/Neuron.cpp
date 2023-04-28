@@ -22,7 +22,7 @@ Neuron::Neuron()
 
     uniform_int_distribution<mt19937::result_type> dist_dendrites(lb, ub);
     // Generate int number in [lb, ub]
-    nb_dendrites = dist_dendrites(rng);
+    nb_dendrites = 1;//dist_dendrites(rng);
 
     // // Create a random span radius and set its value to this
     // generateSpanRadius();
@@ -115,28 +115,31 @@ bool Neuron::isPosInsideNeuron(Eigen::Vector3d const& position, double const& di
 {
     // if position is in box with Dendrite inside
     string neuron_part; // "dendrite" or "none"
-    int part_id;        // id of the dendrite. -1 if not in neuron
+    vector<int> part_id;        // id of the dendrite. -1 if not in neuron
     // distance_to_be_inside = position.sphere.radius + constant
     tie(neuron_part, part_id) = isNearDendrite(position, distance_to_be_inside);
     // cout << neuron_part << endl;
     std::vector<int> sphere_ids;
     if (!(neuron_part == "none"))
     {
-        for (size_t b=0; b < dendrites[part_id].subbranches.size(); b++)
-        {
-            if (dendrites[part_id].subbranches[b].isPosInsideAxon(position, distance_to_be_inside, false, sphere_ids))
+        for (size_t p=0; p < part_id.size(); p++)
+            for (size_t b=0; b < dendrites[p].subbranches.size(); b++)
             {
-                in_dendrite_index  = part_id;
-                in_subbranch_index = b;
-                in_soma_index      = -1;
-                // cout << "in dendrite" << endl;
-                return true;
+                if (dendrites[p].subbranches[b].isPosInsideAxon(position, distance_to_be_inside, false, sphere_ids))
+                {
+                    in_dendrite_index  = p;
+                    in_subbranch_index = b;
+                    in_soma_index      = -1;
+                    // cout << "in dendrite" << endl;
+                    return true;
+                }
             }
-        }
         
     }
+
+    int soma_id;
     // "soma" or "none". 0 if in soma, -1 otherwise
-    tie(neuron_part, part_id) = isNearSoma(position, distance_to_be_inside);
+    tie(neuron_part, soma_id) = isNearSoma(position, distance_to_be_inside);
     if (neuron_part == "soma")
     {
         if (soma.isInside(position, distance_to_be_inside))
@@ -172,13 +175,14 @@ tuple<string, int> Neuron::isNearSoma(Vector3d const& position, double const& di
         return tuple<string, int>{"none", -1};
 }
 
-tuple<string, int> Neuron::isNearDendrite(Vector3d const& position, double const& distance_to_be_inside) const
+tuple<string, vector<int>> Neuron::isNearDendrite(Vector3d const& position, double const& distance_to_be_inside) const
 {
     // TODO [ines] : it may be possible that it is near 2 dendrites, and that the first one checked will be returned, even though
     // the walker is in the other...
 
     // Check each dendrite's box
     int count_isnear = 0;
+    vector <int> dendrite_ids;
     for (unsigned int i = 0; i < dendrites.size(); ++i)
     {
         count_isnear = 0;
@@ -190,14 +194,18 @@ tuple<string, int> Neuron::isNearDendrite(Vector3d const& position, double const
             {
                 ++count_isnear;
             }
+
         }
         // Inside the box around dendrite
         if (count_isnear == 3)
-            return tuple<string, int>{"dendrite", i};
-        else
-            return tuple<string, int>{"none", -1};
+            dendrite_ids.push_back(i);
+            
+
     }
-    return tuple<string, int>{"none", -1};
+    if (dendrite_ids.size() > 0)
+        return tuple<string, vector<int>>{"dendrite", dendrite_ids};
+
+    return tuple<string, vector<int>>{"none", {-1}};
 }
 
 bool Neuron::checkCollision(Walker &walker, Vector3d const& step_dir, double const& step_lenght, Collision &colision)

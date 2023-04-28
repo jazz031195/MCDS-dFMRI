@@ -94,33 +94,46 @@ double Dendrite::volumeDendrite() const
 
 void Dendrite::add_projection(int const& dendrite_id)
 {
-    // Contains the minimum axis projection of the subbranches axon_projections
-    double min_axis_projection     = 1000;
-    // Contains the minimum axis projection of the subbranches axon_projections_max
-    double min_axis_projection_max = 1000;
-    // Contains the maximum axis projection of the subbranches axon_projections
-    double max_axis_projection     = 0;
-    // Contains the maximum axis projection of the subbranches axon_projections_max
-    double max_axis_projection_max = 0;
     for(int axis=0; axis < 3 ; axis++)
     {
+            // Contains the minimum axis projection of the subbranches axon_projections
+            double min_axis_projection     = 1000;
+            // Contains the minimum axis projection of the subbranches axon_projections_max
+            double min_axis_projection_max = 1000;
+            // Contains the maximum axis projection of the subbranches axon_projections
+            double max_axis_projection     = 0;
+            // Contains the maximum axis projection of the subbranches axon_projections_max
+            double max_axis_projection_max = 0;
             for(size_t b=0; b < subbranches.size(); b++)
             {        
-                double min_axis_projection_tmp     = subbranches[0].projections.axon_projections[axis][0];
-                double min_axis_projection_max_tmp = subbranches[0].projections_max.axon_projections[axis][0];
-                if(min_axis_projection_tmp < min_axis_projection)
-                    min_axis_projection = min_axis_projection_tmp;
-                if(min_axis_projection_max_tmp < min_axis_projection_max)
-                    min_axis_projection_max = min_axis_projection_max_tmp;
+                // double min_axis_projection_tmp     = subbranches[0].projections.axon_projections[axis][0];
+                // double min_axis_projection_max_tmp = subbranches[0].projections_max.axon_projections[axis][0];
+                // if(min_axis_projection_tmp < min_axis_projection)
+                //     min_axis_projection = min_axis_projection_tmp;
+                // if(min_axis_projection_max_tmp < min_axis_projection_max)
+                //     min_axis_projection_max = min_axis_projection_max_tmp;
 
-                double max_axis_projection_tmp     = subbranches[0].projections.axon_projections[axis][1];
-                double max_axis_projection_max_tmp = subbranches[0].projections_max.axon_projections[axis][1];
-                if(max_axis_projection_tmp > max_axis_projection)
-                    max_axis_projection = max_axis_projection_tmp;
-                if(max_axis_projection_max_tmp > max_axis_projection_max)
-                    max_axis_projection_max = max_axis_projection_max_tmp;
+                // double max_axis_projection_tmp     = subbranches[0].projections.axon_projections[axis][1];
+                // double max_axis_projection_max_tmp = subbranches[0].projections_max.axon_projections[axis][1];
+                // if(max_axis_projection_tmp > max_axis_projection)
+                //     max_axis_projection = max_axis_projection_tmp;
+                // if(max_axis_projection_max_tmp > max_axis_projection_max)
+                //     max_axis_projection_max = max_axis_projection_max_tmp;
+                int size = subbranches[b].spheres.size()-1;
+                double center0 = subbranches[b].spheres[0].center[axis];
+                double centerEnd = subbranches[b].spheres[size].center[axis];
+
+                if(min_axis_projection > center0)
+                    min_axis_projection = center0;
+                if(min_axis_projection > centerEnd)
+                    min_axis_projection = centerEnd;
+
+                if(max_axis_projection < center0)
+                    max_axis_projection = center0;
+                if(max_axis_projection < centerEnd)
+                    max_axis_projection = centerEnd;
             }
         projections.axon_projections.push_back({min_axis_projection, max_axis_projection});  
-        projections_max.axon_projections.push_back({min_axis_projection_max, max_axis_projection_max}); 
+        projections_max.axon_projections.push_back({min_axis_projection, max_axis_projection}); 
     }
 }

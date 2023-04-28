@@ -124,7 +124,7 @@ private:
      *                                       neuron_part : "dendrite" or "none",
      *                                       dendrite_id : dendrite_id or -1.
     */
-    std::tuple<std::string, int> isNearDendrite(Eigen::Vector3d const& position,  double const& barrier_thickness) const;
+    std::tuple<std::string, std::vector<int>> isNearDendrite(Eigen::Vector3d const& position,  double const& barrier_thickness) const;
     /**
      * Calculates if there is/are intersection(s) between the sphere s and a walker
      * starting at traj_orig, with a direction step_dir. 

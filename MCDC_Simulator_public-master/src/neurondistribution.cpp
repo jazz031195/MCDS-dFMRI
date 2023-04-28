@@ -485,6 +485,12 @@ void NeuronDistribution::printSubstrate(ostream &out) const
                 
             }
             out << "Dendrite " + to_string(j) << endl;
+            out << neurons[i].dendrites[j].projections.axon_projections[0][0] << " "
+                    << neurons[i].dendrites[j].projections.axon_projections[0][1] << " "
+                    << neurons[i].dendrites[j].projections.axon_projections[1][0] << " "
+                    << neurons[i].dendrites[j].projections.axon_projections[1][1] << " "
+                    << neurons[i].dendrites[j].projections.axon_projections[2][0] << " "
+                    << neurons[i].dendrites[j].projections.axon_projections[2][1] << endl;
             // cout << "min " << min[0] << " " << min[1] << " " << min[2] << endl;
             // cout << "max " << max[0] << " " << max[1] << " " << max[2] << endl;
         }
