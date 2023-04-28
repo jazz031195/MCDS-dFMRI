@@ -728,7 +728,7 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos, int &cy
     bool achieved= false;
     while(!achieved){
 
-        if(count > 100000){
+        if(count > 1000000){
             SimErrno::error("Cannot initialize intra-axonal walkers within the given substrate",cout);
             SimErrno::error("Max. number of tries to find an intra-celular compartment reached",cout);
             assert(0);
@@ -1052,7 +1052,6 @@ bool DynamicsSimulation::isInsideNeurons(Vector3d &position, int &neuron_id, dou
             return true;
         }
     }
-    // cout << "neuron in extra" << endl;
     // Quick fix in case it goes in extra. TODO: correct it [ines]
     walker.in_neuron_index = -1;
     walker.in_soma_index = -1;
@@ -1434,13 +1433,13 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
         walker.getVoxelPosition(voxel_pos);
         // Vector3d voxel_tmp = voxel_pos;
         walker.setVoxelPosition(voxel_pos + tmax*bounced_step);
-        // int a, b, c, d, e;
-        // if(!isInIntra(walker.pos_v, a, b, c, d, e))
-        //     if(walker.initial_location == Walker::intra)
-        //     {
-        //         cout << "Warning: Walker crossed the boundary : intra to extra" << endl;
-        //         // assert(0);
-        //     }
+        int a, b, c, d, e;
+        if(!isInIntra(walker.pos_v, a, b, c, d, e))
+            if(walker.initial_location == Walker::intra)
+            {
+                cout << "Warning: Walker crossed the boundary : intra to extra" << endl;
+                // assert(0);
+            }
                 
     }
 

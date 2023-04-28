@@ -518,17 +518,13 @@ tuple<double, double, double> NeuronDistribution::computeICVF(double const& min_
     double VolumeVoxel = (max_limits_vx[0] - min_limits_vx[0] - min_distance_from_border) * (max_limits_vx[1] - min_limits_vx[1] - min_distance_from_border) * (max_limits_vx[2] - min_limits_vx[2] - min_distance_from_border);
     double VolumeSoma = 0;
     double VolumeDendrites = 0;
+    vector<double> volumeNeuron;
    
     for (size_t i = 0; i < neurons.size(); i++)
     {
-        // Calculate the volume of the soma
-        VolumeSoma += 4/3*M_PI*pow(neurons[i].soma.radius, 3);
-
-        // Calculate the cylindrical volume of each dendrite
-        for (uint8_t j = 0; j < neurons[i].nb_dendrites; j++)
-        {
-            VolumeDendrites += neurons[i].dendrites[j].volumeDendrite();
-        }      
+        volumeNeuron     = neurons[i].get_Volume();
+        VolumeSoma      += volumeNeuron[0];
+        VolumeDendrites += volumeNeuron[1];
     }
     
     double somaFraction      = VolumeSoma / VolumeVoxel;

@@ -8,9 +8,10 @@ plot_3d = False
 plot_traj = True
 projection = True
 z_slice = [0.02, 0.04, 0.06, 0.08]
+position = np.array([0.0431963, 0.0456198, 0.0431084])
 max_lim = 0
-neuron_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_00_neurons_list.txt'
-traj_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_00.traj.txt'
+neuron_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_01_neurons_list.txt'
+traj_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_01.traj.txt'
 with open(neuron_file) as f:
     lines = f.readlines()
     if plot_3d:
@@ -41,6 +42,9 @@ with open(neuron_file) as f:
                 x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
                 y = np.sin(u)*np.sin(v)*float(coords[3]) + float(coords[1])
                 z = np.cos(v)*float(coords[3]) + float(coords[2])
+                r = float(coords[3])
+                if np.linalg.norm(coords[:3] - position) < r:
+                    print(coords)
                 if plot_3d:
                     ax.plot_wireframe(x, y, z, color="r")
                     # # Creating the plot
@@ -69,12 +73,16 @@ with open(neuron_file) as f:
                     max_lim = coords[0]
                 # Plot only one sphere out of four for the dendrites (otherwise, too expensive)
                 a = random.randint(1, 50)
+                # draw sphere
+                u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+                x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
+                y = np.sin(u)*np.sin(v)*float(coords[3]) + float(coords[1])
+                z = np.cos(v)*float(coords[3]) + float(coords[2])
+                r = float(coords[3])
+                if np.linalg.norm(coords[:3] - position) < r:
+                    print(coords)
                 if a==1:
-                    # draw sphere
-                    u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
-                    x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
-                    y = np.sin(u)*np.sin(v)*float(coords[3]) + float(coords[1])
-                    z = np.cos(v)*float(coords[3]) + float(coords[2])
+                    
                     if plot_3d:
                         ax.plot_wireframe(x, y, z, color="r")
                         # # Creating the plot

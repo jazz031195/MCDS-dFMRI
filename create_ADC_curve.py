@@ -53,7 +53,7 @@ def get_psge_data():
     data_dwi["Delta"] = Delta
     data_dwi["delta"] = delta
     data_dwi["TE"] = TE
-    data_dwi["b"] = pow(data_dwi["G"]*giro*data_dwi["delta"],2)*(data_dwi["Delta"]-data_dwi["delta"]/3)
+    data_dwi["b [um²/ms]"] = pow(data_dwi["G"]*giro*data_dwi["delta"],2)*(data_dwi["Delta"]-data_dwi["delta"]/3)/1000
 
     return data_dwi
 
@@ -69,12 +69,14 @@ def create_data(dwi_path):
     #data_1 = data_psge.loc[data_psge['x'] != x1]
     datas = [data_x,data_y,data_z]
     for i in range(len(datas)):
-        b0 = list(datas[i]["b"])[0]
-        Sb0 = list(datas[i].loc[datas[i]["b"]== b0]["DWI"])[0]
-        signal = list(map(lambda Sb : np.log(Sb/Sb0), list(datas[i]["DWI"])))
-        adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(datas[i]["b"]),list(datas[i]["DWI"])))
-        datas[i]["log(Sb/So)"] = signal
-        datas[i]["adc [mm²/s]"] = adc
+        b0 = list(datas[i]["b [um²/ms]"])[0]
+        Sb0 = list(datas[i].loc[datas[i]["b [um²/ms]"]== b0]["DWI"])[0]
+        signal = list(map(lambda Sb : Sb/Sb0, list(datas[i]["DWI"])))
+        signal_log = list(map(lambda Sb : np.log(Sb/Sb0), list(datas[i]["DWI"])))
+        adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(datas[i]["b [um²/ms]"]),list(datas[i]["DWI"])))
+        datas[i]["Sb/So"] = signal
+        datas[i]["log(Sb/So)"] = signal_log
+        datas[i]["adc [um²/ms]"] = adc
 
     data_dwi = pd.concat(datas)
 
@@ -560,31 +562,33 @@ def get_adc_diff_rest_active(folder, conf):
 
 
 # combine_intra_extra_adc("neurons")
-dwi_intra_path = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_00_DWI.txt"
+dwi_intra_path = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_01_DWI.txt"
 dwi_intra = create_data(dwi_intra_path)
+print(dwi_intra)
 dwi_intra["loc"] = ["intra"]*dwi_intra["x"].size
-data_x = dwi_intra.loc[(dwi_intra['x'] > 0.0) ].sort_values(by = ["b"],ascending=True)
-data_y = dwi_intra.loc[(dwi_intra['y'] > 0.0) ].sort_values(by = ["b"],ascending=True)
-data_z = dwi_intra.loc[(dwi_intra['z'] > 0.0) ].sort_values(by = ["b"],ascending=True)
-bs = list(data_z["b"])
+data_x = dwi_intra.loc[(dwi_intra['x'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+data_y = dwi_intra.loc[(dwi_intra['y'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+data_z = dwi_intra.loc[(dwi_intra['z'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+bs = list(data_z["b [um²/ms]"])
 datas = [data_x,data_y,data_z]
 std = list(map(lambda x,y,z : np.std([x,y,z]), list(datas[0]["log(Sb/So)"]),list(datas[1]["log(Sb/So)"]),list(datas[2]["log(Sb/So)"])))
+dwi = dwi_intra
 
-print(std)
-dwi_extra_path = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/extra/_DWI.txt"
-dwi_extra = create_data(dwi_extra_path)
-dwi_extra["loc"] = ["extra"]*dwi_extra["x"].size
-data_x = dwi_extra.loc[(dwi_extra['x'] > 0.0) ].sort_values(by = ["b"],ascending=True)
-data_y = dwi_extra.loc[(dwi_extra['y'] > 0.0) ].sort_values(by = ["b"],ascending=True)
-data_z = dwi_extra.loc[(dwi_extra['z'] > 0.0) ].sort_values(by = ["b"],ascending=True)
-bs = list(data_z["b"])
-datas = [data_x,data_y,data_z]
-std = list(map(lambda x,y,z : np.std([x,y,z]), list(datas[0]["log(Sb/So)"]),list(datas[1]["log(Sb/So)"]),list(datas[2]["log(Sb/So)"])))
-print(std)
-dwi = dwi_intra.append(dwi_extra)
+# print(std)
+# dwi_extra_path = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/extra/_DWI.txt"
+# dwi_extra = create_data(dwi_extra_path)
+# dwi_extra["loc"] = ["extra"]*dwi_extra["x"].size
+# data_x = dwi_extra.loc[(dwi_extra['x'] > 0.0) ].sort_values(by = ["b"],ascending=True)
+# data_y = dwi_extra.loc[(dwi_extra['y'] > 0.0) ].sort_values(by = ["b"],ascending=True)
+# data_z = dwi_extra.loc[(dwi_extra['z'] > 0.0) ].sort_values(by = ["b"],ascending=True)
+# bs = list(data_z["b"])
+# datas = [data_x,data_y,data_z]
+# std = list(map(lambda x,y,z : np.std([x,y,z]), list(datas[0]["log(Sb/So)"]),list(datas[1]["log(Sb/So)"]),list(datas[2]["log(Sb/So)"])))
+# print(std)
+# dwi = dwi_intra.append(dwi_extra)
 
 import plotly.express as px
-fig = px.box(dwi[~dwi['b'].isnull()], x='b', y='log(Sb/So)', color='loc')
+fig = px.box(dwi[~dwi['b [um²/ms]'].isnull()], x='b [um²/ms]', y='Sb/So', color='loc')
 fig.show()
 # intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_active__DWI.txt"
 # extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_active__DWI.txt"
