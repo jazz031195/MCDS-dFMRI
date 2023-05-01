@@ -187,10 +187,10 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                         distal_branch = {largest_node + 1, largest_node + 2};
                         largest_node  = largest_node + 2;
                         bool stop_growth = false;
-                        // cout << "P id " << branching_points[0].subbranch_id << endl;
-                        // cout << "C id " << branch_id << endl;
-                        // cout << "prox " << proximal_branch[0] << endl;
-                        // cout << "dist " << distal_branch[0] << distal_branch[1] << endl;
+                        cout << "P id " << branching_points[0].subbranch_id << endl;
+                        cout << "C id " << branch_id << endl;
+                        cout << "prox " << proximal_branch[0] << endl;
+                        cout << "dist " << distal_branch[0] << distal_branch[1] << endl;
                         branching_pt branching_pt_new = growSubbranch(dendrite, branching_points[0], nb_spheres, sphere_radius, proximal_branch, distal_branch, 
                                                                       min_distance_from_border, stop_growth, branch_id);
                         branch_id++;
@@ -211,10 +211,11 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                                 largest_node  = largest_node + 2;
                                 branching_points[p].direction = branching_points[p].children_direction[c];
                                 bool stop_growth = false;
-                                // cout << "P id " << branching_points[p].subbranch_id << endl;
-                                // cout << "C id " << branch_id << endl;
-                                // cout << "prox " << proximal_branch[0] << proximal_branch[1] << endl;
-                                // cout << "dist " << distal_branch[0] << distal_branch[1] << endl;
+                                cout << "P id " << branching_points[p].subbranch_id << endl;
+                                cout << "C id " << branch_id << endl;
+                                cout << "largest id " << largest_node << endl;
+                                cout << "prox " << proximal_branch[0] << proximal_branch[1] << endl;
+                                cout << "dist " << distal_branch[0] << distal_branch[1] << endl;
                                 branching_pt branching_pt_new = growSubbranch(dendrite, branching_points[p], nb_spheres, sphere_radius, 
                                                                               proximal_branch, distal_branch, min_distance_from_border, 
                                                                               stop_growth, branch_id);

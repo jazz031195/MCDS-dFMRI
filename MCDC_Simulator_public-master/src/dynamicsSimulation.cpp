@@ -759,6 +759,7 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos, int &cy
     double x = double(udist(gen));
     double y = double(udist(gen));
     double z = double(udist(gen));
+    double probaRadius = double(udist(gen));
 
 
     vector<double> volume_soma_dendrite = (*neurons_list)[0].get_Volume();
@@ -769,6 +770,7 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos, int &cy
     if (proba < volume_soma_dendrite[0]/VolumeNeuron)
     {
         while(!achieved){
+            cout << "starts in soma" << endl;
 
             if(count > 100000){
                 SimErrno::error("Cannot initialize intra-axonal walkers within the given substrate",cout);
@@ -778,9 +780,11 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos, int &cy
             Vector3d somaCenter = (*neurons_list)[0].soma.center;
             double somaRadius   = (*neurons_list)[0].soma.radius;
 
-            x = x*(somaCenter[0] - somaRadius) + ( 1.0-x)*(somaCenter[0] + somaRadius);
-            y = y*(somaCenter[1] - somaRadius) + ( 1.0-y)*(somaCenter[1] + somaRadius);
-            z = z*(somaCenter[2] - somaRadius) + ( 1.0-z)*(somaCenter[2] + somaRadius);
+            double theta = 2 * M_PI * udist(gen);
+            double phi = acos(1 - 2 * udist(gen));
+            double x = sin(phi) * cos(theta) * probaRadius * somaRadius + somaCenter[0];
+            double y = sin(phi) * sin(theta) * probaRadius * somaRadius + somaCenter[1];
+            double z = cos(phi) * probaRadius * somaRadius + somaCenter[2];
 
             Vector3d pos_temp = {x,y,z};
 
@@ -799,6 +803,7 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos, int &cy
     else
     {
         while(!achieved){
+            cout << "starts in dendrite" << endl;
 
             if(count > 100000){
                 SimErrno::error("Cannot initialize intra-axonal walkers within the given substrate",cout);
