@@ -8,7 +8,8 @@ plot_3d = False
 plot_traj = True
 projection = True
 z_slice = [0.02, 0.04, 0.06, 0.08]
-position = np.array([0.0431963, 0.0456198, 0.0431084])
+# position = np.array([0.044359383652472821, 0.073838872992544963, 0.053730584153105686])
+# position2 = np.array([0.0450215294826024, 0.073325599802571709, 0.053024812566757319])
 max_lim = 0.1
 neuron_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_02_neurons_list.txt'
 traj_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_02.traj.txt'
@@ -43,8 +44,8 @@ with open(neuron_file) as f:
                 y = np.sin(u)*np.sin(v)*float(coords[3]) + float(coords[1])
                 z = np.cos(v)*float(coords[3]) + float(coords[2])
                 r = float(coords[3])
-                if np.linalg.norm(coords[:3] - position) < r:
-                    print(coords)
+                # if np.linalg.norm(coords[:3] - position) <= r:
+                #     print("soma", coords)
                 if plot_3d:
                     ax.plot_wireframe(x, y, z, color="r")
                     # # Creating the plot
@@ -55,6 +56,12 @@ with open(neuron_file) as f:
                     axs[0].plot(x, y, color="r")
                     axs[1].plot(x, z, color="r")
                     axs[2].plot(z, y, color="r")
+                    # axs[0].plot(position[0], position[1], ".b", markersize=5)
+                    # axs[1].plot(position[0], position[2], ".b", markersize=5)
+                    # axs[2].plot(position[2], position[1], ".b", markersize=5)
+                    # axs[0].plot(position2[0], position2[1], ".g", markersize=5)
+                    # axs[1].plot(position2[0], position2[2], ".g", markersize=5)
+                    # axs[2].plot(position2[2], position2[1], ".g", markersize=5)
                 else:
                     if ((coords[2] - coords[3]) < slice_) and ((coords[2] + coords[3]) > slice_):
                         idx = ((x - coords[0])**2 + (y - coords[1])**2 < coords[3]**2 - (slice_ - coords[2])**2)
@@ -72,15 +79,15 @@ with open(neuron_file) as f:
                 # if max_lim < coords[0]:
                 #     max_lim = coords[0]
                 # Plot only one sphere out of four for the dendrites (otherwise, too expensive)
-                a = random.randint(1, 50)
+                a = random.randint(1, 10)
                 # draw sphere
                 u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
                 x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
                 y = np.sin(u)*np.sin(v)*float(coords[3]) + float(coords[1])
                 z = np.cos(v)*float(coords[3]) + float(coords[2])
                 r = float(coords[3])
-                if np.linalg.norm(coords[:3] - position) < r:
-                    print(coords)
+                # if np.linalg.norm(coords[:3] - position) <= r:
+                #     print("d", coords)
                 if a==1:
                     
                     if plot_3d:
@@ -113,7 +120,7 @@ with open(neuron_file) as f:
                 ymax = coords[3]
                 zmin = coords[4]
                 zmax = coords[5]
-                print(coords)
+                # print(coords)
 
                 if plot_3d:
                     ax.plot(xmin, ymin, zmin, color="g")

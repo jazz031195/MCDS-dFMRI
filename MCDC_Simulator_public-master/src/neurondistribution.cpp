@@ -142,11 +142,11 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
     {   
         cout << "dendrite " << i << endl;
         int tries = 0;
-        int nb_branching = generateNbBranching();
+        int nb_branching = 4;//generateNbBranching();
         // Radius of each dendrite sphere [mm]
-        double sphere_radius = 0.5e-3;
+        double sphere_radius = 0.6e-3;
         // Don't initiate dendrite too close from the borders
-        double min_distance_from_border = barrier_tickness + sphere_radius;
+        double min_distance_from_border = barrier_tickness + sphere_radius + step_length;
         
         while(tries < max_tries)
         {
@@ -291,7 +291,9 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
         children_dir.push_back(rotatedDir);
         bifurcationAngle = -bifurcationAngle;
     }
-    
+    cout << subbranch.projections.axon_projections[0][0] << " " << subbranch.projections.axon_projections[0][1];
+    cout << subbranch.projections.axon_projections[1][0] << " " << subbranch.projections.axon_projections[1][1];
+    cout << subbranch.projections.axon_projections[2][0] << " " << subbranch.projections.axon_projections[2][1];
     // Return the next branching point
     return {spheres_to_add[spheres_to_add.size()-1].center, parent.direction, children_dir, branch_id};
 }

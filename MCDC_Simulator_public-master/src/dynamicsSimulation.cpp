@@ -1132,9 +1132,9 @@ bool DynamicsSimulation::isInsideNeurons(Vector3d &position, int &neuron_id, dou
         }
     }
     // Quick fix in case it goes in extra. TODO: correct it [ines]
-    walker.in_neuron_index = -1;
-    walker.in_soma_index = -1;
-    walker.in_dendrite_index = -1;
+    walker.in_neuron_index    = -1;
+    walker.in_soma_index      = -1;
+    walker.in_dendrite_index  = -1;
     walker.in_subbranch_index = -1;
     walker.location = Walker::extra;
     return false;
@@ -1478,11 +1478,13 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
         walker.steps_count++;
 
         // True if there was a collision and the particle needs to be bounced.
+        // bounced_step and tmax are not modified here
         update_walker_status |= checkObstacleCollision(bounced_step, tmax, end_point, colision);
 
         // Updates the position and bouncing direction.
         if(update_walker_status){
             // At this point, bounced_step = step
+            // bounced_step and tmax ARE modified here
             bounced = updateWalkerPositionAndHandleBouncing(bounced_step, tmax, colision);
             // restarts the variables.
             update_walker_status = false;

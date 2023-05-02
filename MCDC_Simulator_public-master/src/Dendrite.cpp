@@ -122,16 +122,18 @@ void Dendrite::add_projection(int const& dendrite_id)
                 int size = subbranches[b].spheres.size()-1;
                 double center0 = subbranches[b].spheres[0].center[axis];
                 double centerEnd = subbranches[b].spheres[size].center[axis];
+                double radius = subbranches[b].spheres[size].radius;
+                double eps    = 0.1*radius;
 
                 if(min_axis_projection > center0)
-                    min_axis_projection = center0;
+                    min_axis_projection = center0 - radius - eps;
                 if(min_axis_projection > centerEnd)
-                    min_axis_projection = centerEnd;
+                    min_axis_projection = centerEnd - radius - eps;
 
                 if(max_axis_projection < center0)
-                    max_axis_projection = center0;
+                    max_axis_projection = center0 + radius + eps;
                 if(max_axis_projection < centerEnd)
-                    max_axis_projection = centerEnd;
+                    max_axis_projection = centerEnd + radius + eps;
             }
         projections.axon_projections.push_back({min_axis_projection, max_axis_projection});  
         projections_max.axon_projections.push_back({min_axis_projection, max_axis_projection}); 

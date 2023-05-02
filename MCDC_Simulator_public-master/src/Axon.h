@@ -85,8 +85,6 @@ public:
     }
 
     Axon(Axon const &ax);
-
-    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision) const;
     /**
      * Check the collision within a dendrite and with the soma of the neuron.
      * 
@@ -97,8 +95,8 @@ public:
      * @param Soma  Dynamic_Sphere, soma of the neuron.
      * @return true if there is a collision, else false.    
      * */
-    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision, Dynamic_Sphere const& Soma) const;
-
+    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision) const;
+   
     std::vector<Dynamic_Sphere>  closestSpheres (Eigen::Vector3d const& pos) const;
     std::vector<Dynamic_Sphere>  closestSpheres (Walker const& w) const;
     int closest_sphere_dichotomy(Walker const& walker) const;
