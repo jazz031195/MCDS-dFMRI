@@ -1,6 +1,7 @@
 #include "collision.h"
 #include <cmath>
 const double EPS_VAL = 1e-15;
+using namespace std;
 
 Collision::~Collision()
 {

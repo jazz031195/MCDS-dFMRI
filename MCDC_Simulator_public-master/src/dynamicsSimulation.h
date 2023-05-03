@@ -145,7 +145,7 @@ public:
      *         with a defined "inside region" can be considered. Voxel periodicity is not
      *         considered
      */
-    bool isInIntra(Eigen::Vector3d& position, int& cyl_id,  int& ply_id, int& sph_id, int& ax_id, double distance_to_be_intra_ply=1e-6);
+    bool isInIntra(Eigen::Vector3d& position, int& cyl_id,  int& ply_id, std::vector<int>& sph_id, int& ax_id,  double distance_to_be_intra_ply=1e-6);
     
     /*!
      * \brief   Writes to disk the final propagator matrix.
@@ -160,7 +160,7 @@ public:
 
     bool isInsideSpheres(Eigen::Vector3d &position, int& sph_id,double distance_to_be_inside);
 
-    bool isInsideAxons(Eigen::Vector3d &position, int &ax_id, double distance_to_be_inside);
+    bool isInsideAxons(Eigen::Vector3d &position, int &ax_id, double distance_to_be_inside, std::vector<int>& col_sphere_ids);
 
 private:    
 
@@ -218,6 +218,8 @@ private:
      *          the voxel limits.
      */
     inline void mapWalkerIntoVoxel(Eigen::Vector3d &amended_step, Collision &colision, double barrier_thickness);
+    inline void mapWalkerIntoVoxel_tortuous(Eigen::Vector3d &amended_step, Collision &colision, double barrier_thickness);
+    
 
     /*! \fn     getTimeDt
      * \param   last_time_dt saves the last time step;
@@ -276,13 +278,15 @@ private:
      * \brief   finds an intra celullar 3d position inside the voxel (needs a voxel initialized).
      * \param   intra_pos vector to save the 3d position.
      */
-    inline void getAnIntraCellularPosition(Eigen::Vector3d& intra_pos, int &cyl_ind, int &ply_ind, int &sph_ind, int& ax_id);
-
+    inline void getAnIntraCellularPosition(Eigen::Vector3d& intra_pos, int &cyl_ind, int &ply_ind, std::vector<int>& sph_ind, int& ax_id);
+    inline void getAnIntraCellularPositionOnEdge(Eigen::Vector3d& intra_pos, int &cyl_ind, int &ply_ind, std::vector<int>& sph_ind, int& ax_id, double z);
+    
     /*!
      * \brief   finds an extra cellular 3d position inside the voxel (needs a voxel initialized).
      * \param   extra_pos vector to save the 3d position.
      */
     inline void getAnExtraCellularPosition(Eigen::Vector3d& extra_pos);
+    inline void getAnExtraCellularPositionOnEdge(Eigen::Vector3d& extra_pos, double z);
 
     /*!
      * \brief   Auxiliary function to checks if a 3d position is still inside the voxel

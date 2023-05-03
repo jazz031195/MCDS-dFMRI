@@ -15,6 +15,7 @@
 #include "swipeprune.h"
 #include "simerrno.h"
 #include "obstacle.h"
+#include <vector>
 
 using namespace std;
 
@@ -78,7 +79,7 @@ public:
 
     std::vector<Dynamic_Sphere>  closestSpheres (Walker &w);
 
-    bool checkCollision(Walker &walker, std::vector<int> ind_close_spheres, Eigen::Vector3d &step, double &step_lenght, Collision &colision);
+    bool checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_lenght, Collision &colision);
 
     std::vector<Dynamic_Sphere>  closestSpheres (Eigen::Vector3d pos);
 
@@ -93,9 +94,8 @@ public:
     void set_spheres(std::vector<Dynamic_Sphere> spheres_to_add);
     void add_projection();
     bool isNearAxon(Eigen::Vector3d &position,  double distance_to_be_inside);
-    bool isPosInsideAxon(Eigen::Vector3d &position,  double distance_to_be_inside, bool swell_, std::vector<int> sphere_ids);
-    int closest_sphere_dichotomy(Eigen::Vector3d O);
-
+    bool isPosInsideAxon(Eigen::Vector3d &position,  double distance_to_be_inside,  std::vector<int>& sphere_ids);
+    
 };
 
 

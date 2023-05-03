@@ -38,7 +38,8 @@ public:
     /*! \fn     elasticBounceAgainsPlane
      */
     void elasticBounceAgainsPlane(Eigen::Vector3d& ray_origin, Eigen::Vector3d& normal, double& t, Eigen::Vector3d &step);
-
+    void elasticBounceAgainsPlane_intra(Eigen::Vector3d& ray_origin, Eigen::Vector3d& normal, double& t, Eigen::Vector3d &step);
+    void elasticBounceAgainsPlane_extra(Eigen::Vector3d &ray_origin, Eigen::Vector3d &normal, double &t, Eigen::Vector3d &step);
     /*!
      *  \param  walker to find the (closest) distance.
      *  \brief  Returns the minimum distance of collision.

@@ -71,8 +71,8 @@ def make_new(perc_swell, axons_file):
     return new_file
 
 
-for i in [0.6,0.5,0.4,0.3]:
-    perc = i+0.1
+for i in [0.0]:
+    perc = 0.3
     axons_file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/axons/Substrates/icvf_0.3_swell_{perc}_gamma_distributed_axon_list.txt"
     new_file = make_new(i, axons_file)
     get_axons_array(new_file)

@@ -131,16 +131,14 @@ std::tuple<double, double>  phi_theta_to_target (Eigen::Vector3d new_pos, Eigen:
 bool Growth::isSphereColliding(Dynamic_Sphere sph){
     
     Vector3d position = sph.center;
-    double distance_to_be_inside = sph.max_radius + 10*barrier_tickness;
 
     std::vector<int> col_sphere_ids;
 
     //std::cout << "env_axons.size():" << env_axons.size() << endl;
 
     for (unsigned i = 0; i < env_axons.size() ; i++){
-
-
-        bool isinside = env_axons[i].isPosInsideAxon(position, distance_to_be_inside, true, col_sphere_ids);
+        double distance_to_be_inside = sph.radius;
+        bool isinside = env_axons[i].isPosInsideAxon(position, distance_to_be_inside, col_sphere_ids);
         
         if (isinside){
             return true;

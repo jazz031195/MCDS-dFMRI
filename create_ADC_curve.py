@@ -65,8 +65,11 @@ def create_data(dwi_path, b0):
     #data_1 = data_psge.loc[data_psge['x'] != x1]
     datas = [data_x,data_y,data_z]
     for i in range(len(datas)):
+        # b values
         datas[i]["b [ms/um²]"] = [round(n,1) for n in list(datas[i]["b [ms/um²]"])]
+        # DWI(b0)
         Sb0 = list(datas[i].loc[datas[i]["b [ms/um²]"]== b0]["DWI"])[0]
+
         signal = list(map(lambda Sb : np.log(Sb/Sb0), list(datas[i]["DWI"])))
         adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(datas[i]["b [ms/um²]"]),list(datas[i]["DWI"])))
         datas[i]["log(Sb/So)"] = signal
@@ -226,68 +229,144 @@ def plot_DWI(intra_rest_path,extra_rest_path, extra_active_path, intra_active_pa
 
 
 
-#axons_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_list_icvf_0.3_gamma_distributed_axon_list.txt"
+def plot_inc_():
+    b0 = 0.2
+    b1 = 1
 
-#intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_intra_active_DWI.txt"
-#extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_extra_active_DWI.txt"
-#intra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_intra_rest_DWI.txt"
-#extra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/axons_dist_50_0.3_extra_rest_DWI.txt"               
-#data2 = assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_rest_path)
+    locs = ["intra"]
+    swell = [0.0, 0.3, 0.4, 0.5, 0.6, 0.7]
+    datas = []
+    swell_ = []
+    locs_ = []
 
-
-#plot_DWI(intra_rest_path,extra_rest_path, extra_active_path, intra_active_path)
-b0 = 0.2
-b1 = 1
-locs = ["intra", "extra"]
-swell = [0.0, 0.3, 0.4, 0.5, 0.6, 0.7]
-datas = []
-swell_ = []
-locs_ = []
-diff_ = []
-w_diff_ = []
-for n in [1, 2]:
-    for s in swell:
-        for l in locs:
-            ref_file = f'/home/localadmin/localdata/juradata/ijelescu/micmap/jasmine/DWI/try{n}/icvf_0.3_swell_0.0_{l}_DWI.txt'
-            if (Path(ref_file)).exists():
-                ref_data = get_adc(ref_file, b1, b0)
-                file = f'/home/localadmin/localdata/juradata/ijelescu/micmap/jasmine/DWI/try{n}/icvf_0.3_swell_{s}_{l}_DWI.txt'
+    for n in [1]:
+        for s in swell:
+            for l in locs:
+                file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/axons/icvf_0.3_swell_{s}_{l}_DWI.txt"
                 print(file)
                 if (Path(file)).exists():
                     print("exists")
                     data = get_adc(file, b1, b0)
-                    datas.append(get_adc(file, b1, b0))
-                    if l == "intra":
-                        diff = list((data["adc [um²/ms]"]-ref_data["adc [um²/ms]"])*100/ref_data["adc [um²/ms]"])
-                        w_diff_.extend([d*0.3 for d in diff])
-                        diff_.extend(diff)
-                    else:
-                        diff = list((data["adc [um²/ms]"]-ref_data["adc [um²/ms]"])*100/ref_data["adc [um²/ms]"])
-                        w_diff_.extend([d*0.7 for d in diff])
-                        diff_.extend(diff)
+                    datas.append(data)
                     for i in range(3):
                         swell_.append(s)
                         locs_.append(l)
 
-data = pd.concat(datas)
-data["location"] = locs_
-data["swell_perc"] = swell_
-data["adc difference [%]"] = diff_
-data["weighted adc difference [%]"] = w_diff_
+
+    data = pd.concat(datas)
+    
+    
+    data["location"] = locs_
+    data["swell_perc"] = swell_
+    print(data)
+    
+    #data = data.loc[data["orientations"] != "axial"]
+    sns.lineplot(data = data.reset_index(), x = "swell_perc",y = "adc [um²/ms]", hue = "axis")
+    plt.show()
+    data = data.groupby(by =["swell_perc", "location"] ).mean().reset_index()
+
+    data["weighted_adc"] = list(map(lambda x,y : x*0.7 if y == "intra" else x*0.3 , list(data["adc [um²/ms]"] ), list(data["location"])))
+    
+    data_intra = data[data["location"] == "intra"]
+    data_extra = data[data["location"] == "extra"]
+    if len(data_intra ) != 0:
+        adc_0_intra = list(data_intra.loc[data_intra["swell_perc"]==0.0]["weighted_adc"])[0] 
+    if len(data_extra ) != 0:
+        adc_0_extra = list(data_extra.loc[data_extra["swell_perc"]==0.0]["weighted_adc"])[0] 
+    
+    data["adc_difference[%]"] = list(map(lambda x, y: (x-adc_0_intra)*100/x if y == "intra" else (x-adc_0_extra)*100/x, list(data["weighted_adc"] ), list(data["location"] )))
+    
+    
+    print(data)
+
+    data = data.groupby(by =["swell_perc"]).mean().reset_index()
+
+    sns.lineplot(data = data, x = "swell_perc",y = "adc_difference[%]")
+    plt.show()
+    
+    print(data)
 
 
-sns.lineplot(data = data.reset_index(), x = "swell_perc",y = "weighted adc difference [%]")
-plt.show()
 
-sns.lineplot(data = data.reset_index(), hue = "orientations", x = "swell_perc",y = "weighted adc difference [%]")
-plt.show()
+def plot_increase():
+    b0 = 0
+    b1 = 2
+    locs = ["intra", "extra"]
+    swell = [0.0, 0.3, 0.4, 0.5, 0.6, 0.7]
+    datas = []
+    swell_ = []
+    locs_ = []
+    diff_ = []
+    w_diff_ = []
+    for n in [1, 2]:
+        for s in swell:
+            for l in locs:
+                ref_file = f'/home/localadmin/localdata/juradata/ijelescu/micmap/jasmine/DWI/try{n}/icvf_0.3_swell_0.0_{l}_DWI.txt'
+                if (Path(ref_file)).exists():
+                    ref_data = get_adc(ref_file, b1, b0)
+                    file = f'/home/localadmin/localdata/juradata/ijelescu/micmap/jasmine/DWI/try{n}/icvf_0.3_swell_{s}_{l}_DWI.txt'
+                    print(file)
+                    if (Path(file)).exists():
+                        print("exists")
+                        data = get_adc(file, b1, b0)
+                        datas.append(get_adc(file, b1, b0))
+                        if l == "intra":
+                            diff = list((data["adc [um²/ms]"]-ref_data["adc [um²/ms]"])*100/ref_data["adc [um²/ms]"])
+                            w_diff_.extend([d*0.3 for d in diff])
+                            diff_.extend(diff)
+                        else:
+                            diff = list((data["adc [um²/ms]"]-ref_data["adc [um²/ms]"])*100/ref_data["adc [um²/ms]"])
+                            w_diff_.extend([d*0.7 for d in diff])
+                            diff_.extend(diff)
+                        for i in range(3):
+                            swell_.append(s)
+                            locs_.append(l)
 
-sns.lineplot(data = data.reset_index(), hue = "location", x = "swell_perc",y = "adc difference [%]")
-plt.show()
-
-data = data.loc[data["swell_perc"] != 0]
-print(data)
-sns.boxplot(data = data.reset_index(),x = "axis",hue = "location",y = "adc difference [%]")
-plt.show()
+    data = pd.concat(datas)
+    data["location"] = locs_
+    data["swell_perc"] = swell_
+    data["adc difference [%]"] = diff_
+    data["weighted adc difference [%]"] = w_diff_
 
 
+    sns.lineplot(data = data.reset_index(), x = "swell_perc",y = "weighted adc difference [%]")
+    plt.show()
+
+    sns.lineplot(data = data.reset_index(), hue = "orientations", x = "swell_perc",y = "weighted adc difference [%]")
+    plt.show()
+
+    sns.lineplot(data = data.reset_index(), hue = "location", x = "swell_perc",y = "adc difference [%]")
+    plt.show()
+
+    data = data.loc[data["swell_perc"] != 0]
+    print(data)
+    sns.boxplot(data = data.reset_index(),x = "axis",hue = "location",y = "adc difference [%]")
+    plt.show()
+
+def plot_const():
+    b0 = 0
+    b1 = 2
+    s = 0.0
+    l= "intra"
+    datas = []
+    repetition = []
+    for i in range(5):
+        if i == 0:
+            file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/axons/icvf_0.3_swell_{s}_{l}_DWI.txt"
+        else:
+            file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/axons/icvf_0.3_swell_{s}_{l}_rep_0{i-1}_DWI.txt"
+        print(file)
+        if (Path(file)).exists():
+            print("exists")
+            data = get_adc(file, b1, b0)
+            datas.append(data)
+            repetition.extend([i]*len(data))
+        
+    data = pd.concat(datas)
+    data["repetition"] = repetition
+    sns.lineplot(data = data.reset_index(), x = "repetition",y = "adc [um²/ms]", hue = "axis")
+    plt.show()
+
+
+
+plot_const()

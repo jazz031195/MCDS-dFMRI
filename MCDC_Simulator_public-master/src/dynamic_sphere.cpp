@@ -163,7 +163,7 @@ double Dynamic_Sphere::minDistance(Eigen::Vector3d O){
     double distance_to_sphere = m.norm();
 
     //Minimum distance to the shpere wall.
-    double d_ = (distance_to_sphere - radius);
+    double d_ = (distance_to_sphere - this->radius);
    // return d_>0.0?d_:0.0;
     return d_;
 }
