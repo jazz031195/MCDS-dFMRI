@@ -22,9 +22,8 @@ public:
     bool swell;
     double volume_inc_perc;
     int ax_id;
-    double max_radius;
     double min_radius;
-    bool active_state;
+
 
     /*!
      *  \brief Default constructor. Does nothing
@@ -41,19 +40,12 @@ public:
      *  \param scale  overall scale for when reading files.
      *  \brief Initialize everything.
      */
-    Dynamic_Sphere( Eigen::Vector3d center_, double min_radius_, double volume_inc_perc_, bool swell_, int ax_id_,double scale, bool active_state_, int id_ = -1): id(id_), center(center_*scale),min_radius(min_radius_*scale), volume_inc_perc(volume_inc_perc_), ax_id(ax_id_),swell(swell_), active_state(active_state_){
-        radius = min_radius;
+    Dynamic_Sphere( Eigen::Vector3d center_, double radius_, double volume_inc_perc_, bool swell_, int ax_id_, int id_ , double scale=1): id(id_), center(center_*scale), radius(radius_*scale), volume_inc_perc(volume_inc_perc_), ax_id(ax_id_),swell(swell_){
+        
+        min_radius = radius;
         if (swell){
-            max_radius = sqrt(1+volume_inc_perc)*radius;
+            radius = sqrt(1+volume_inc_perc)*radius;
         }
-        else {
-            max_radius = min_radius;
-        }
-        if (active_state){
-            radius = max_radius;
-        }
-
-    
     }
 
     /*!

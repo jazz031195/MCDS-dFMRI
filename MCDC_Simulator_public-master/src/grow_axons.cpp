@@ -29,7 +29,7 @@ Growth::~Growth() { delete axon_to_grow; }
 void Growth::add_next_sphere(Dynamic_Sphere added_sphere, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii){
     
     centers.push_back(added_sphere.center);
-    sph_radii.push_back(added_sphere.min_radius);
+    sph_radii.push_back(added_sphere.radius);
         
 }
 
@@ -265,13 +265,13 @@ bool Growth::find_next_center(Axon* ax, Eigen::Vector3d destination, Dynamic_Sph
         Eigen::Vector3d v2 = (new_pos - curr_pos).normalized();
         
 
-        Dynamic_Sphere sphere_ (new_pos, rad,ax->volume_inc_perc,ax->swell, ax->id, 1, ax->active_state);
+        Dynamic_Sphere sphere_ (new_pos, rad,ax->volume_inc_perc,ax->swell, ax->id, -1);
         
         // if sphere doesn't collide with environment
         if (!isSphereColliding(sphere_)){
 
             // if sphere collides with border planes
-            if (check_borders(sphere_.center, sphere_.max_radius, twin_delta_pos)){
+            if (check_borders(sphere_.center, sphere_.radius, twin_delta_pos)){
                 std::vector<Dynamic_Sphere> twin_spheres;
                 collides_with_border = true;
                 createTwinSpheres(twin_spheres, sphere_, twin_delta_pos);
@@ -333,7 +333,7 @@ void Growth::fill_with_spheres(Axon* ax, std::vector<Dynamic_Sphere>& spheres_to
 
     for (unsigned i = 1; i < centers.size(); i++){
 
-        Dynamic_Sphere sphere (centers[i-1], sph_radii[i-1] ,ax->volume_inc_perc, ax->swell, ax->id, 1, ax->active_state, (i-1)*4);  
+        Dynamic_Sphere sphere (centers[i-1], sph_radii[i-1] ,ax->volume_inc_perc, ax->swell, ax->id, 1, (i-1)*4);  
         spheres_to_add.push_back(sphere);
         // add spheres in between 
         for (unsigned j = 0; j < 3; j++){
@@ -342,7 +342,7 @@ void Growth::fill_with_spheres(Axon* ax, std::vector<Dynamic_Sphere>& spheres_to
             // radius
             double radius_in_between = (3-j)*sph_radii[i-1]/4+(j+1)*sph_radii[i]/4;
             // sphere
-            Dynamic_Sphere sphere_in_between (center_between, radius_in_between,ax->volume_inc_perc, ax->swell, ax->id, 1, ax->active_state, (i-1)*4+j+1);  
+            Dynamic_Sphere sphere_in_between (center_between, radius_in_between,ax->volume_inc_perc, ax->swell, ax->id, 1, (i-1)*4+j+1);  
             double shrink_perc = 0;
             Dynamic_Sphere sphere_ = sphere_in_between;
             // check if this sphere collides
@@ -354,7 +354,7 @@ void Growth::fill_with_spheres(Axon* ax, std::vector<Dynamic_Sphere>& spheres_to
                     cout << "Error : cannot shrink spheres in between so that they don't collide with environment !" << endl;
                 } 
                 shrink_sphere_rad(rad, radius_in_between, shrink_perc);
-                sphere_ = Dynamic_Sphere (center_between, rad,ax->volume_inc_perc, ax->swell, ax->id, 1, ax->active_state, sphere_.id);  
+                sphere_ = Dynamic_Sphere (center_between, rad,ax->volume_inc_perc, ax->swell, ax->id, 1, sphere_.id);  
                 shrink_perc += 0.01;
             }
             sphere_in_between = sphere_;
@@ -392,7 +392,7 @@ void Growth::fill_with_spheres(Axon* ax, std::vector<Dynamic_Sphere>& spheres_to
             */
         }
         if (i == centers.size()-1){
-            Dynamic_Sphere sphere (centers[i], sph_radii[i] ,ax->volume_inc_perc, ax->swell, ax->id, 1, ax->active_state, i*4);  
+            Dynamic_Sphere sphere (centers[i], sph_radii[i] ,ax->volume_inc_perc, ax->swell, ax->id, 1, i*4);  
             spheres_to_add.push_back(sphere);
 
         }  
@@ -412,7 +412,7 @@ std::vector<Dynamic_Sphere> Growth::GrowAxon(Axon* ax, Eigen::Vector3d destinati
 
     // maximum of shrinking percentage
     double max_shrinking = 0.5;
-    double min_radius_shrinking = ax->min_radius*(1-max_shrinking);
+    double min_radius_shrinking = ax->radius*(1-max_shrinking);
     // minimum radius of axon
     if (min_radius_shrinking < 0.05*1e-3) {
         min_radius_shrinking = 0.05*1e-3;
@@ -427,7 +427,7 @@ std::vector<Dynamic_Sphere> Growth::GrowAxon(Axon* ax, Eigen::Vector3d destinati
 
 
     // first sphere to add
-    Dynamic_Sphere s1(ax->begin, ax->min_radius,ax->volume_inc_perc,ax->swell, ax->id, 1, ax->active_state);
+    Dynamic_Sphere s1(ax->begin, ax->min_radius,ax->volume_inc_perc,ax->swell, ax->id, 1);
 
     
     if(Growth::isSphereColliding(s1)) {
@@ -437,7 +437,7 @@ std::vector<Dynamic_Sphere> Growth::GrowAxon(Axon* ax, Eigen::Vector3d destinati
     else{
         // if the first sphere touches boundaries
         Eigen::Vector2d twin_delta_pos_;
-        if(check_borders(s1.center, s1.max_radius, twin_delta_pos_)){
+        if(check_borders(s1.center, s1.radius, twin_delta_pos_)){
             std::vector<Dynamic_Sphere> first_twin_spheres;
             createTwinSpheres(first_twin_spheres, s1, twin_delta_pos_);
             int non_colliders = 0;
@@ -561,7 +561,7 @@ std::vector<Dynamic_Sphere> Growth::GrowAxon(Axon* ax, Eigen::Vector3d destinati
                             }
                         else{   
                             // rad = shrinked radius
-                            find_shrinking_dichotomy(rad, ax->min_radius, lower_boundary, upper_boundary, middle_boundary);
+                            find_shrinking_dichotomy(rad, ax->radius, lower_boundary, upper_boundary, middle_boundary);
                             // distance between spheres is the maximum between the radius of the two
                             dist_ = max(rad, sph_radii[sph_radii.size()-1]);
                             // try shrinking at half 
@@ -641,7 +641,7 @@ const void Growth::GrowInParallel(const Eigen::Vector3d destination){
 void Growth::createTwinAxons(Axon* ax, Eigen::Vector2d twin_delta_pos){
     
     int id = env_axons.size()+twin_axons.size();
-    Axon* twin_ax = new Axon (id, ax->min_radius, ax->begin, ax->end, ax->volume_inc_perc, ax->active_state, ax->swell, 1);
+    Axon* twin_ax = new Axon (id, ax->min_radius, ax->begin, ax->end, ax->volume_inc_perc,  ax->swell, -1);
     std::vector<Dynamic_Sphere> twin_spheres;
 
     for (unsigned i = 0; i < ax->spheres.size() ; i++){
@@ -656,7 +656,7 @@ void Growth::createTwinAxons(Axon* ax, Eigen::Vector2d twin_delta_pos){
 
     // if axon overlaps with 2 different planes of boundary
     if (twin_delta_pos[0] != 0 && twin_delta_pos[1] != 0){
-        Axon* twin_ax1 = new Axon (id+1, ax->min_radius, ax->begin, ax->end, ax->volume_inc_perc, ax->active_state, ax->swell, 1);
+        Axon* twin_ax1 = new Axon (id+1, ax->min_radius, ax->begin, ax->end, ax->volume_inc_perc, ax->swell, -1);
         twin_spheres.clear();
 
         for (unsigned i = 0; i < ax->spheres.size() ; i++){
@@ -668,7 +668,7 @@ void Growth::createTwinAxons(Axon* ax, Eigen::Vector2d twin_delta_pos){
         twin_axons.push_back(*twin_ax1);
         delete twin_ax1;
 
-        Axon* twin_ax2 = new Axon (id+2, ax->min_radius, ax->begin, ax->end, ax->volume_inc_perc, ax->active_state, ax->swell, 1);
+        Axon* twin_ax2 = new Axon (id+2, ax->min_radius, ax->begin, ax->end, ax->volume_inc_perc,  ax->swell, -1);
         twin_spheres.clear();
         for (unsigned i = 0; i < ax->spheres.size() ; i++){
             Dynamic_Sphere twin_sphere = ax->spheres[i];

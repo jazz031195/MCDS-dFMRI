@@ -40,17 +40,13 @@ AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc
     max_limits = max_l;
     axons.clear();
     this->min_radius = min_radius;
-    active_state = active_state_;
     icvf_current = 0;
     duration = 0.0;
     c2 = c2_;
     tortuosities.clear();
     tortuous = tortuous_;
-    small_voxel_size = max_limits;
     step_length = step_length_;
-    gamma_from_file = gamma_from_file_;
     num_obstacles = num_ax;
-
 
 }
 void AxonGammaDistribution::computeMinimalSize(std::vector<double> radiis, double icvf_, Eigen::Vector3d &l)
@@ -206,99 +202,7 @@ void display_progress(double nbr_axons, double number_obstacles){
         "] "  << nbr_axons << "/" << number_obstacles << endl;          //printing percentage
 } 
 
-/*
-void AxonGammaDistribution::flip(int flip_nbr, int j, int k, Eigen::Vector3d small_voxel_size, Eigen::Vector3d& initial_pos){
 
-    // projection onto next small voxel
-    double x_increment = j*small_voxel_size[0];
-    double y_increment = k*small_voxel_size[1];
-    std::cout << "   small_voxel_size: " << small_voxel_size << endl;
-    std::cout << "initial position : " << initial_pos << endl;
-    initial_pos = {initial_pos[0] + x_increment, initial_pos[1] + y_increment, initial_pos[2]};
-    std::cout << " position after increment : " << initial_pos << endl;
-    double x_flip;
-    double y_flip;
-    // center of small voxel
-    Eigen::Vector2d center = {(j+0.5)*small_voxel_size[0], (k+0.5)*small_voxel_size[1]};
-    std::cout << "center : " << center << endl;
-
-    std::cout << "flip nbr : " << flip_nbr << endl;
-    if (flip_nbr == 0){
-        x_flip = 0;
-        y_flip = 0;
-    }  
-    // flips of the small voxel wrt y
-    else if (flip_nbr == 1){
-        double distance = 2*(center[1]-initial_pos[1]);
-        y_flip = distance;
-    }
-    // flips of the small voxel wrt x
-    else if (flip_nbr == 2){
-        double distance = 2*(center[0]-initial_pos[0]);
-        x_flip = distance;
-    }
-    else if (flip_nbr == 3){
-        double distance = 2*(center[0]-initial_pos[0]);
-        x_flip = distance;
-        distance = 2*(center[1]-initial_pos[1]);
-        y_flip = distance;
-    } 
-
-    initial_pos = {initial_pos[0] + x_flip, initial_pos[1] + y_flip, initial_pos[2]};
-    std::cout << " position after flip : " << initial_pos << endl;
-}
-*/
-
-/*
-void AxonGammaDistribution::add_periodic_voxel(int nbr_small_voxels, Eigen::Vector3d small_voxel_size){
-    
-    std::vector<Axon> axons_to_add;
-    int flip_nbr;
-    for (unsigned j = 0; j < nbr_small_voxels -1 ; ++j){
-        
-        for (unsigned k = 0; k < nbr_small_voxels -1 ; ++k){
-            
-            int flip_nbr = 0; 
-            
-            for (unsigned i = 0; i < axons.size(); ++i){
-                if (j == 0 and k == 0){
-                    k += 1;
-                }
-                Eigen::Vector3d new_begin = axons[i].begin;
-                flip(flip_nbr, j, k, small_voxel_size, new_begin);
-                Eigen::Vector3d new_end = axons[i].end;
-                flip(flip_nbr, j, k, small_voxel_size, new_end);
-                Axon ax = Axon (axons[i]);
-                ax.begin = new_begin;
-                ax.end = new_end;
-                std::vector<Dynamic_Sphere> new_spheres;
-                bool stop = false;
-                for (unsigned s = 0; s < axons[i].spheres.size(); ++s){
-                    if (!stop){ 
-                        Dynamic_Sphere new_sphere = axons[i].spheres[s];
-                        // if axon already exists
-                        if (isSphereColliding(new_sphere)){
-                            stop = true;
-                        } 
-                        Eigen::Vector3d new_center = new_sphere.center;
-                        flip(flip_nbr, j, k, small_voxel_size, new_center);
-                        new_sphere.center = new_center;
-                        new_spheres.push_back(new_sphere);
-                    } 
-                }
-                if (new_spheres.size() != 0){  
-                    ax.set_spheres(new_spheres);
-                    axons_to_add.push_back(ax);
-                }
-
-            }
-        }
-    }
-    // extend axons with axons to add
-    axons.reserve(axons.size() + distance(axons_to_add.begin(),axons_to_add.end()));
-    axons.insert(axons.end(),axons_to_add.begin(),axons_to_add.end());
-}
-*/
 
 void AxonGammaDistribution::get_begin_end_point(Eigen::Vector3d& Q, Eigen::Vector3d& D, double radius) {
     std::random_device rd;   
@@ -441,7 +345,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
         int number_axons_wo_twins = 0;
         int stuck;
-        int stuck_thr = 10000;
+        int stuck_thr = 1000000;
         
 
         for (unsigned i = 0; i < num_obstacles; i++)
@@ -466,7 +370,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
                 for (unsigned int j =0; j < nbr_threads; j++){
                     get_begin_end_point(Q, D, radiis[i]);
                     
-                    growths.push_back(new Growth (new Axon (id_, radiis[i], Q, D, volume_inc_perc, active_state, bool_swell_ax_id[i], 1), axons, small_voxel_size, tortuous));
+                    growths.push_back(new Growth (new Axon (id_, radiis[i], Q, D, volume_inc_perc,  bool_swell_ax_id[i], 1), axons, small_voxel_size, tortuous));
                     growing_threads.push_back(std::thread(&Growth::GrowInParallel, growths.at(j), D));
 
                 }
@@ -567,7 +471,7 @@ void AxonGammaDistribution::combine_axons_and_save(Axon axon1, Axon axon2, int i
     Eigen::Vector3d D = axon1.spheres[axon1.spheres.size()-1].center;
     Eigen::Vector3d Q = axon2.spheres[axon2.spheres.size()-1].center;
 
-    Axon* ax  = new Axon (id_, axon1.min_radius, D, Q, axon1.volume_inc_perc, axon1.active_state, axon1.swell);
+    Axon* ax  = new Axon (id_, axon1.min_radius, D, Q, axon1.volume_inc_perc, axon1.swell);
     std::vector<Dynamic_Sphere> combined_spheres;
     combined_spheres = axon1.spheres;
     // spheres of axon2 without first element which is also in axon1

@@ -32,7 +32,6 @@ Parameters::Parameters()
     min_obstacle_radii  = 0;
     volume_inc_perc     = 0;
     dyn_perc            = 0; 
-    active_state = false;
     gamma_from_file = "";
 
     ini_walkers_file = "";
@@ -86,16 +85,6 @@ void Parameters::readSchemeFile(std::string conf_file_path)
         }
         else if(str_dist(tmp,"diffusivity") <= 1){
             in >> diffusivity;
-        }
-        else if(str_dist(tmp,"active_state") <= 2){
-            string active_state_str;
-            in >> active_state_str;
-            if(active_state_str.compare("false")== 0){
-                active_state = false;
-            }
-            else if (active_state_str.compare("true")== 0){
-                active_state = true;
-            }
         }
         else if( (str_dist(tmp,"out_traj_file_index") <= 2) or (str_dist(tmp,"exp_prefix") <= 2)) {
             in >> traj_file;
@@ -232,7 +221,7 @@ void Parameters::readSchemeFile(std::string conf_file_path)
     }
 
     // if nbr of obstacles is not defined, estimate numbe of obstacles by taking 
-    // 0.5 um being the approx mean value of axons radii
+    // 0.35 um being the approx mean value of axons radii
     if (gamma_num_obstacles == 0 && max_limits[0] >EPS_VAL && gamma_icvf >EPS_VAL) {
             gamma_num_obstacles = unsigned(gamma_icvf*max_limits[0]*max_limits[1]/(M_PI*(0.35e-3)*(0.35e-3)));
             std::cout << " Num axons :" << gamma_num_obstacles << endl;
@@ -255,7 +244,7 @@ void Parameters::readSchemeFile(std::string conf_file_path)
 
 void Parameters::setNumWalkers(unsigned N)
 {
-    num_walkers = N;
+    num_walkers = int(N);
 }
 
 void Parameters::setNumSteps(unsigned T)
@@ -447,6 +436,16 @@ void Parameters::readObstacles(ifstream& in)
             in >> path;
             readPLYFileListScalePercolation(path);
             num_obstacles++;
+        }
+        if(str_dist(tmp,"tortuous") <= 1){
+            string tortuous_str;
+            in >> tortuous_str;
+            if(tortuous_str.compare("false")== 0){
+                tortuous = false;
+            }
+            else if (tortuous_str.compare("true")== 0){
+                tortuous = true;
+            }
         }
         if(str_dist(tmp,"<cylinder_hex_packing>") <=1){
             this->hex_cyl_packing = true;
@@ -682,16 +681,7 @@ void Parameters::readGammaParams(ifstream &in)
             in >> gamma_num_obstacles;
 
         }
-        else if(str_dist(tmp,"tortuous") <= 1){
-            string tortuous_str;
-            in >> tortuous_str;
-            if(tortuous_str.compare("false")== 0){
-                tortuous = false;
-            }
-            else if (tortuous_str.compare("true")== 0){
-                tortuous = true;
-            }
-        }
+
 
         else if(str_dist(tmp,"min_radius") <= 1){
             in >> min_obstacle_radii;
@@ -709,9 +699,7 @@ void Parameters::readGammaParams(ifstream &in)
             in >> gamma_icvf;
 
         }
-        else if(str_dist(tmp,"gamma_from_file") <= 1){
-            in >> gamma_from_file;
-        }
+
         else if(str_dist(tmp,"c2") <= 1){
             in >> c2;
 

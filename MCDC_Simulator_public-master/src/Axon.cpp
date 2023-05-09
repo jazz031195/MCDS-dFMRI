@@ -17,11 +17,9 @@ Axon::Axon(const Axon &ax)
     radius = ax.radius;
     begin = ax.begin;
     end = ax.end;
-    max_radius = ax.max_radius;
-    min_radius = ax.min_radius;
-    active_state = ax.active_state;
     volume_inc_perc = ax.volume_inc_perc;
     projections = ax.projections;
+    min_radius = ax.min_radius;
 
 }
 
@@ -205,31 +203,7 @@ bool Axon::isPosInsideAxon(Vector3d &position,  double distance_to_be_inside, st
         
 
     }
-    //if (minDistance(position) < distance_to_be_inside){
 
-    //    cout << "not working " << endl;
-    //    if (isNearAxon(position, distance_to_be_inside)){
-    //        if(coliding_projs.size() == 3){
-    //            if(colliding_all_axes){
-    //                if(!sphere_.distSmallerThan(position, distance_to_be_inside + rad)){
-    //                    cout <<"distSmallerThan doesn't work" << endl;
-    //                }
-    //            }
-    //            else{
-    //                cout << "not colliding_all_axes" << endl;
-    //            }
-    //        }
-    //        else{
-    //            cout << "coliding_projs.size() != 3" << endl;
-    //        }
-    //    }
-    //    else{
-    //        cout << "not near" << endl;
-    //    }
-    //    return true;
-    //}
-    //else{
-    //}
     return false;
 } 
 
@@ -407,12 +381,11 @@ bool check_inside(vector<double> list_c){
 
 bool check_outside(vector<double> list_c){
     for (unsigned i=0 ; i< list_c.size(); ++i){
-        if (list_c[i] > -1e-10){
-            return true;
-            break;        
+        if (list_c[i] < -1e-10){
+            return false;      
         }
     }
-    return false;
+    return true;
 }
 
 bool check_on_edge(vector<double> list_c){

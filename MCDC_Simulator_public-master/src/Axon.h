@@ -26,15 +26,13 @@ public:
     int id;
     std::vector<Dynamic_Sphere> spheres; 
     double radius;
-    double max_radius;
-    double min_radius;
     bool swell;
     Eigen::Vector3d begin;
     Eigen::Vector3d end;
     double volume_inc_perc;
-    bool active_state;
     Projections projections;
     Projections projections_max;
+    double min_radius;
 
 
     /*!
@@ -45,29 +43,20 @@ public:
     ~Axon(){};
 
 
-    Axon(int id_, double min_radius_,  Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_,bool active_state_ , bool swell_ , int scale = 1){
+    Axon(int id_, double radius_,  Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_, bool swell_ , int scale = 1){
 
         id = id_;
         begin = begin_*scale;
         end = end_*scale;
         volume_inc_perc = volume_inc_perc_;
-        min_radius = min_radius_*scale;
-        active_state = active_state_;
         swell = swell_;
 
-        radius = min_radius;
+        min_radius = radius = radius_*scale;
         spheres.clear();
 
         if (swell){ 
-            max_radius = sqrt(1+volume_inc_perc)*radius;
+            radius = sqrt(1+volume_inc_perc)*radius;
         }
-        else{
-            max_radius = radius;
-        } 
-
-        if (swell && active_state){
-            radius = max_radius;
-        } 
 
         //projections.clear_projections();
         //projections_max.clear_projections();

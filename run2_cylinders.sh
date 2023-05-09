@@ -2,7 +2,7 @@
 # see make_conf_file.py to see the parameters to use
 
 # icvf
-icvf="0.3";
+icvf="0.7";
 concentration=100000;
 
 declare -a locs=( "intra" "extra"); 
@@ -33,9 +33,9 @@ do
 		n=${n%.*}
             fi
             # run code to create axons list file
-	    chmod u+x make_conf_file.sh
-            ./make_conf_file.sh -i $icvf -l "$l" -p 48 -n "$n" -s "$s" -P "$path"
-            ./MCDC_Simulator_public-master/MC-DC_Simulator "${path}/docs/conf_file_examples/gammaDistributedAxons_run.conf"
+	    chmod u+x make_conf_file_cylinders.sh
+            ./make_conf_file_cylinders.sh -i $icvf -l "$l" -p 48 -n "$n" -s "$s" -P "$path"
+            ./MCDC_Simulator_public-master/MC-DC_Simulator "${path}/docs/conf_file_examples/gammaDistributedCylinders_run.conf"
         done
         
     done

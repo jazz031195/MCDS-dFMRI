@@ -22,7 +22,6 @@
 class Parameters
 {
 public:
-    bool active_state;
     unsigned num_walkers;                           /*!< N, number of walkers                                                       */
     unsigned num_steps;                             /*!< T, number of steps                                                         */
     double diffusivity;                             /*!< D, diffusivity constant                                                    */
@@ -87,7 +86,6 @@ public:
     double       min_obstacle_radii;                 /*!< Minimum radii (in um) to be sampled                                        */
     double c2;                                      /*!< for Orientation Density Function of axons (instead of kappa)                                                   */
     bool tortuous = false;
-    std::string gamma_from_file;
 
     bool subdivision_flag           = false;        /*!< flag to check if we have several voxel subdivision to compute the signal   */
     unsigned number_subdivisions    = 0;            /*!< saves the number of subdivisions for an initialzied voxel (needed)         */

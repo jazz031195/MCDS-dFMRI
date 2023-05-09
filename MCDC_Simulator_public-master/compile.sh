@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-cd "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/src/"|| exit
+cd "/src"
 search_dir=''
 src_files=''
 for entry in *.cpp

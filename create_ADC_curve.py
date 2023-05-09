@@ -232,17 +232,21 @@ def plot_DWI(intra_rest_path,extra_rest_path, extra_active_path, intra_active_pa
 def plot_inc_():
     b0 = 0.2
     b1 = 1
-
-    locs = ["intra"]
-    swell = [0.0, 0.3, 0.4, 0.5, 0.6, 0.7]
+    icvf=0.7
+    locs = ["intra", "extra"]
+    swell = [0.0, 0.3, 0.5, 0.7]
     datas = []
     swell_ = []
     locs_ = []
+    trys=[]
 
-    for n in [1]:
+    for n in [0,1,2,3,4,5,6,7]:
         for s in swell:
             for l in locs:
-                file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/axons/icvf_0.3_swell_{s}_{l}_DWI.txt"
+                if n == 0:
+                    file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/cylinders/icvf_{icvf}_swell_{s}_{l}_DWI.txt"
+                else:
+                    file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/cylinders/icvf_{icvf}_swell_{s}_{l}_rep_0{n-1}_DWI.txt"
                 print(file)
                 if (Path(file)).exists():
                     print("exists")
@@ -251,6 +255,7 @@ def plot_inc_():
                     for i in range(3):
                         swell_.append(s)
                         locs_.append(l)
+                        trys.append(n)
 
 
     data = pd.concat(datas)
@@ -258,38 +263,29 @@ def plot_inc_():
     
     data["location"] = locs_
     data["swell_perc"] = swell_
+    data["repetition"] = trys
     print(data)
     
-    #data = data.loc[data["orientations"] != "axial"]
-    sns.lineplot(data = data.reset_index(), x = "swell_perc",y = "adc [um²/ms]", hue = "axis")
+    data = data.loc[data["orientations"] != "axial"]
+    
+    sns.lineplot(data = data.reset_index(), x = "swell_perc",y = "adc [um²/ms]", hue = "location")
     plt.show()
-    data = data.groupby(by =["swell_perc", "location"] ).mean().reset_index()
-
-    data["weighted_adc"] = list(map(lambda x,y : x*0.7 if y == "intra" else x*0.3 , list(data["adc [um²/ms]"] ), list(data["location"])))
+    data = data.groupby(by =["swell_perc","orientations", "location","repetition"] ).mean().reset_index()
+    print(data)
+    data["weighted_adc"] = list(map(lambda x,y : x*icvf if y == "intra" else x*(1-icvf) , list(data["adc [um²/ms]"] ), list(data["location"])))
     
-    data_intra = data[data["location"] == "intra"]
-    data_extra = data[data["location"] == "extra"]
-    if len(data_intra ) != 0:
-        adc_0_intra = list(data_intra.loc[data_intra["swell_perc"]==0.0]["weighted_adc"])[0] 
-    if len(data_extra ) != 0:
-        adc_0_extra = list(data_extra.loc[data_extra["swell_perc"]==0.0]["weighted_adc"])[0] 
-    
-    data["adc_difference[%]"] = list(map(lambda x, y: (x-adc_0_intra)*100/x if y == "intra" else (x-adc_0_extra)*100/x, list(data["weighted_adc"] ), list(data["location"] )))
-    
+    data = data.groupby(by =["swell_perc","repetition"] ).mean().reset_index()
     
     print(data)
 
-    data = data.groupby(by =["swell_perc"]).mean().reset_index()
-
-    sns.lineplot(data = data, x = "swell_perc",y = "adc_difference[%]")
+    sns.lineplot(data = data, x = "swell_perc",y = "weighted_adc")
     plt.show()
     
-    print(data)
 
 
 
 def plot_increase():
-    b0 = 0
+    b0 = 1
     b1 = 2
     locs = ["intra", "extra"]
     swell = [0.0, 0.3, 0.4, 0.5, 0.6, 0.7]
@@ -369,4 +365,4 @@ def plot_const():
 
 
 
-plot_const()
+plot_inc_()

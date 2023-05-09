@@ -20,26 +20,33 @@ class Dynamic_Cylinder : public Obstacle
 public:
 
     static int count;
+    int id;
     Eigen::Vector3d P,Q;    /*!< Cilinder Axis reference Points, P should be the "center"       */
     Eigen::Vector3d D;      /*!< Pre-computed and normalized P - Q vector                       */
     double radius;          /*!< Radius of the cylinder                                         */
     bool swell;
-    double max_radius;
-    double ini_radius;
     double volume_inc_perc;
+    double min_radius;
     /*!
      *  \brief Default constructor. Does nothing
      */
+ 
     Dynamic_Cylinder();
 
     ~Dynamic_Cylinder();
 
 
-    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_, double radius_,double volume_inc_perc_, bool swell_ = false, double scale = 1):P(P_*scale),Q(Q_*scale),radius(radius_*scale), ini_radius{radius_*scale},volume_inc_perc{volume_inc_perc_}, swell{swell_}{
+    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_, double radius_,double volume_inc_perc_, bool swell_, int id_, double scale = 1):P(P_*scale),Q(Q_*scale),volume_inc_perc{volume_inc_perc_}, swell{swell_}{
         D  = (Q_-P_).normalized();
         Q = P+D;
-        max_radius = radius*std::sqrt(1+volume_inc_perc_);
-        id = count++;
+
+        id = id_;
+
+        min_radius = radius = radius_*scale;
+        if (swell){
+            radius = sqrt(1+volume_inc_perc)*radius;
+        }
+
     }
     Dynamic_Cylinder(Dynamic_Cylinder const &dyn_cyl);
 
@@ -60,8 +67,6 @@ public:
      *  cylinders that a given walker can reach.
      */
     double minDistance(Walker &w);
-
-    bool checkSwallow(Walker &walker, bool walker_is_extra);
 
 
 private:
