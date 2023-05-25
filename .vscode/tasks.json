@@ -43,6 +43,7 @@
                 "vertex.cpp",
                 "voxel.cpp",
                 "walker.cpp",
+                "Dendrite.cpp",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
             ],
