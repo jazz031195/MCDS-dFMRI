@@ -184,7 +184,7 @@ void ParallelMCSimulation::initializeUnitSimulations()
         simulation_->plyObstacles_list = &this->plyObstacles_list;
         simulation_->cylinder_list = &this->cylinders_list;
         simulation_->dyn_cylinder_list = &this->dyn_cylinders_list;
-        simulation_->sphere_list = &this->spheres_list;
+        simulation_->dyn_sphere_list = &this->dyn_spheres_list;
         simulation_->axon_list = &this->axons_list;
         simulation_->dynamicsEngine->print_expected_time = 0;
         simulation_->neuron_list = &this->neurons_list;
@@ -207,7 +207,7 @@ void ParallelMCSimulation::initializeUnitSimulations()
     simulation_->plyObstacles_list = &this->plyObstacles_list;
     simulation_->cylinder_list = &this->cylinders_list;
     simulation_->dyn_cylinder_list = &this->dyn_cylinders_list;
-    simulation_->sphere_list    = &this->spheres_list;
+    simulation_->dyn_sphere_list    = &this->dyn_spheres_list;
     simulation_->axon_list = &this->axons_list;
     simulation_->neuron_list = &this->neurons_list;
 
@@ -733,7 +733,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 enum_ += 1;
                 continue;
                 }
-            if (enum_ == 2 || enum_ == 3 || enum_ == 4){
+            if (enum_ <=6){
                 enum_ += 1;
                 continue;
             }
@@ -751,24 +751,29 @@ void ParallelMCSimulation::addObstaclesFromFiles()
 
         if(z_flag){
             double x,y,z,r;
-            bool s;
             double scale;
+            bool s;
             double volume_inc_perc, dyn_perc, icvf;
+            double max_limits, min_limits;
+
             in >> scale;
             in >> volume_inc_perc;
             in >> dyn_perc;
             in >> icvf;
-
+            in >> min_limits;
+            in >> max_limits;
+            int n = 0;
             while (in >> x >> y >> z >> r >> s)
             {
-                if (params.active_state && s){
-                    r *= sqrt(1+volume_inc_perc);
-                }
-                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,volume_inc_perc,s, scale));
+                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(x,y,z+1.0),r,volume_inc_perc,s, n, scale));
+                n += 1;
             }
             params.volume_inc_perc = volume_inc_perc;
             params.gamma_icvf = icvf;
             params.dyn_perc = dyn_perc;
+            params.max_limits = Eigen::Vector3d(max_limits,max_limits,max_limits);
+            params.min_limits = Eigen::Vector3d(min_limits,min_limits,min_limits);
+
 
 
             in.close();
@@ -778,22 +783,25 @@ void ParallelMCSimulation::addObstaclesFromFiles()
             double scale;
             bool s;
             double volume_inc_perc, dyn_perc, icvf;
+            double max_limits, min_limits;
 
             in >> scale;
             in >> volume_inc_perc;
             in >> dyn_perc;
             in >> icvf;
-
+            in >> min_limits;
+            in >> max_limits;
+            int n = 0;
             while (in >> x >> y >> z >> ox >> oy >> oz >> r >> s)
             {
-                if (params.active_state && s){
-                    r *= sqrt(1+volume_inc_perc);
-                }
-                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,volume_inc_perc, s, scale));
+                dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(x,y,z),Eigen::Vector3d(ox,oy,oz),r,volume_inc_perc, s, n, scale));
+                n +=1;
             }
             params.volume_inc_perc = volume_inc_perc;
             params.gamma_icvf = icvf;
             params.dyn_perc = dyn_perc;
+            params.max_limits = Eigen::Vector3d(max_limits,max_limits,max_limits);
+            params.min_limits = Eigen::Vector3d(min_limits,min_limits,min_limits);
 
 
             in.close();
@@ -850,32 +858,35 @@ void ParallelMCSimulation::addObstaclesFromFiles()
 
         std::vector<Dynamic_Sphere> spheres_ ;
         Dynamic_Sphere sphere_;
-
+        int sph_id = 0;
         for( std::string line; getline( in, line ); ){
             
             std::vector<std::string> jkr = _split_(line,' ');
-            int ax_id=0;
+            int ax_id = 0;
             if(jkr.size() == 5){
                 x = stod(jkr[0]);
                 y = stod(jkr[1]);
                 z = stod(jkr[2]);
                 r = stod(jkr[3]);
                 s = stod(jkr[4]);
-                sphere_ = Dynamic_Sphere(Eigen::Vector3d(x,y,z), r, volume_inc_perc, s, ax_id, scale, params.active_state);
+                sphere_ = Dynamic_Sphere(Eigen::Vector3d(x,y,z), r, volume_inc_perc, s, ax_id, scale, sph_id);
                 spheres_.push_back(sphere_);
+                dyn_spheres_list.push_back(sphere_);
+                sph_id += 1; 
                 //cout << "adding sphere,  min radius :" << sphere_.min_radius <<", max radius :" << sphere_.max_radius <<", radius :" << sphere_.radius << ", swell : " << sphere_.swell << endl;
             
             }
 
             if(jkr.size() == 3 ){
+                sph_id = 0;
                 ax_id = stod(jkr[1]);
                 Eigen::Vector3d begin = {min_limits, min_limits, min_limits};
                 Eigen::Vector3d end = {max_limits, max_limits, max_limits};
-                Axon ax (r, begin, end,volume_inc_perc, params.active_state, s, scale);
-                ax.set_spheres(spheres_, ax_id);
+                Axon ax (ax_id, r, begin, end,volume_inc_perc, s, scale);
+                ax.set_spheres(spheres_);
                 axons_list.push_back(ax);
                 spheres_.clear();
-                cout << "adding axon, begin x:" << ax.begin[0] << ", end x :" << ax.end[0] <<", min radius :" << ax.min_radius <<", max radius :" << ax.max_radius <<", radius :" << ax.radius << ", swell : " << ax.swell << endl;
+                //cout << "adding axon, id :" << ax.id <<" , begin x:" << ax.begin[0] << ", end x :" << ax.end[0] <<", min radius :" << ax.min_radius <<", max radius :" << ax.max_radius <<", radius :" << ax.radius << ", swell : " << ax.swell << endl;
             }
         }
 
@@ -950,15 +961,16 @@ void ParallelMCSimulation::addObstaclesFromFiles()
         for( std::string line; getline( in, line ); ){
             
             std::vector<std::string> jkr = _split_(line,' ');
+            int ax_id = 0;
             if(jkr.size() == 5){
                 x = stod(jkr[0]);
                 y = stod(jkr[1]);
                 z = stod(jkr[2]);
                 r = stod(jkr[3]);
                 s = stod(jkr[4]);
-                sphere_ = Dynamic_Sphere(Eigen::Vector3d(x,y,z), r, volume_inc_perc, s, id, scale, params.active_state);
+                sphere_ = Dynamic_Sphere(Eigen::Vector3d(x,y,z), r, volume_inc_perc, s, ax_id, id, scale);
                 spheres_.push_back(sphere_);
-                cout << "adding sphere,  min radius :" << sphere_.min_radius <<", max radius :" << sphere_.max_radius <<", radius :" << sphere_.radius << ", swell : " << sphere_.swell << endl;
+                cout << "adding sphere,  min radius :" << sphere_.min_radius << ", radius :" << sphere_.radius << ", swell : " << sphere_.swell << endl;
             
             }
             if(jkr.size() == 2){
@@ -976,9 +988,8 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 {
                     Eigen::Vector3d begin = {min_limits, min_limits, min_limits};
                     Eigen::Vector3d end   = {max_limits, max_limits, max_limits};
-                    Axon subbranch (r, begin, end, volume_inc_perc, params.active_state, s, scale);
-                    subbranch.id = id;
-                    subbranch.set_spheres(spheres_, id);
+                    Axon subbranch (id, r, begin, end, volume_inc_perc, s, scale);
+                    subbranch.set_spheres(spheres_);
                     spheres_.clear();
                     subbranches_.push_back(subbranch);
                     cout << "adding segment "  << endl;
@@ -1119,17 +1130,17 @@ void ParallelMCSimulation::addObstacleConfigurations()
         // h = sqrt(3)/2 * sep
         double h =0.8660254037844386*sep;
 
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,0,0),Eigen::Vector3d(0,0,1.0),rad, params.volume_inc_perc));
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,0,0),Eigen::Vector3d(sep,0,1.0),rad, params.volume_inc_perc));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,0,0),Eigen::Vector3d(0,0,1.0),rad, params.volume_inc_perc, false, 0));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,0,0),Eigen::Vector3d(sep,0,1.0),rad, params.volume_inc_perc, false, 1));
 
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,2.0*h,0),Eigen::Vector3d(0,2.0*h,1.0),rad,  params.volume_inc_perc));
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,2.0*h,0),Eigen::Vector3d(sep,2.0*h,1.0),rad, params.volume_inc_perc));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0,2.0*h,0),Eigen::Vector3d(0,2.0*h,1.0),rad,  params.volume_inc_perc, false, 2));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(sep,2.0*h,0),Eigen::Vector3d(sep,2.0*h,1.0),rad, params.volume_inc_perc, false, 3));
 
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0.5*sep,h,0),Eigen::Vector3d(0.5*sep,h,1.0),rad, params.volume_inc_perc));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(0.5*sep,h,0),Eigen::Vector3d(0.5*sep,h,1.0),rad, params.volume_inc_perc, false, 4));
 
         // To avoid problems with the boundaries
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(-0.5*sep,h,0),Eigen::Vector3d(-0.5*sep,h,1.0),rad, params.volume_inc_perc));
-        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(1.5*sep,h,0),Eigen::Vector3d(1.5*sep,h,1.0),rad, params.volume_inc_perc));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(-0.5*sep,h,0),Eigen::Vector3d(-0.5*sep,h,1.0),rad, params.volume_inc_perc,false,  5));
+        dyn_cylinders_list.push_back(Dynamic_Cylinder(Eigen::Vector3d(1.5*sep,h,0),Eigen::Vector3d(1.5*sep,h,1.0),rad, params.volume_inc_perc,false,  6));
 
         if(params.voxels_list.size()>0)
             params.voxels_list.clear();
@@ -1228,7 +1239,7 @@ void ParallelMCSimulation::addObstacleConfigurations()
         SimErrno::info(message,cout);
 
         DynCylinderGammaDistribution gamma_dist(params.dyn_perc, params.volume_inc_perc, params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
-                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii, params.active_state);
+                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii);
 
 
         gamma_dist.displayGammaDistribution();
@@ -1252,10 +1263,9 @@ void ParallelMCSimulation::addObstacleConfigurations()
         ofstream out(file);
 
         gamma_dist.printSubstrate(out);
-
-        this->dyn_cylinders_list = gamma_dist.dyn_cylinders;
-
-        //params.cylinders_files.push_back(file);
+        for (unsigned i = 0; i < (gamma_dist.dyn_cylinders).size(); ++i){
+            dyn_cylinders_list.push_back(*(gamma_dist.dyn_cylinders)[i]);
+        }
 
         out.close();
 
@@ -1274,21 +1284,15 @@ void ParallelMCSimulation::addObstacleConfigurations()
         SimErrno::info(message,cout);
 
         AxonGammaDistribution gamma_dist(params.dyn_perc, params.volume_inc_perc,  params.gamma_num_obstacles,params.gamma_packing_alpha, params.gamma_packing_beta,params.gamma_icvf
-                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii, params.active_state, params.c2, params.tortuous);
+                                             ,params.min_limits, params.max_limits,params.min_obstacle_radii, params.c2, params.tortuous, params.step_lenght);
 
 
         gamma_dist.displayGammaDistribution();
         string file = params.output_base_name + "_gamma_distributed_axon_list_.txt";
         ofstream out(file);
+
         
         gamma_dist.createGammaSubstrate(out);
-
-        //for (unsigned i = 0; i < gamma_dist.dyn_cylinders.size(); i++)
-        //{
-            
-        //    string message = " P : ("+ to_string(gamma_dist.dyn_cylinders[i].P[0])+", "+ to_string(gamma_dist.dyn_cylinders[i].P[1]) + "," + to_string(gamma_dist.dyn_cylinders[i].P[2])+") \n";
-        //    SimErrno::info(message, cout);
-        //}
 
         params.max_limits = gamma_dist.max_limits;
         params.min_limits = gamma_dist.min_limits;
@@ -1308,15 +1312,8 @@ void ParallelMCSimulation::addObstacleConfigurations()
         ofstream out_(file);
         gamma_dist.printSubstrate(out_);
 
-        this->axons_list = gamma_dist.axons;
+        axons_list = gamma_dist.axons;
 
-        //for (unsigned i=0; i< axons_list.size(); ++i){
-        //    for (unsigned s=0; s< this->axons_list[i].spheres.size(); ++s){
-        //        this->dyn_spheres_list.push_back(this->axons_list[i].spheres[s]);
-        //    }
-        //}
-         
-        //params.cylinders_files.push_back(file);
 
         out.close();
 

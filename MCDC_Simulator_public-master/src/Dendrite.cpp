@@ -49,7 +49,7 @@ bool Dendrite::isPosInsideDendrite(Vector3d const& position,  double const& barr
     vector<int> dummy;
     for(size_t s=0; s < subbranches.size(); ++s)
     {
-        if(subbranches[s].isPosInsideAxon(position, barrier_thickness, false, dummy))
+        if(subbranches[s].isPosInsideAxon(position, barrier_thickness, dummy))
             return true;
     }
     return false;
@@ -99,11 +99,11 @@ void Dendrite::add_projection(int const& dendrite_id)
             // Contains the minimum axis projection of the subbranches axon_projections
             double min_axis_projection     = 1000;
             // Contains the minimum axis projection of the subbranches axon_projections_max
-            double min_axis_projection_max = 1000;
+            // double min_axis_projection_max = 1000;
             // Contains the maximum axis projection of the subbranches axon_projections
             double max_axis_projection     = 0;
             // Contains the maximum axis projection of the subbranches axon_projections_max
-            double max_axis_projection_max = 0;
+            // double max_axis_projection_max = 0;
             for(size_t b=0; b < subbranches.size(); b++)
             {        
                 // double min_axis_projection_tmp     = subbranches[0].projections.axon_projections[axis][0];

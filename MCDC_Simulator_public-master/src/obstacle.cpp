@@ -10,7 +10,7 @@ bool Obstacle::checkCollision(Walker& walker, Eigen::Vector3d const& step, doubl
     return false;
 }
 
-void Obstacle::elasticBounceAgainsPlane(Eigen::Vector3d const& ray_origin, Eigen::Vector3d const& normal, double const& step_length, Eigen::Vector3d &step_dir) const
+void Obstacle::elasticBounceAgainsPlane(Eigen::Vector3d& ray_origin, Eigen::Vector3d& normal, double& step_length, Eigen::Vector3d &step_dir) 
 {
 
     Eigen::Vector3d ray =  -step_dir;//
@@ -23,8 +23,36 @@ void Obstacle::elasticBounceAgainsPlane(Eigen::Vector3d const& ray_origin, Eigen
 
 }
 
-double Obstacle::minDistance(Walker const& walker) const
+void Obstacle::elasticBounceAgainsPlane_intra(Eigen::Vector3d &ray_origin, Eigen::Vector3d &normal, double &t, Eigen::Vector3d &step)
+{
+
+    Eigen::Vector3d ray =  (-t*step).normalized();//
+
+    double rn = ray.dot(normal);
+    if (cos(rn)== 0){
+        step = normal;
+    } 
+    else{
+        step = -ray + 2.0*normal*rn;
+    } 
+
+
+}
+
+void Obstacle::elasticBounceAgainsPlane_extra(Eigen::Vector3d &ray_origin, Eigen::Vector3d &normal, double &t, Eigen::Vector3d &step)
+{
+
+    Eigen::Vector3d ray =  (-t*step).normalized();//
+
+    double rn = ray.dot(normal);
+    if (cos(rn) <= 0){
+        step = -ray + 2.0*normal*rn;
+    } 
+
+
+}
+
+double Obstacle::minDistance(Walker &w)
 {
     return 0;
-
 }

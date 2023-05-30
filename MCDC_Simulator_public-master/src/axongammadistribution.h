@@ -17,6 +17,7 @@
 #include <iostream>
 #include "Axon.h"
 #include "dynamic_sphere.h"
+#include <thread>
 
 
 
@@ -31,7 +32,7 @@ public:
     double alpha;                                   /*!< alpha coefficient of the Gamma distribution                                */
     double beta;                                    /*!< beta coefficient of the gamma distribution                                 */
     double icvf;                                    /*!< Achieved intra-celular volum fraction in the substrate                     */
-    float min_radius;                                /*!< Minimum radius to be sampled from the gamma distribution                  */
+    double min_radius;                                /*!< Minimum radius to be sampled from the gamma distribution                  */
     double icvf_current;
     
     Eigen::Vector3d min_limits;                     /*!< voxel min limits (if any) (bottom left corner)                             */
@@ -43,6 +44,9 @@ public:
     double duration; 
     std::vector<double> tortuosities;
     double c2;                                      /*!< ODF                                               */
+    double step_length;
+    Eigen::Vector3d small_voxel_size;               /*!< size of small voxel where the aount of desired axons are fitted                                              */
+    std::string gamma_from_file;
     /*!
      *  \param P_ Cylinder origin
      *  \param Q_ cylinder direction.
@@ -59,7 +63,7 @@ public:
      *  \param scale scale factor for the values passed. Useful when reading a file.
      *  \brief Initialize everything.
      */
-    AxonGammaDistribution(double, double, unsigned, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius = 0.001, bool active_state = false, double c2 = 1.0, bool tortuous = false);
+    AxonGammaDistribution(double, double, unsigned&, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, double min_radius = 0.001, bool active_state = false, double c2 = 1.0, bool tortuous = false, double step_length_ = barrier_tickness, std::string gamma_from_file = "");
      
      /*!
      *  \brief Shows a small histogram of the gamma distribution
@@ -76,15 +80,12 @@ public:
      *  \param out ostream where to write the info.
     */
     void printSubstrate(std::ostream& out);
-    std::vector<Dynamic_Sphere> GrowAxon(Axon ax, double distance_to_be_inside, int axon_id,  std::ostream& out);
-    bool check_borders(Eigen::Vector3d pos, double distance_to_border);
-    bool isSphereColliding(Dynamic_Sphere sph);
-    bool find_next_center(Axon ax, Dynamic_Sphere& s, double dist_, double& rad, Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, int axon_id, std::ostream& out);
-    void fiber_collapse(Eigen::Vector3d& new_pos, Eigen::Vector3d& prev_pos, std::vector<Eigen::Vector3d>& centers, uint& fibre_collapsed_nbr, std::ostream& out);
-    bool fill_spheres_in_between(Axon ax, Dynamic_Sphere& added_sphere, std::vector<Eigen::Vector3d>& centers, std::vector<double>& sph_radii, std::ostream& out);
-    void shrink_sphere_rad(double& rad, double axon_rad, double& shrink_perc, std::ostream& out);
     void find_target_point (double c2, double radius, Eigen::Vector3d& initial_point , Eigen::Vector3d& target_point);
-
+    bool check_borders(Eigen::Vector3d pos, double distance_to_border, Eigen::Vector2d& twin_delta_pos);
+    //void add_periodic_voxel(int nbr_small_voxels, Eigen::Vector3d small_voxel_size);
+    //void flip(int flip_nbr, int j, int k, Eigen::Vector3d small_voxel_size, Eigen::Vector3d& initial_pos);
+    void combine_axons_and_save(Axon axon1, Axon axon2, int id_, std::vector<Axon>& axons_);
+    void get_begin_end_point(Eigen::Vector3d& Q,Eigen::Vector3d& D, double radius);
 private:
 
     /*!
@@ -93,10 +94,11 @@ private:
      *  \param min_limits voxel min limits.
      *  \param max_limits voxel max limits.
     */
-    double  computeICVF(std::vector<Axon> &axons, Eigen::Vector3d &min_limits, Eigen::Vector3d &max_limits, int &num_no_repeat);
+    double  computeICVF();
 
     void computeMinimalSize(std::vector<double> radiis, double icvf_, Eigen::Vector3d& l);
 
+    
 
 };
 

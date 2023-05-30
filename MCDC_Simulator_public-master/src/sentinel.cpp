@@ -77,8 +77,6 @@ bool Sentinel::checkErrors(Walker &walker, const Parameters &params, bool noPLY,
                 setCrossingError(uint(walker.in_neuron_index));
             else if (walker.in_ply_index >= 0)
                 setCrossingError(uint(walker.in_ply_index));
-            else if (walker.in_sph_index >= 0)
-                setCrossingError(uint(walker.in_sph_index));
             else 
                 setCrossingError(uint(walker.in_cyl_index));   
             illegal_count++;

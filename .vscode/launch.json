@@ -3,6 +3,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+    
         {
             "name": "run current conf file",
             "type": "cppdbg",
@@ -11,8 +12,7 @@
             "args": ["${file}"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "MIMode": "lldb",
-            "console": "integratedTerminal" 
+            "MIMode": "gdb",
         },
     ]
 }

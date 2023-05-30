@@ -21,12 +21,12 @@
 class Parameters
 {
 public:
-    bool active_state;
     unsigned num_walkers;                           /*!< N, number of walkers                                                       */
     unsigned num_steps;                             /*!< T, number of steps                                                         */
     double diffusivity;                             /*!< D, diffusivity constant                                                    */
     double sim_duration;                            /*!< simulation total time                                                      */
     double dyn_perc;                                /*!< percentage of swelling cylinders                                           */
+    double step_lenght;
     double volume_inc_perc;  
     bool write_traj;                                /*!< flag, write a traj file or not, binary format only                         */
     bool write_txt;                                 /*!< flag, writes DWI output signals in .txt if True                            */
@@ -84,7 +84,7 @@ public:
     double      gamma_icvf;
     double      gamma_output_configuration;
     unsigned    gamma_num_obstacles;
-    float       min_obstacle_radii;                 /*!< Minimum radii (in um) to be sampled                                        */
+    double       min_obstacle_radii;                 /*!< Minimum radii (in um) to be sampled                                        */
     double c2;                                      /*!< for Orientation Density Function of axons (instead of kappa)                                                   */
     bool tortuous = false;
 

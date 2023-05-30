@@ -25,16 +25,15 @@ public:
 
     double dyn_perc;                                /*!< Percentage of dynamic cylinders that swell                                 */ 
     double volume_inc_perc;                         /*!< Percentage of Volume increase of cylinders that start to swell       */                                       
-    std::vector<Dynamic_Cylinder> dyn_cylinders;    /*!< Cylinder vector                                                            */
+    std::vector<Dynamic_Cylinder*> dyn_cylinders;    /*!< Cylinder vector                                                            */
     unsigned num_obstacles;                         /*!< number of cylnders fit inside the substrate                                */
     double alpha;                                   /*!< alpha coefficient of the Gamma distribution                                */
     double beta;                                    /*!< beta coefficient of the gamma distribution                                 */
     double icvf;                                    /*!< Achieved intra-celular volum fraction in the substrate                     */
     float min_radius;                                /*!< Minimum radius to be sampled from the gamma distribution                  */
-    bool active_state;                              /*!< If the cylinders are initially swollen                                     */
     Eigen::Vector3d min_limits;                     /*!< voxel min limits (if any) (bottom left corner)                             */
     Eigen::Vector3d max_limits;                     /*!< voxel max limits (if any)                                                  */
-    
+    double icvf_current;
 
     /*!
      *  \param P_ Cylinder origin
@@ -52,7 +51,7 @@ public:
      *  \param scale scale factor for the values passed. Useful when reading a file.
      *  \brief Initialize everything.
      */
-    DynCylinderGammaDistribution(double, double , unsigned,double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius = 0.001, bool active_state = false);
+    DynCylinderGammaDistribution(double, double , unsigned,double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, float min_radius);
      
      /*!
      *  \brief Shows a small histogram of the gamma distribution
@@ -63,7 +62,6 @@ public:
     */
     void createGammaSubstrate();
 
-    void updateGammaSubstrate();
 
     /*!
      *  \brief Prints the cylinders positions in a file or output stream.
@@ -81,7 +79,7 @@ private:
      *  \param cylinders_list cylinders already added.
      *  \param min_distance that two cylinders can be close to.
     */
-    bool checkForCollition(Dynamic_Cylinder cyl, Eigen::Vector3d min_limits, Eigen::Vector3d max_limits, std::vector<Dynamic_Cylinder>& dyn_cylinders_list, double &min_distance);
+    bool checkForCollition(Dynamic_Cylinder* cyl, Eigen::Vector3d min_limits, Eigen::Vector3d max_limits, std::vector<Dynamic_Cylinder*>& dyn_cylinders_list, double &min_distance);
 
     /*!
      *  \brief Auxiliary function to check the BOundary collision
@@ -90,7 +88,7 @@ private:
      *  \param max_limits Voxel max limits.
      *  \param cylinders_list cylinders already added.
     */
-    void checkBoundaryConditions(Dynamic_Cylinder cyl, std::vector<Dynamic_Cylinder>& dyn_cylinders_list, Eigen::Vector3d min_limits, Eigen::Vector3d max_limits);
+    void checkBoundaryConditions(Dynamic_Cylinder* cyl, std::vector<Dynamic_Cylinder*>& dyn_cylinders_list, Eigen::Vector3d min_limits, Eigen::Vector3d max_limits);
 
     /*!
      *  \brief Computes Intra Celular Volum Fraction given the voxel limits and the list of added cylinders.
@@ -98,7 +96,7 @@ private:
      *  \param min_limits voxel min limits.
      *  \param max_limits voxel max limits.
     */
-    double  computeICVF(std::vector<Dynamic_Cylinder> &dyn_cylinders, Eigen::Vector3d &min_limits, Eigen::Vector3d &max_limits, int &num_no_repeat);
+    double  computeICVF(std::vector<Dynamic_Cylinder*> &dyn_cylinders, Eigen::Vector3d &min_limits, Eigen::Vector3d &max_limits, int &num_no_repeat);
 
     void computeMinimalSize(std::vector<double> radiis, double icvf_, Eigen::Vector3d& l);
 

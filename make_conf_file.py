@@ -8,7 +8,9 @@ dynamic_cylinders = mcdc_dir / "instructions/demos/output/dynamic_cylinders"
 conf_file_examples = mcdc_dir / "docs/conf_file_examples"
 scheme_files = mcdc_dir / "docs/scheme_files"
 
-def write_conf_file_create_axons(N, T, exp_prefix, icvf , num_axons, c2):
+path = "/scratch/jnguyend/Simulation/MCDC_Simulator_public-master"
+
+def write_conf_file_create_axons(N, T, exp_prefix, icvf , num_axons, c2, i, swell):
     """
     Overwrites the configuration file gammaDistributedAxons.conf with the desired parameters
     Should be used in case we want to grow axons in a new substrate
@@ -28,29 +30,34 @@ def write_conf_file_create_axons(N, T, exp_prefix, icvf , num_axons, c2):
     lines.append("duration 0.067")
     lines.append("diffusivity 2.5e-9")
     lines.append("active_state false")
-    lines.append("exp_prefix /home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/axons/" +exp_prefix)
-    lines.append("scheme_file /home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/scheme_files/PGSE_sample_scheme_new.scheme")
+    lines.append(f"exp_prefix {path}/instructions/demos/output/axons/" +exp_prefix)
+    lines.append(f"scheme_file {path}/docs/scheme_files/PGSE_sample_scheme_new.scheme")
     lines.append("scale_from_stu 1")
     lines.append("write_txt 1")
     lines.append("write_bin 0")
     lines.append("write_traj_file 0")
     lines.append("<obstacle>")
     lines.append("<axon_gamma_packing>")
-    lines.append("alpha 5")
-    lines.append("beta 0.1")
+    lines.append("alpha 0.0")
+    lines.append("beta 0.0")
     lines.append("icvf "+str(icvf))
     lines.append("num_axons "+str(num_axons))
-    lines.append("percentage_dynamic_axons 0.3")
+    lines.append("percentage_dynamic_axons "+str(swell))
     lines.append("percentage_increase_of_volume 0.01")
     lines.append("c2 "+str(c2))
     lines.append("tortuous true")
+    lines.append("min_radius 0.1")
     lines.append("</axon_gamma_packing>")
     lines.append("</obstacle>")
+    lines.append("<voxels>")
+    lines.append("0 0 0")
+    lines.append("0 0 0")
+    lines.append("</voxels>")
     lines.append("ini_walkers_pos extra")
     lines.append("num_process 10")
     lines.append("<END>")
 
-    name = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedAxons.conf"
+    name = f"{path}/docs/conf_file_examples/gammaDistributedAxons.conf"
 
     f = open(name, "w")
     for l in lines :
@@ -77,20 +84,20 @@ def write_conf_file(N, T, activation, exp_prefix, location, axons_list_prefix):
     lines.append("duration 0.067")
     lines.append("diffusivity 2.5e-9")
     lines.append("active_state " + str(activation))
-    lines.append("exp_prefix /home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/axons/" +exp_prefix)
-    lines.append("scheme_file /home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/scheme_files/PGSE_sample_scheme_new.scheme")
+    lines.append(f"exp_prefix {path}/instructions/demos/output/axons/" +exp_prefix)
+    lines.append(f"scheme_file {path}/docs/scheme_files/PGSE_sample_scheme_new.scheme")
     lines.append("scale_from_stu 1")
     lines.append("write_txt 1")
     lines.append("write_bin 0")
     lines.append("write_traj_file 0")
     lines.append("<obstacle>")
-    lines.append("axon_list /home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/axons/"+str(axons_list_prefix)+"_gamma_distributed_axon_list.txt")
+    lines.append(f"axon_list {path}/instructions/demos/output/axons/Substrates/"+str(axons_list_prefix)+".txt")
     lines.append("</obstacle>")
     lines.append("ini_walkers_pos "+ str(location))
-    lines.append("num_process 10")
+    lines.append("num_process 20")
     lines.append("<END>")
 
-    name = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedAxons.conf"
+    name = f"{path}/docs/conf_file_examples/gammaDistributedAxons.conf"
 
     f = open(name, "w")
     for l in lines :
@@ -112,13 +119,15 @@ def get_variables():
     loc = None 
     state = None
     icvf = None
-    concentration = 1000
+    concentration = 100000
     create_substrate_ = "true"
+    g = None
+    swell = None
 
     argv = sys.argv[1:]
   
     try:
-        opts, args = getopt.getopt(argv, ":a:t:l:s:i:c:x:")
+        opts, args = getopt.getopt(argv, ":a:t:l:s:i:c:x:g:S:")
       
     except:
         print("Error")
@@ -144,6 +153,11 @@ def get_variables():
             c2 = float(arg)
         elif opt in ['-x']:
             create_substrate_ = arg
+        elif opt in ['-g']:
+            g = arg
+        elif opt in ['-S']:
+            # percentage of axons swelling
+            swell = arg
         
     if (create_substrate_ == "true"):
         create_substrate = True
@@ -158,14 +172,16 @@ def get_variables():
 
         
         
-    return N, nbr_axons, T, loc, state,icvf, create_substrate, c2
+    return N, nbr_axons, T, loc, state,icvf, create_substrate, c2, g, swell
         
       
 
-N, nbr_axons, T, location, activation, icvf, create_substrate, c2 = get_variables()
-axons_list_prefix = "nbr_axons_"+str(nbr_axons)+"_icvf_"+str(icvf)
+N, nbr_axons, T, location, activation, icvf, create_substrate, c2, g, swell = get_variables()
+#axons_list_prefix = "nbr_axons_"+str(nbr_axons)+"_icvf_"+str(icvf)
+axons_list_prefix = f'icvf_{icvf}_swell_{swell}_gamma_distributed_axon_list'
+print(axons_list_prefix )
 if(create_substrate):
-    write_conf_file_create_axons(1, 1, axons_list_prefix, icvf , nbr_axons, c2)
+    write_conf_file_create_axons(1, 1, axons_list_prefix, icvf , nbr_axons, c2, g, swell)
 else:
-    exp_prefix = "nbr_axons_"+str(nbr_axons)+"_"+str(location)+"_"+str(activation)+"_icvf_"+str(icvf)
+    exp_prefix = f'icvf_{icvf}_swell_{swell}_{location}'
     write_conf_file(N, T, activation, exp_prefix, location, axons_list_prefix)

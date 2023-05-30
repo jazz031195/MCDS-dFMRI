@@ -8,6 +8,8 @@
 #ifndef COLLISION_H
 #define COLLISION_H
 #include <Eigen/Core>
+#include <vector>
+using namespace std;
 
 /*! \class Collision
  *  \brief Class to save and handle collisions between walkers and objects.
@@ -18,10 +20,14 @@
  */
 class Collision{
 public:
+
+    // Object ID that walker last collided with 
+    std::vector<int> collision_objects;
     //! \enum  collision_type.
     /*! All the possibles cases or situations where a step can end.
      *  The next step is performed according to this state
     */
+    
     enum collision_type{hit,near,null,boundary,degenerate};
 
     //! \enum collision_location.

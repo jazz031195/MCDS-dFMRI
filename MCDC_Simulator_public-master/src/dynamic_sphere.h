@@ -16,22 +16,21 @@ class Dynamic_Sphere : public Sphere
 {
 public:
 
-    static int count;
+    int id;
     bool swell;
     double volume_inc_perc;
     int ax_id;
-    double max_radius;
     double min_radius;
-    bool active_state;
+
 
     /*!
      *  \brief Default constructor. Does nothing
      */
-    Dynamic_Sphere(){id = count++;}
+    Dynamic_Sphere(){}
     /*!
      *  \brief Default destructor. Does nothing
      */
-    ~Dynamic_Sphere(){count--;}
+    ~Dynamic_Sphere(){}
 
     /*!
      *  \param center Sphere origin
@@ -39,31 +38,21 @@ public:
      *  \param scale  overall scale for when reading files.
      *  \brief Initialize everything.
      */
-    Dynamic_Sphere(Eigen::Vector3d center_, double min_radius_, double volume_inc_perc_, bool swell_, int ax_id_,double scale, bool active_state_):
-    swell(swell_),
-    volume_inc_perc(volume_inc_perc_), 
-    ax_id(ax_id_),
-    min_radius(min_radius_*scale), 
-     active_state(active_state_){
-        radius = min_radius;
-        if (swell){
-            max_radius = sqrt(1+volume_inc_perc)*radius;
-        }
-        else {
-            max_radius = min_radius;
-        }
-        if (active_state){
-            radius = max_radius;
-        }
+    Dynamic_Sphere(Eigen::Vector3d center_, double radius_, double volume_inc_perc_, bool swell_, int ax_id_, int id_, double scale=1):
+    id(id_), swell(swell_), volume_inc_perc(volume_inc_perc_), ax_id(ax_id_), min_radius(radius_*scale)
+    {
         center = center_*scale;
-        id = count++;
+        radius = radius_*scale;
+        if (swell){
+            radius = sqrt(1+volume_inc_perc)*radius;
+        }
     }
 
     /*!
      *  \brief constrcutor by copy
      */
     Dynamic_Sphere(Dynamic_Sphere const &sph);
-    Dynamic_Sphere(Sphere const& s);
+
     Dynamic_Sphere(Eigen::Vector3d soma_center, double soma_radius);
 
     /*! \fn  minDistance
@@ -75,6 +64,16 @@ public:
     bool isInside(Eigen::Vector3d pos, double distance_to_be_inside) const;
     bool distSmallerThan(Eigen::Vector3d pos, double distance);
     void set_center(Eigen::Vector3d center_);
+
+private:
+
+    /*! \fn  handleCollition
+     *  \param walker, Walker instance in the simulation.
+     *  \param collision, Collision instance to save all the information.
+     *  \param step, step vector where to move.
+     *  \brief Returns true if it was any analytical collision to the infinite plane
+     */
+    inline bool handleCollition(Walker& walker, Collision &colision, Eigen::Vector3d& step,double& a,double& b, double& c,double& discr,double& step_length);
 
 };  
 

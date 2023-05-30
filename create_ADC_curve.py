@@ -7,9 +7,6 @@ import os
 import pandas as pd
 import seaborn as sns
 from pathlib import Path
-from sklearn import datasets, linear_model
-from sklearn.linear_model import LinearRegression
-import statsmodels.api as sm
 from scipy import stats
 import warnings
 warnings.filterwarnings("ignore")
@@ -57,7 +54,7 @@ def get_psge_data():
 
     return data_dwi
 
-def create_data(dwi_path):
+def create_data(dwi_path, b0):
     dwi_signal = get_dwi_array(dwi_path)
     data_psge = get_psge_data()
     data_psge["DWI"] = list(dwi_signal)
@@ -82,20 +79,19 @@ def create_data(dwi_path):
 
     return data_dwi
 
-def get_adc(dwi_path):
-    data = create_data(dwi_path)
+def get_adc(dwi_path, b, b0):
+    data = create_data(dwi_path, b0)
     axes = ["x","y","z"]
     orientations = ["radial","radial","axial"]
     adcs = []
     for a in axes:
         ax_data = data.loc[data[a]>0]
-        b1 = list(ax_data["b"])[-1]
-        ax_data = ax_data.loc[ax_data["b"] == b1]
-        adcs.append(list(ax_data["adc [mm²/s]"])[0])
-    new_data = pd.DataFrame(columns = ["axis", "adc [mm²/s]"])
+        ax_data = ax_data.loc[ax_data["b [ms/um²]"] == b]
+        adcs.append(list(ax_data["adc [um²/ms]"])[0])
+    new_data = pd.DataFrame(columns = ["axis", "adc [um²/ms]"])
     new_data["orientations"] = orientations
     new_data["axis"] = axes
-    new_data["adc [mm²/s]"] = adcs
+    new_data["adc [um²/ms]"] = adcs
     return new_data
 
 
@@ -121,82 +117,113 @@ def assemble_data(intra_active_path, intra_rest_path, extra_active_path, extra_r
 
 def plot(result):
     fig1 = plt.figure(0)
-    sns.catplot(x="orientations", y="adc [mm²/s]",
+    sns.catplot(x="orientations", y="adc [um²/ms]",
              hue="state", col = "loc", kind = "box",
              data=result)
 
     fig1 = plt.figure(1)
-    sns.catplot(x="orientations", y="adc [mm²/s]",
+    sns.catplot(x="orientations", y="adc [um²/ms]",
              hue="state", col = "loc", 
              data=result)
     plt.show() 
 
+def get_axons_array(file):
+    axons = []
+    spheres = []
+
+    with open(file) as f:
+        for line in f.readlines():
+            if (len(line.split(' ')) > 4):
+                spheres.append([float(i) for i in line.split(' ')[:]])
+            else :
+                if (len(spheres)!= 0):
+                    axons.append(spheres)
+                spheres = []
+            
+
+    return axons
+
+def plot_radii(file):
+    axons = get_axons_array(file)
+    area = 0
+    for i in range(len(axons)):
+        radius = [] 
+        spheres = axons[i]
+        for ii in range(len(spheres)):
+            radius.append(spheres[ii][3])
+        area += np.pi*spheres[ii][3]*spheres[ii][3]
+        plt.plot(radius)
+    plt.ylabel("[mm]")
+
+    plt.show()
 
 
-def plot_DWI(data, path):
-    data["orientation"] =  list(data["x"]).copy()
-    data["orientation"] = list(map(lambda x,y : "x" if x == 1 else y,list(data["x"]), list(data["orientation"])))
-    data["orientation"] = list(map(lambda x,y : "y" if x == 1 else y,list(data["y"]), list(data["orientation"])))
-    data["orientation"] = list(map(lambda x,y : "z" if x == 1 else y,list(data["z"]), list(data["orientation"])))
-    fig1 = plt.figure(1)
-    sns.lineplot(x="b", y="log(Sb/So)",
-             hue="orientation",
-             data=data)
-    plt.title('DWI Signal (log(Sb/So))')
-    path_ = path.split("/")
-    path_ = path_[:-1]
-    path_ = "/".join(path_)
-    name = path_ + "/DWI.png"
+def plot_tortuosity(file):
+    axons = get_axons_array(file)
+    dfs =[] 
+    for j in range(int(len(axons)/100)):
+        i = j*50
+        xs = [] 
+        ys =[]  
+        spheres = axons[i]
+        for ii in range(1,len(spheres)):
+            xs.append(spheres[ii][0]-spheres[ii-1][0])
+            ys.append(spheres[ii][1]- spheres[ii-1][1])
+        df = pd.DataFrame()
+        df["x[um]"]=xs
+        df["y[um]"]=ys
+        df["index"] = [i]*len(xs)   
+        dfs.append(df)
+    dfs_ = pd.concat(dfs)
+    dfs_ = dfs_.reset_index()
+    g = sns.JointGrid(data=dfs_, x="x[um]", y="y[um]")
+    g.plot_joint(sns.kdeplot,
+             fill=True, 
+             thresh=0, levels=100, cmap="rocket")
+    g.plot_marginals(sns.histplot, color="#03051A", alpha=1, bins=25)
+    plt.show()
 
-    fig1.savefig(name)
+def plot_tortuosity_angle(file):
+    axons = get_axons_array(file)
+    dfs =[] 
+    for j in range(int(len(axons)/100)):
+        i = j*50
+        xs = [] 
+        ys =[]  
+        zs =[] 
+        spheres = axons[i]
+        for ii in range(1,len(spheres)):
+            xs.append(spheres[ii][0]-spheres[ii-1][0])
+            ys.append(spheres[ii][1]- spheres[ii-1][1])
+            zs.append(spheres[ii][2]- spheres[ii-1][2])
 
-    plt.show() 
-
-def get_ADC_value(data_dwi, orientation = "all"):
-    xs= [1.0,0,0]   
-    ys = [0,1.0,0]
-    zs = [0,0,1.0]
-    adcs =[] 
-    for i in range(3):  
-        x0 = xs[i] 
-        y0 = ys[i] 
-        z0 = zs[i] 
-        b_200 = list(data_dwi["b"])[1]
-        b_1000 = list(data_dwi["b"])[-1]
-        data_dwi0 = data_dwi.loc[data_dwi.x == x0]
-        data_dwi0 = data_dwi0.loc[data_dwi0.y == y0]
-        data_dwi0 = data_dwi0.loc[data_dwi0.z == z0]
-        signalb200 = list(data_dwi0.loc[data_dwi0.b == b_200]["log(Sb/So)"])[0]
-        signalb1000 = list(data_dwi0.loc[data_dwi0.b == b_1000]["log(Sb/So)"])[0]
-        adcs.append((signalb200-signalb1000)/(b_1000-b_200))
-    if orientation == "all":
-        return np.mean([adcs[0],adcs[1],2.5e-3])
-        #return ((adcs[0]+adcs[1])/2)
-    if orientation == "radial":
-        return ((adcs[0]+adcs[1])/2)
-    if orientation == "z":
-        return (adcs[2])
-    if orientation == "separate":
-        return adcs[0], adcs[1], adcs[2]
-
-
-def get_total_dwi_array(path):
+        df = pd.DataFrame()
+        df["index"] = [i]*len(xs)
+        df["theta"]= list(map(lambda x,y:np.arctan2(y,x)/np.pi if np.arctan2(y,x)/np.pi>0 else np.arctan2(y,x)/np.pi+2, xs, ys))
+        df["phi"]= list(map(lambda x,y,z:np.arctan(np.sqrt(x**2+y**2)/z)/np.pi if z!= 0 else np.pi/2, xs, ys, zs))  
+        dfs.append(df)
+        del df
+    dfs_ = pd.concat(dfs)
+    dfs_ = dfs_.reset_index()
+    g = sns.JointGrid(data=dfs_, x="theta", y="phi")
+    g.plot_joint(sns.kdeplot,
+             fill=True, 
+             thresh=0, levels=100, cmap="rocket")
+    g.plot_marginals(sns.histplot, color="#03051A", alpha=1, bins=25)
+    plt.show()
     
-    data_dwi = create_data(path)
-    data_x = data_dwi.loc[data_dwi['x'] > 0.0].sort_values(by = ["b"],ascending=True)
-    data_y = data_dwi.loc[data_dwi['y'] > 0.0].sort_values(by = ["b"],ascending=True)
-    data_z = data_dwi.loc[data_dwi['z'] > 0.0].sort_values(by = ["b"],ascending=True)
-    bs = list(data_z["b"])
-    datas = [data_x,data_y,data_z]
 
-    #x0 = list(dict.fromkeys(list(data_dwi["x"])))[0]
-    #data_dwi0 = list(data_dwi.loc[data_dwi.x == x0].sort_values(by = ["b"],ascending=True)["DWI"])
-    #x1 = list(dict.fromkeys(list(data_dwi["x"])))[1]
-    #data_dwi1 = list(["DWI"])
-    #bs = list(data_dwi.loc[data_dwi.x == x1].sort_values(by = ["b"])["b"])
-    dwi_tot = list(map(lambda x,y,z : pow(x*y*z,1/3), list(datas[0]["DWI"]),list(datas[1]["DWI"]),list(datas[2]["DWI"])))
-    dwi_tot = list(map(lambda x : np.log(x/dwi_tot[0]), dwi_tot))
-    return bs, dwi_tot
+def plot_DWI(intra_rest_path,extra_rest_path, extra_active_path, intra_active_path):
+    data_intra_rest = create_data(intra_rest_path)
+    data_extra_active = create_data(extra_active_path)
+    data_intra_active = create_data(intra_active_path)
+    data_extra_rest = create_data(extra_rest_path)
+    data_rest = data_intra_rest.add(data_extra_rest)
+    data_active = data_intra_active.add(data_extra_active)
+    ax = sns.lineplot(data=data_rest, x = "b [ms/um²]", y= "DWI")
+
+    ax = sns.lineplot(data=data_active, x = "b [ms/um²]", y= "DWI")
+    plt.show()
 
 def get_total_adc_array(path):
     
@@ -217,59 +244,54 @@ def get_total_adc_array(path):
 
 
 
-def plot_adc_sanity_check(state, loc):
 
-    orientations = []
-    adcs = []
-    confs_ =[]  
-    data_adc = pd.DataFrame()
-    Ns_ =[] 
-    Ns = [1e4, 5e4, 1e5, 5e5, 1e6]
+
+def plot_inc_():
+    b0 = 0.2
+    b1 = 1
+    icvf=0.7
+    locs = ["intra", "extra"]
+    swell = [0.0, 0.3, 0.5, 0.7]
+    datas = []
+    swell_ = []
+    locs_ = []
+    trys=[]
+
+    for n in [0,1,2,3,4,5,6,7]:
+        for s in swell:
+            for l in locs:
+                if n == 0:
+                    file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/cylinders/icvf_{icvf}_swell_{s}_{l}_DWI.txt"
+                else:
+                    file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/cylinders/icvf_{icvf}_swell_{s}_{l}_rep_0{n-1}_DWI.txt"
+                print(file)
+                if (Path(file)).exists():
+                    print("exists")
+                    data = get_adc(file, b1, b0)
+                    datas.append(data)
+                    for i in range(3):
+                        swell_.append(s)
+                        locs_.append(l)
+                        trys.append(n)
+
+
+    data = pd.concat(datas)
     
-    for conf in ["conf1","conf2","conf3"] :
-        N_5_10_4_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/N_5_10_4/"+str(conf)+"/dyn_cylinder_DWI.txt"
-        N_10_4_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/N_10_4/"+str(conf)+"/dyn_cylinder_DWI.txt"
-        N_5_10_5_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/N_5_10_5/"+str(conf)+"/dyn_cylinder_DWI.txt"
-        N_10_5_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/N_10_5/"+str(conf)+"/dyn_cylinder_DWI.txt"
-        N_10_6_file = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/N_10_6/"+str(conf)+"/dyn_cylinder_DWI.txt"
-        paths = [N_10_4_file,N_5_10_4_file, N_10_5_file, N_5_10_5_file, N_10_6_file]
     
-        for e, path in enumerate(paths):
-            
-            if Path(path).exists():
-
-                data_dwi = create_data(path)
-                x_adc,y_adc,z_adc = get_ADC_value(data_dwi, orientation="separate")
-                adcs.append(x_adc)
-                orientations.append("x")
-                adcs.append(y_adc)
-                orientations.append("y")
-                adcs.append(z_adc)
-                orientations.append("z")
-                for i in range(3):
-                    confs_.append(conf)
-                    Ns_.append(Ns[e])
-    data_adc["ADC"] = adcs
-    data_adc["conf"] = confs_
-    data_adc["N"] = Ns_
-    data_adc["orientation"] = orientations
-
-    fig2 = plt.figure(2)
-    ax = sns.lineplot(x="N", y="ADC", hue = "orientation", 
-             data=data_adc.loc[data_adc.orientation == "z"] )
+    data["location"] = locs_
+    data["swell_perc"] = swell_
+    data["repetition"] = trys
+    print(data)
     
-
-    path_ = path.split("/")
-    path_ = path_[:-3]
-    path_ = "/".join(path_)
-    name = path_ + "/ADC_sanity_check.png"
-
-    ax.set_title("ADC wrt number of walkers")
-    ax.set_label("number of walkers")
-    ax.set_label("ADC [mm²/s]")
+    data = data.loc[data["orientations"] != "axial"]
+    
+    sns.lineplot(data = data.reset_index(), x = "swell_perc",y = "adc [um²/ms]", hue = "location")
     plt.show()
-    fig2.savefig(name)
-
+    data = data.groupby(by =["swell_perc","orientations", "location","repetition"] ).mean().reset_index()
+    print(data)
+    data["weighted_adc"] = list(map(lambda x,y : x*icvf if y == "intra" else x*(1-icvf) , list(data["adc [um²/ms]"] ), list(data["location"])))
+    
+    data = data.groupby(by =["swell_perc","repetition"] ).mean().reset_index()
     
 def combine_intra_extra_adc(folder_name, rest = True):
     # if rest:
@@ -320,133 +342,86 @@ def combine_intra_extra_adc(folder_name, rest = True):
 
 
 
-def combine_active_rest_adc(folders=["N_10_5","N_5_10_5","N_10_6"] , Ns=[1e5, 5e5, 1e6], confs =["conf1", "conf2" , "conf3"] ):
 
-    data_rets_active = pd.DataFrame()
-    fs =[]
-    adcs =[]
-    orientations =[] 
-    confs_ =[] 
+def plot_increase():
+    b0 = 1
+    b1 = 2
+    locs = ["intra", "extra"]
+    swell = [0.0, 0.3, 0.4, 0.5, 0.6, 0.7]
+    datas = []
+    swell_ = []
     locs_ = []
-    locs = ["extra", "intra"]
-    for loc in locs:
-        for e,folder in enumerate(folders): 
-            for conf in confs :
-                state = "rest"
-                path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI.txt"
-                if Path(path).exists():
-                    data_dwi = create_data(path)
-                    x_adc_rest,y_adc_rest,z_adc_rest = get_ADC_value(data_dwi, orientation = "separate")
-
-                    state = "active"
-                    path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI.txt"
-                    if Path(path).exists():
-                        data_dwi = create_data(path)
-                        x_adc_act,y_adc_act,z_adc_act = get_ADC_value(data_dwi, orientation = "separate")
-                        
-                        adcs.append((x_adc_act-x_adc_rest)*100/x_adc_rest)
-                        orientations.append("x")
-                        adcs.append((y_adc_act-y_adc_rest)*100/y_adc_rest)
-                        orientations.append("y")
-                        adcs.append((z_adc_act-z_adc_rest)*100/z_adc_rest)
-                        orientations.append("z")
-
+    diff_ = []
+    w_diff_ = []
+    for n in [1, 2]:
+        for s in swell:
+            for l in locs:
+                ref_file = f'/home/localadmin/localdata/juradata/ijelescu/micmap/jasmine/DWI/try{n}/icvf_0.3_swell_0.0_{l}_DWI.txt'
+                if (Path(ref_file)).exists():
+                    ref_data = get_adc(ref_file, b1, b0)
+                    file = f'/home/localadmin/localdata/juradata/ijelescu/micmap/jasmine/DWI/try{n}/icvf_0.3_swell_{s}_{l}_DWI.txt'
+                    print(file)
+                    if (Path(file)).exists():
+                        print("exists")
+                        data = get_adc(file, b1, b0)
+                        datas.append(get_adc(file, b1, b0))
+                        if l == "intra":
+                            diff = list((data["adc [um²/ms]"]-ref_data["adc [um²/ms]"])*100/ref_data["adc [um²/ms]"])
+                            w_diff_.extend([d*0.3 for d in diff])
+                            diff_.extend(diff)
+                        else:
+                            diff = list((data["adc [um²/ms]"]-ref_data["adc [um²/ms]"])*100/ref_data["adc [um²/ms]"])
+                            w_diff_.extend([d*0.7 for d in diff])
+                            diff_.extend(diff)
                         for i in range(3):
-                            fs.append(Ns[e])
-                            confs_.append(conf)
-                            locs_.append(loc)
+                            swell_.append(s)
+                            locs_.append(l)
 
-    data_rets_active["orientation"] = orientations
-    data_rets_active["% ADC change from rest to active"] = adcs
-    data_rets_active["N"] = fs
-    data_rets_active["conf"] = confs_
-    data_rets_active["location"] = locs_
-    print(data_rets_active)
+    data = pd.concat(datas)
+    data["location"] = locs_
+    data["swell_perc"] = swell_
+    data["adc difference [%]"] = diff_
+    data["weighted adc difference [%]"] = w_diff_
 
-    sns.stripplot(data = data_rets_active , x = "% ADC change from rest to active",  y = "orientation", hue = "conf")
+
+    sns.lineplot(data = data.reset_index(), x = "swell_perc",y = "weighted adc difference [%]")
     plt.show()
 
-def final_plot_adc():
-    folder = "N_10_6"
-    conf = "conf2"
-    states = ["active", "rest"]
-    locs =["intra", "extra"] 
-    df = pd.DataFrame()
-    adcs =[]
-    locs_ = []
-    states_ = []
-    orientations =[] 
-    trials_ = []
-    for loc in locs :
-        for state in states:
-            for i in range(8):
-                path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
-                data = create_data(path)
-                x_adc_act,y_adc_act,z_adc_act = get_ADC_value(data, orientation = "separate")
-                adcs.append((x_adc_act+y_adc_act)/2)
-                orientations.append("radial")
-                adcs.append(z_adc_act)
-                orientations.append("z")
+    sns.lineplot(data = data.reset_index(), hue = "orientations", x = "swell_perc",y = "weighted adc difference [%]")
+    plt.show()
 
-                for ii in range(2):
-                    locs_.append(loc)
-                    states_.append(state)
-                    trials_.append(i)
-    df["orientation"] = orientations
-    df["ADC [mm²/s]"] = adcs
-    df["location"] = locs_
-    df["state"] = states_
-    df = df.loc[df.orientation == "radial"]
-    print(df)
-    plt.figure(figsize=(10,8))
-    #g = sns.FacetGrid(df.loc[df.orientation == "radial"], y= "ADC [mm²/s]", row = "orientation", hue="state",sharex=False, hue_order= [ "rest", "active"])
-    #g.map(sns.catplot, "ADC [mm²/s]", x= "location", alpha=.7)
-    #g.set_xticklabels(fontsize=5)
-    #g.add_legend()
-    g = sns.catplot(data = df, y= "ADC [mm²/s]", x= "state",  hue = "state", col = "location", hue_order=["rest","active"], sharey=False)
-    #plt.show()
-    for axs in g.axes:
-        for ax in axs:
-            ax.set_yticklabels(ax.get_yticklabels(),fontsize= 12)
-            ax.set_xticklabels(ax.get_xticklabels(),fontsize= 12)
+    sns.lineplot(data = data.reset_index(), hue = "location", x = "swell_perc",y = "adc difference [%]")
+    plt.show()
 
-    plt.savefig("adc_compare.png")
+    data = data.loc[data["swell_perc"] != 0]
+    print(data)
+    sns.boxplot(data = data.reset_index(),x = "axis",hue = "location",y = "adc difference [%]")
+    plt.show()
 
-def stats():
-    folder = "N_10_6"
-    conf = "conf2"
-    states = ["active", "rest"]
-    df = pd.DataFrame()
-    rs =[]
-    zs = []
-    states_ = []
+def plot_const():
+    b0 = 0
+    b1 = 2
+    s = 0.0
+    l= "intra"
+    datas = []
+    repetition = []
+    for i in range(5):
+        if i == 0:
+            file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/axons/icvf_0.3_swell_{s}_{l}_DWI.txt"
+        else:
+            file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/axons/icvf_0.3_swell_{s}_{l}_rep_0{i-1}_DWI.txt"
+        print(file)
+        if (Path(file)).exists():
+            print("exists")
+            data = get_adc(file, b1, b0)
+            datas.append(data)
+            repetition.extend([i]*len(data))
+        
+    data = pd.concat(datas)
+    data["repetition"] = repetition
+    sns.lineplot(data = data.reset_index(), x = "repetition",y = "adc [um²/ms]", hue = "axis")
+    plt.show()
 
-    for state in states :
-        for i in range(5):
-            loc = "intra"
-            path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
-            data = create_data(path)
-            x_adc_intra,y_adc_intra,z_adc_intra = get_ADC_value(data, orientation = "separate")
-
-            loc = "extra"
-            path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/dynamic_cylinders/"+str(state)+"/"+str(loc)+"/"+str(folder)+"/"+str(conf)+"/dyn_cylinder_DWI_"+str(i)+".txt"
-            data = create_data(path)
-            x_adc_extra,y_adc_extra,z_adc_extra = get_ADC_value(data, orientation = "separate")
-            icvf = 0.7
-            if state == "active":
-                icvf *= (1+0.01*0.3)
-            x_adc = (1-icvf)*x_adc_extra+ icvf*x_adc_intra
-            y_adc = (1-icvf)*y_adc_extra+ icvf*y_adc_intra
-            z_adc = (1-icvf)*z_adc_extra+ icvf*z_adc_intra
-
-            rs.append((x_adc+y_adc)/2)
-            zs.append(z_adc)
-
-            states_.append(state)
-            
-    df["rADC"] = rs
-    df["zADC"] = zs
-    df["state"] = [1 if s == "active" else 0 for s in states_]
 
     
     y = df.state

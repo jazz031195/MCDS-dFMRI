@@ -7,33 +7,23 @@
 using namespace Eigen;
 using namespace std;
 
-int Dynamic_Sphere::count = 0;
 
-Dynamic_Sphere::Dynamic_Sphere(Vector3d soma_center, double soma_radius): Sphere(soma_center, soma_radius) 
+
+Dynamic_Sphere::Dynamic_Sphere(Vector3d soma_center, double soma_radius): Sphere(soma_center, soma_radius)
 {
-    swell        = false;
-    active_state = false;
-    id     = count++;
 }
 
-Dynamic_Sphere::Dynamic_Sphere(Sphere const& s): Sphere(s.center, s.radius)
-{                                    
-    swell        = false;
-    active_state = false;
-    id           = count++;
-}
 
-Dynamic_Sphere::Dynamic_Sphere(const Dynamic_Sphere &sph): 
+Dynamic_Sphere::Dynamic_Sphere(Dynamic_Sphere const& sph): 
 Sphere(sph.center, sph.radius), swell(sph.swell), volume_inc_perc(sph.volume_inc_perc),
-ax_id(sph.ax_id), max_radius(sph.max_radius), min_radius(sph.min_radius), active_state(sph.active_state)
+ax_id(sph.ax_id), min_radius(sph.min_radius)
 {    
-    id    = count++;
-
 }
 
 void Dynamic_Sphere::set_center(Eigen::Vector3d center_)
 {
     this->center = center_; 
+
 }
 
 

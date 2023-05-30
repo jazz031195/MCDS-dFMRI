@@ -41,13 +41,14 @@ public:
      *  \param step_lenght double, length used as the maximum step collision distance.
      *  \param step_dir Vector3d, step direction - incident ray.
      */
-    void elasticBounceAgainsPlane(Eigen::Vector3d const& ray_origin, Eigen::Vector3d const& normal, double const& step_length, Eigen::Vector3d &step_dir) const;
-
+    void elasticBounceAgainsPlane(Eigen::Vector3d& ray_origin, Eigen::Vector3d& normal, double& t, Eigen::Vector3d &step);
+    void elasticBounceAgainsPlane_intra(Eigen::Vector3d& ray_origin, Eigen::Vector3d& normal, double& t, Eigen::Vector3d &step);
+    void elasticBounceAgainsPlane_extra(Eigen::Vector3d &ray_origin, Eigen::Vector3d &normal, double &t, Eigen::Vector3d &step);
     /*!
      *  \param  walker to find the (closest) distance.
      *  \brief  Returns the minimum distance of collision.
      */
-    double minDistance(Walker const& walker) const;
+    double minDistance(Walker& walker);
 
 };
 

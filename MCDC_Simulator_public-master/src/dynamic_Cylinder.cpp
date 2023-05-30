@@ -8,51 +8,26 @@
 using namespace Eigen;
 using namespace std;
 
-int Dynamic_Cylinder::count = 0;
+
 Dynamic_Cylinder::Dynamic_Cylinder()
-{
-    id = count++;
-}
+{}
 
 Dynamic_Cylinder::~Dynamic_Cylinder()
-{
-    count--;
-}
+{}
 
 Dynamic_Cylinder::Dynamic_Cylinder(const Dynamic_Cylinder &cyl)
 {
-
     D = cyl.D;
     Q = cyl.Q;
     P = cyl.P;
     radius = cyl.radius;
     swell = cyl.swell;
     volume_inc_perc = cyl.volume_inc_perc; 
-    id = count++;
-    ini_radius = cyl.ini_radius;
-    max_radius = cyl.max_radius;
-
+    id = cyl.id;
+    min_radius = cyl.min_radius;
 }
-bool Dynamic_Cylinder::checkSwallow(Walker &walker, bool walker_is_extra)
-{
-    //Origin of the ray
-    Vector3d O;
-    walker.getVoxelPosition(O);
-    Vector3d m = O - P;
 
-    //minimum distance to the cylinder axis.
-    double distance_to_cilinder = (D.cross(-m)).norm();
-    double d_ = distance_to_cilinder - radius;
-    // walker should be extra so is swallowed if is inside cylinder
-    // walker should be intra so is swallowed if is outside cylinder
-    bool condition;
-    condition = ((d_> -EPS_VAL)&&(d_< EPS_VAL ));
-    return condition;
-    
-    // walker should be intra so is swallowed if is outside cylinder
-
-}
-bool Dynamic_Cylinder::checkCollision(Walker &walker, Eigen::Vector3d const& step, double const& step_lenght, Collision &colision)
+bool Dynamic_Cylinder::checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision)
 {
     //Origin of the ray
     Vector3d O;

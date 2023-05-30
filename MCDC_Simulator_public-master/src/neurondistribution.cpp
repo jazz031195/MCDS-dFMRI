@@ -142,7 +142,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
     {   
         cout << "dendrite " << i << endl;
         int tries = 0;
-        int nb_branching = 4;//generateNbBranching();
+        int nb_branching = generateNbBranching();
         // Radius of each dendrite sphere [mm]
         double sphere_radius = 0.6e-3;
         // Don't initiate dendrite too close from the borders
@@ -204,7 +204,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                         for(size_t p=0; p < branching_points.size(); p++)
                         {
                                                         // The branching point is split into 2 children
-                            for(int c=0; c < branching_points[p].children_direction.size(); c++)
+                            for(int c=0; c < static_cast<int>(branching_points[p].children_direction.size()); c++)
                             {
                                 proximal_branch = {branching_points[p].subbranch_id, branch_id + 1 - 2*c};
                                 distal_branch = {largest_node + 1, largest_node + 2};
@@ -247,7 +247,7 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
                                       int const& branch_id)
 {
     Eigen::Vector3d begin;
-    Axon subbranch(sphere_radius, begin, begin, 0, false, false , 1, proximal_end, distal_end, branch_id);
+    Axon subbranch(branch_id, sphere_radius, begin, begin, 0, false, 1, proximal_end, distal_end);
     std::vector<Dynamic_Sphere> spheres_to_add;
     spheres_to_add.clear();
 
@@ -262,7 +262,7 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
         {
             if (!isSphereColliding(center, sphere_radius))
             {
-                Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1, false);
+                Dynamic_Sphere sphere_to_add(center, sphere_radius, 0, false, j, 1);
                 spheres_to_add.push_back(sphere_to_add);
             }
         }
@@ -270,7 +270,7 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
         {
             if(spheres_to_add.size() > 0)
             {
-                subbranch.set_spheres(spheres_to_add, branch_id);
+                subbranch.set_spheres(spheres_to_add);
                 dendrite.add_subbranch(subbranch);
             }
             return {};
@@ -279,8 +279,9 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
 
     if (!discard_dendrite)
     {
-        subbranch.set_spheres(spheres_to_add, branch_id);
+        subbranch.set_spheres(spheres_to_add);
         dendrite.add_subbranch(subbranch);
+
     } 
     
     double bifurcationAngle = generateBifurcationAngle()/2.0;
@@ -296,6 +297,7 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
     cout << subbranch.projections.axon_projections[2][0] << " " << subbranch.projections.axon_projections[2][1];
     // Return the next branching point
     return {spheres_to_add[spheres_to_add.size()-1].center, parent.direction, children_dir, branch_id};
+    
 }
 
 int NeuronDistribution::generateNbBranching(int const& lower_bound, int const& upper_bound)
@@ -400,7 +402,7 @@ void NeuronDistribution::createTwinSphere(Vector3d &center, double const& sphere
 bool NeuronDistribution::isSphereColliding(Dynamic_Sphere const& sph) 
 {
     Vector3d position = sph.center;
-    double distance_to_be_inside = sph.max_radius + 2 * barrier_tickness;
+    double distance_to_be_inside = sph.radius + 2 * barrier_tickness;
     int dummy;
     for (unsigned i = 0; i < neurons.size() ; i++){
         bool isinside = neurons[i].isPosInsideNeuron(position, distance_to_be_inside, false, dummy, dummy, dummy);

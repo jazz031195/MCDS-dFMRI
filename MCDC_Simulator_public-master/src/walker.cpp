@@ -22,8 +22,11 @@ Walker::Walker()
     in_neuron_index       = -1;
     in_soma_index         = -1;
     in_dendrite_index     = -1;
-    in_sph_index          = -1;
     in_subbranch_index    = -1;
+    in_sph_index.clear();
+    in_cyl_index = -1;
+    last_collision.clear();
+
 }
 
 Walker::Walker(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax)
@@ -53,8 +56,9 @@ Walker::Walker(double xmin, double xmax, double ymin, double ymax, double zmin, 
     in_neuron_index       = -1;
     in_soma_index         = -1;
     in_dendrite_index     = -1;
-    in_sph_index          = -1;
     in_subbranch_index    = -1;
+    in_sph_index.clear();
+    last_collision.clear();
 }
 
 void Walker::getRealPosition(double &x_, double &y_, double &z_) const
@@ -102,12 +106,28 @@ unsigned int Walker::getIndex() const
 {
     return index;
 }
+void Walker::getLastCollision(std::vector<int> &col_obj) const
+{
+    col_obj = last_collision;
+}
+
+void Walker::clearLastCollision()
+{
+    last_collision.clear();
+}
 
 void Walker::setRealPosition(const Eigen::Vector3d &_pos_)
 {
     last_pos_r = pos_r;
     pos_r = _pos_;
 }
+
+void Walker::setLastCollision(const std::vector<int> col_obj)
+{
+    last_collision.clear();
+    last_collision = col_obj;
+}
+
 
 void Walker::setVoxelPosition(const Eigen::Vector3d &_pos_)
 {

@@ -54,7 +54,7 @@ public:
 
     int in_ply_index;                                               /*!< Auxiliar index to save if the walker was inside a convex ply object    */
 
-    int in_sph_index;                                                /*!< Auxiliar index to save if the walker was inside a sphere               */
+    std::vector<int> in_sph_index;                                                /*!< Auxiliar index to save if the walker was inside a sphere               */
     
     int in_ax_index;                                                 /*!< Auxiliar index to save in which Axon the walker was                    */
 
@@ -104,6 +104,7 @@ public:
 
     float steps_per_second;                                         /*!< Particles steps per second speeed.*/
 
+    std::vector<int> last_collision;                                 /*!< Axon id and sphere id of last collision.*/
     //! Default constructor.
     /*! Set all variables to cero.*/
     Walker();
@@ -133,6 +134,8 @@ public:
     void  getInitialPosition(Eigen::Vector3d&) const;
     void  getNextDirection(Eigen::Vector3d&) const;
     unsigned int getIndex() const;
+    void getLastCollision(std::vector<int> &col_obj) const;
+    void clearLastCollision();
 
     // Set methods
     void  setRealPosition(const double &, const double &,const double &);
@@ -144,6 +147,7 @@ public:
     void  setNextDirection(Eigen::Vector3d &);
     void  setRandomInitialPosition(const Eigen::Vector3d &min, const Eigen::Vector3d &max);
     void  setIndex(unsigned int&);
+    void  setLastCollision(const std::vector<int> col_obj);
 
     void setRealPosLog(const Eigen::Vector3d &pos,unsigned t);
     void setRealPosLog(double x, double y, double z, unsigned t);

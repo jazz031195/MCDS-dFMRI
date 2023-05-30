@@ -18,27 +18,27 @@ def get_nbr_cylinders (file):
     return nbr_cylinders
 
 def get_size (file):
+    n = 0
     with open(file ) as f:
         for e, line in enumerate(f.readlines()):
-            if e == 5:
-                return float(line)
+            if len(line.split(' ')) >4:
+                n += 1
+    return n
 
 def get_first_cylinder_array(file, N):
     nbr_cylinders = N
     cylinder_array = np.zeros((nbr_cylinders,5))
-    prev_length = 0
     with open(file) as f:
         e = 0
         for line in f.readlines():
 
             if e< nbr_cylinders:
                 
-                if len(line.split(' ')) > 4 and prev_length < 4:
-                    
+                if len(line.split(' ')) > 4:
                     
                     cylinder_array[e] = np.array([float(i) for i in line.split(' ')[:]])
                     e = e+1
-            prev_length = len(line.split(' '))
+
 
     return cylinder_array
 
@@ -159,44 +159,40 @@ def draw_cercles(cylinder_array, size, swell = False):
 
     fig.savefig(name)
 
-def get_spheres_array(file):
+def get_spheres_array(N,file):
 
-    axons = []
-    spheres = []
-
+    nbr_cylinders = N
+    cylinder_array = np.zeros((nbr_cylinders,8))
     with open(file) as f:
+        e = 0
         for line in f.readlines():
-            if (len(line.split(' ')) > 3):
-                spheres.append([float(i) for i in line.split(' ')[:]])
-            else :
-                if len(spheres) > 0:
-                    axons.append(spheres)
-                    spheres = []
 
-    return axons
+            if e< nbr_cylinders:
+                
+                if len(line.split(' ')) > 4:
+                    
+                    cylinder_array[e] = np.array([float(i) for i in line.split(' ')[:]])
+                    e = e+1
+
+
+    return cylinder_array
 
 def main(name):
 
     file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/cylinders/Substrates/{name}.txt"
     size = get_size (file)
-    axons = get_spheres_array(file)
+    axons = get_spheres_array(size,file)
     axons_slice = []
-    z = 0.01
-    for axon in axons:
 
-        index, value =  min(enumerate(list(np.array(axon).T[2])), key=lambda x: abs(x[1]-z))
-        distance = np.abs(z-value)
-        R = axon[index][3]
-        if axon[index][4] == 1 :
+    for i,axon in enumerate(axons):
+        print(axon)
+
+        R = axon[-2]
+        if axon[-1] == 1 :
             R = R*np.sqrt(1.01)
-        if distance == 0:
-            new_r = R
-        else:
-            if distance < R :
-                new_r = np.sqrt(np.abs(R*R-distance*distance))
-            else:
-                continue
-        axons_slice.append([axon[index][0], axon[index][1], z, new_r, axon[index][4]])
+
+
+        axons_slice.append([axon[0], axon[1], R, axon[-1]])
     
     draw_cercles(np.array(axons_slice), size, swell = False)
 
@@ -224,5 +220,30 @@ def main2(name, traj_name):
         axons_slice.append([axon[index][0], axon[index][1], z, new_r, axon[index][4]])
     
     draw_cercles_with_trajectory(np.array(axons_slice), size, traj_name, swell = False)
-    
-main("icvf_0.7_swell_0.7_gamma_distributed_dyn_cylinder_list")
+
+def check_distances(name):
+    file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/cylinders/Substrates/{name}.txt"
+    size = get_size (file)
+    axons = get_spheres_array(size,file)
+
+    for axon in enumerate(axons):
+        axon = axon[1]
+        x = axon[0]
+        y = axon[1]
+        r = axon[2]
+        r = r*np.sqrt(1.01)
+        for axon_ in enumerate(axons):
+            axon_ = axon_[1]
+            x_ = axon_[0]
+            y_ = axon_[1]
+            r_ = axon_[2]
+            r_ = r_*np.sqrt(1.01)
+
+            if ((x-x_)**2+(y-y_)**2< (r_+r)**2):
+                return True
+    return False
+        
+
+main("icvf_0.7_swell_1.0_gamma_distributed_dyn_cylinder_list")
+#collides = check_distances("icvf_0.7_swell_1.0_gamma_distributed_dyn_cylinder_list")
+#print(collides)

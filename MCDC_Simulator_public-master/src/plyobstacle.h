@@ -33,16 +33,14 @@ public:
     PLYObstacle(std::string path,double scale_factor_ = 1);
     PLYObstacle(std::string path, std::vector<Eigen::Vector3d> &centers, double max_distance=INFINITY,double scale_factor_ = 1);
 
-
-    void readPLY_ASCII_triangleFan(std::string ply_file);
     void readPLY_ASCII_triangles(std::string ply_file);
     void readPLY_ASCII_trianglesSubdivitionDistance(std::string ply_file, std::vector<Eigen::Vector3d> &centers, double max_distance);
 
     void setScaleFactor(double scale){scale_factor = scale;}
 
 //  bool computeStepCollition(Walker &w, double step[3], const double &step_length,double end_point[3], Collision& colision);
-    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision);
-    bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision, std::vector<unsigned> const& triangle_list, unsigned const& list_end);
+    bool checkCollision(Walker &walker, Eigen::Vector3d &step, double const&step_lenght, Collision &colision);
+    bool checkCollision(Walker &walker, Eigen::Vector3d &step, double const&step_lenght, Collision &colision, std::vector<unsigned> const& triangle_list, unsigned const& list_end);
     double minDistance(Walker const& w, unsigned const& t) const;
 
 private:
@@ -54,7 +52,7 @@ private:
     void checkIfItsNearToTriangle(const Eigen::Vector3d end_point, const unsigned triangle_ind, Collision &colision);
 
     //Given the collision, handles the next walker status and the bouncing, if needed.
-    bool updateWalkerStatusAndHandleBouncing(Walker &walker, Eigen::Vector3d const&ray_origin, Eigen::Vector3d const&step, Collision &colision);
+    bool updateWalkerStatusAndHandleBouncing(Walker &walker, Eigen::Vector3d &ray_origin, Eigen::Vector3d &step, Collision &colision);
 
 };
 

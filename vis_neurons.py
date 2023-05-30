@@ -11,8 +11,8 @@ z_slice = [0.02, 0.04, 0.06, 0.08]
 # position = np.array([0.044359383652472821, 0.073838872992544963, 0.053730584153105686])
 # position2 = np.array([0.0450215294826024, 0.073325599802571709, 0.053024812566757319])
 max_lim = 0.1
-neuron_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_02_neurons_list.txt'
-traj_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_02.traj.txt'
+neuron_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_08_neurons_list.txt'
+traj_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_08.traj.txt'
 with open(neuron_file) as f:
     lines = f.readlines()
     if plot_3d:

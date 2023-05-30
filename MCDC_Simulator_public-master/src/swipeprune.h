@@ -33,8 +33,8 @@ public:
     
     Projections();
     void clear_projections();
-    std::vector<projection_pt> find_collisions(projection_pt const& proj_on_axis_min, projection_pt const& proj_on_axis_max,std::vector<projection_pt> const& projections_on_axis) const;
-    std::vector<std::vector<projection_pt>> find_collisions_all_axes(Eigen::Vector3d const& position, double const& rad, int const& ax_id) const;
+    std::vector<projection_pt> find_collisions(projection_pt const& proj_on_axis_min, projection_pt const& proj_on_axis_max,std::vector<projection_pt> const& projections_on_axis, double const& distance_to_be_inside) const;
+    std::vector<std::vector<projection_pt>> find_collisions_all_axes(Eigen::Vector3d const& position, double const& rad, int const& ax_id, double const& distance_to_be_inside) const;
     bool isProjInside(std::vector<projection_pt> const& projs, projection_pt const& p) const;
     void append_right_place(projection_pt const& p1, projection_pt const& p2, int const& axis);
 };
