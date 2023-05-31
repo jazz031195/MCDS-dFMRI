@@ -141,7 +141,7 @@ private:
     Eigen::Vector3d generatePointOnSphere(Eigen::Vector3d const& center, double const& radius) const;
     branching_pt growSubbranch(Dendrite& dendrite, branching_pt const& parent, int const& nb_spheres, double const& sphere_radius, 
                                std::vector<int> const& proximal_end, std::vector<int> const& distal_end, double const& min_distance_from_border, 
-                               bool& stop_growth, int const& branch_id);
+                               bool& stop_growth, int const& branch_id, int& largest_sphere);
 
     Eigen::Vector3d rotateDirection(Eigen::Vector3d const& direction, double const& angle) const;
 

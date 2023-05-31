@@ -58,6 +58,8 @@ Neuron(Neuron const& neuron);
  * @return                     bool, true if collision with this.
  */
 bool checkCollision(Walker &walker, Eigen::Vector3d const&step_dir, double const&step_lenght, Collision &collision);
+bool checkCollision_branching(Walker &walker, std::vector<Dynamic_Sphere*> const& spheres, Eigen::Vector3d const& step, double const& step_lenght, Collision &colision);
+std::vector<Dynamic_Sphere*> find_neighbor_spheres(Walker &walker, Eigen::Vector3d const& next_step, double const& step_length);
 /**
  * Calculate if position is inside this.
  *

@@ -16,11 +16,13 @@ class Dynamic_Sphere : public Sphere
 {
 public:
 
-    int id;
+    int id; /* Id of the sphere */
     bool swell;
     double volume_inc_perc;
-    int ax_id;
+    int ax_id; /* Id of the subbranch*/
     double min_radius;
+    int parent; /* Id of the parent sphere */
+    vector<int> children; /* Id of the children sphere(s) */
 
 
     /*!
@@ -49,6 +51,21 @@ public:
     }
 
     /*!
+     *  \param center Sphere origin
+     *  \param radius Sphere's radius
+     *  \param scale  overall scale for when reading files.
+     *  \brief Initialize everything.
+     */
+    Dynamic_Sphere(Eigen::Vector3d center_, double radius_, double volume_inc_perc_, bool swell_, int ax_id_, int id_, int parent_, std::vector<int> children_, double scale=1):
+    id(id_), swell(swell_), volume_inc_perc(volume_inc_perc_), ax_id(ax_id_), min_radius(radius_*scale), parent(parent_), children(children_)
+    {
+        center = center_*scale;
+        radius = radius_*scale;
+        if (swell){
+            radius = sqrt(1+volume_inc_perc)*radius;
+        }
+    }
+    /*!
      *  \brief constrcutor by copy
      */
     Dynamic_Sphere(Dynamic_Sphere const &sph);
@@ -64,6 +81,8 @@ public:
     bool isInside(Eigen::Vector3d pos, double distance_to_be_inside) const;
     bool distSmallerThan(Eigen::Vector3d pos, double distance);
     void set_center(Eigen::Vector3d center_);
+    void set_parent(int const& parent_id_);
+    void add_children(int const& children_id_);
 
 private:
 

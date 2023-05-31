@@ -78,7 +78,7 @@ public:
      * @return true if there is a collision, else false.    
      * */
     bool checkCollision(Walker &walker, Eigen::Vector3d const&step, double const&step_lenght, Collision &colision);
-   
+
     std::vector<Dynamic_Sphere>  closestSpheres(Eigen::Vector3d const& pos) const;
     std::vector<Dynamic_Sphere>  closestSpheres(Walker const& w) const;
     

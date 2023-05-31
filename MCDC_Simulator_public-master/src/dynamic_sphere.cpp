@@ -16,7 +16,7 @@ Dynamic_Sphere::Dynamic_Sphere(Vector3d soma_center, double soma_radius): Sphere
 
 Dynamic_Sphere::Dynamic_Sphere(Dynamic_Sphere const& sph): 
 Sphere(sph.center, sph.radius), swell(sph.swell), volume_inc_perc(sph.volume_inc_perc),
-ax_id(sph.ax_id), min_radius(sph.min_radius)
+ax_id(sph.ax_id), id(sph.id), min_radius(sph.min_radius), parent(sph.parent), children(sph.children)
 {    
 }
 
@@ -26,6 +26,15 @@ void Dynamic_Sphere::set_center(Eigen::Vector3d center_)
 
 }
 
+void Dynamic_Sphere::set_parent(int const& parent_id_)
+{
+    parent = parent_id_;
+}
+
+void Dynamic_Sphere::add_children(int const& children_id_)
+{
+    children.push_back(children_id_);
+}
 
 bool Dynamic_Sphere::isInside(Walker &w){
 
