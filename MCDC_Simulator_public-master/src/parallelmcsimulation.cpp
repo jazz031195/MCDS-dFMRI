@@ -1364,7 +1364,11 @@ void ParallelMCSimulation::addObstacleConfigurations()
         NeuronDistribution neuron_dist(params.gamma_num_obstacles,params.gamma_icvf
                                       ,params.min_limits, params.max_limits, step_length);
 
+        auto start = high_resolution_clock::now();
         neuron_dist.createSubstrate();
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>(stop-start);
+        cout << duration.count() << endl;
 
         params.max_limits = neuron_dist.max_limits_vx;
         params.min_limits = neuron_dist.min_limits_vx;

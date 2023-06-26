@@ -48,23 +48,25 @@ public:
         if (swell){
             radius = sqrt(1+volume_inc_perc)*radius;
         }
+        parent   = {-1};
+        children = {-1, -1};
     }
 
-    /*!
-     *  \param center Sphere origin
-     *  \param radius Sphere's radius
-     *  \param scale  overall scale for when reading files.
-     *  \brief Initialize everything.
-     */
-    Dynamic_Sphere(Eigen::Vector3d center_, double radius_, double volume_inc_perc_, bool swell_, int ax_id_, int id_, int parent_, std::vector<int> children_, double scale=1):
-    id(id_), swell(swell_), volume_inc_perc(volume_inc_perc_), ax_id(ax_id_), min_radius(radius_*scale), parent(parent_), children(children_)
-    {
-        center = center_*scale;
-        radius = radius_*scale;
-        if (swell){
-            radius = sqrt(1+volume_inc_perc)*radius;
-        }
-    }
+    // /*!
+    //  *  \param center Sphere origin
+    //  *  \param radius Sphere's radius
+    //  *  \param scale  overall scale for when reading files.
+    //  *  \brief Initialize everything.
+    //  */
+    // Dynamic_Sphere(Eigen::Vector3d center_, double radius_, double volume_inc_perc_, bool swell_, int ax_id_, int id_, int parent_, std::vector<int> children_, double scale=1):
+    // id(id_), swell(swell_), volume_inc_perc(volume_inc_perc_), ax_id(ax_id_), min_radius(radius_*scale), parent(parent_), children(children_)
+    // {
+    //     center = center_*scale;
+    //     radius = radius_*scale;
+    //     if (swell){
+    //         radius = sqrt(1+volume_inc_perc)*radius;
+    //     }
+    // }
     /*!
      *  \brief constrcutor by copy
      */

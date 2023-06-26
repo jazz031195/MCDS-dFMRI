@@ -142,7 +142,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
     {   
         cout << "dendrite " << i << endl;
         int tries = 0;
-        int nb_branching = 2;//generateNbBranching();
+        int nb_branching = 3;//generateNbBranching();
         // Radius of each dendrite sphere [mm]
         double sphere_radius = 0.6e-3;
         // Don't initiate dendrite too close from the borders
@@ -261,9 +261,11 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
     if (largest_sphere > 1)
         largest_sphere++;
 
+    cout << largest_sphere << " " << nb_spheres << endl;
     for(int sphere_id=largest_sphere; sphere_id < (largest_sphere + nb_spheres); ++sphere_id)
     {
-        center = sphere_id*parent.direction*sphere_radius/4 + parent.origin;
+        cout << "id " << endl;
+        center = (sphere_id-largest_sphere)*parent.direction*sphere_radius/4 + parent.origin;
 
         if(isInVoxel(center, min_distance_from_border))
         {
@@ -290,7 +292,7 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
                     else if(sphere_id < nb_spheres - 1)
                         sphere_to_add.add_children(sphere_id + 1);  
 
-                    cout << sphere_to_add.id << " " << sphere_to_add.ax_id << " " << sphere_to_add.parent <<endl; 
+                    cout << "sph id " << sphere_to_add.id << "sph ax id " << sphere_to_add.ax_id << "sph parent " << sphere_to_add.parent <<endl; 
 
                 }
                 spheres_to_add.push_back(sphere_to_add);
@@ -435,8 +437,9 @@ bool NeuronDistribution::isSphereColliding(Dynamic_Sphere const& sph)
     Vector3d position = sph.center;
     double distance_to_be_inside = sph.radius + 2 * barrier_tickness;
     int dummy;
+    vector<int> dummy2;
     for (unsigned i = 0; i < neurons.size() ; i++){
-        bool isinside = neurons[i].isPosInsideNeuron(position, distance_to_be_inside, false, dummy, dummy, dummy);
+        bool isinside = neurons[i].isPosInsideNeuron(position, distance_to_be_inside, false, dummy, dummy, dummy, dummy2);
         if (isinside)
             return true;
     }
@@ -466,8 +469,9 @@ bool NeuronDistribution::isSphereColliding(Vector3d const& sphere_center, double
 {
     double distance_to_be_inside = sphere_radius + 2 * barrier_tickness;
     int dummy;
+    vector<int> dummy2;
     for (unsigned i = 0; i < neurons.size() ; i++){
-        bool isinside = neurons[i].isPosInsideNeuron(sphere_center, distance_to_be_inside, false, dummy, dummy, dummy);
+        bool isinside = neurons[i].isPosInsideNeuron(sphere_center, distance_to_be_inside, false, dummy, dummy, dummy, dummy2);
         if (isinside)
             return true;
     }

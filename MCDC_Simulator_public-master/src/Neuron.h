@@ -72,7 +72,7 @@ std::vector<Dynamic_Sphere*> find_neighbor_spheres(Walker &walker, Eigen::Vector
  * @return                    bool, true if position is inside this.
  */
 bool isPosInsideNeuron(Eigen::Vector3d const& position,  double const& barrier_thickness, bool const& swell_, int& in_soma_index, 
-                       int& in_dendrite_index, int& in_subbranch_index);
+                       int& in_dendrite_index, int& in_subbranch_index, std::vector<int>& in_sph_index);
 /**
  * Minimal distance between a position pos and this.
  *

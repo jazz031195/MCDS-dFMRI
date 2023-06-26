@@ -638,7 +638,7 @@ void DynamicsSimulation::initWalkerObstacleIndexes()
 
     // New version Neurons obstacle selection
     walker.neurons_collision_sphere.small_sphere_list_end = 0;
-    walker.neurons_collision_sphere.big_sphere_list_end = unsigned(neurons_deque.size());
+    walker.neurons_collision_sphere.big_sphere_list_end   = unsigned(neurons_deque.size());
 
     // We add and remove the cylinder indexes that are or not inside sphere.
     for(unsigned i = 0 ; i < walker.neurons_collision_sphere.list_size; i++ ){
@@ -776,7 +776,7 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos, int &cy
     double proba = double(udist(gen));
 
     // In soma
-    if (proba < volume_soma_dendrite[0]/VolumeNeuron)
+    if (proba < 0)//volume_soma_dendrite[0]/VolumeNeuron)
     {
         while(!achieved){
             cout << "starts in soma" << endl;
@@ -1222,7 +1222,7 @@ bool DynamicsSimulation::isInsideNeurons(Vector3d &position, int &neuron_id, dou
 {
     for (unsigned i = 0; i < neurons_list->size() ; i++)
     {
-        bool isinside = neurons_list->at(i).isPosInsideNeuron(position, barrier_thickness, false, walker.in_soma_index, walker.in_dendrite_index, walker.in_subbranch_index);
+        bool isinside = neurons_list->at(i).isPosInsideNeuron(position, barrier_thickness, false, walker.in_soma_index, walker.in_dendrite_index, walker.in_subbranch_index, walker.in_sph_index);
         if (isinside)
         {
             walker.in_neuron_index = i;
@@ -1236,6 +1236,7 @@ bool DynamicsSimulation::isInsideNeurons(Vector3d &position, int &neuron_id, dou
     walker.in_soma_index      = -1;
     walker.in_dendrite_index  = -1;
     walker.in_subbranch_index = -1;
+    walker.in_sph_index.clear();
     walker.location = Walker::extra;
     return false;
 }
@@ -1368,6 +1369,7 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
 
         for(unsigned t = 1 ; t <= params.num_steps; t++) //T+1 steps in total (avoid errors)
         {
+            cout << "t " << t << endl;
             //Get the time step in milliseconds
             getTimeDt(last_time_dt, time_dt, l, dataSynth, t, time_step);
 

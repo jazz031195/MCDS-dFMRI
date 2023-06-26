@@ -647,4 +647,3 @@ bool Axon::checkCollision(Walker &walker,  Vector3d const& step, double const& s
 
 }
 
-
