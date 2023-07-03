@@ -10,6 +10,13 @@ cur_path = os.getcwd()
 # Some axons that could previously swell will become static
 
 def get_axons_array(file):
+
+    """
+    Reads the file and saves the activity of each axon (0: rest, 1: active)
+    file : str, name of file (str)
+    cyls : list of the activity of each axon
+    """
+
     axons = []
     spheres = []
 
@@ -26,14 +33,24 @@ def get_axons_array(file):
 
     return axons
 
-def make_new(perc_swell, axons_file):
+def make_new(old_perc, new_perc, axons_file):
+
+    """
+    Makes a new file with the same axons as list in the previous file but with a lower
+    swelling percentage. A portion of the swelling axons are set to rest to achieve the desired 
+    swelling percentage.
+
+    old_perc  : float, swelling percentage of file of reference
+    new_perc : float, swelling percentage of new file
+    axons_file : str, name of file of reference
+    """
 
     axons = get_axons_array(axons_file)
-    if (perc_swell> np.sum(axons)/len(axons)):
+    if (new_perc> old_perc):
         print("Select lower perc_swell")
         return
     # difference between active axons initially and after
-    diff = int(np.sum(axons)-int(len(axons)*perc_swell))
+    diff = int(np.sum(axons)-int(len(axons)*new_perc))
     # create list that shows which active axons are active in new file
     lst = [1]*int(np.sum(axons))
     lst[:diff] = [0]*diff
@@ -48,31 +65,43 @@ def make_new(perc_swell, axons_file):
     # create new file
     path_to_new_file = ("/").join(axons_file.split("/")[:-1])
     new_file = axons_file.split("/")[-1].split("_")
-    new_file = ("_").join(new_file[:3])+"_"+str(perc_swell)+"_"+("_").join(new_file[4:])
+    new_file = ("_").join(new_file[:3])+"_"+str(new_perc)+"_"+("_").join(new_file[4:])
     new_file = path_to_new_file +"/"+ new_file
 
     with open(axons_file,'r') as firstfile, open(new_file,'w') as secondfile:
         axon_nbr = 0
-
         for e,line in enumerate(firstfile):
-                if (len(line.split(' ')) > 4):
-                    activity = axon_activity[axon_nbr]
-                    new_line = line.split(" ")
-                    new_line[-1] = str(int(activity))
-                    new_line = (" ").join(new_line)
-                    secondfile.write(new_line)
-                    secondfile.write("\n")
+            if (len(line.split(' ')) > 4):
+                activity = axon_activity[axon_nbr]
+                new_line = line.split(" ")
+                new_line[-1] = str(int(activity))
+                new_line = (" ").join(new_line)
+                secondfile.write(new_line)
+                secondfile.write("\n")
                     
-                else:
-                    if e > 5:
-                        axon_nbr += 1
-                    # write content to second file
-                    secondfile.write(line)
+            else:
+                if e > 5:
+                    axon_nbr += 1
+                # write content to second file
+                secondfile.write(line)
+
     return new_file
 
-
-for i in [0.0, 0.3, 0.4, 0.5, 0.6]:
-    perc = 0.7
-    axons_file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/axons/Substrates/icvf_0.3_swell_{perc}_straight_gamma_distributed_axon_list.txt"
-    new_file = make_new(i, axons_file)
-    get_axons_array(new_file)
+# main
+# list of desired swelling percentage
+lst = [ 0.7, 0.5, 0.3, 0.1, 0.0]
+# icvf
+icvf = 0.6
+straight = False
+for i,v in enumerate(lst):
+    print(v)
+    if i > 0:
+        last_perc = lst[i-1]
+    else:
+        last_perc = 1.0
+    if straight :
+        axons_file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/axons/Substrates/icvf_{icvf}_swell_{last_perc}_straight_gamma_distributed_axon_list.txt"
+    else:
+        axons_file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/axons/Substrates/icvf_{icvf}_swell_{last_perc}_gamma_distributed_axon_list.txt"
+    
+    new_file = make_new(last_perc,v,  axons_file)

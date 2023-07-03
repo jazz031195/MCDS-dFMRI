@@ -26,13 +26,13 @@ public:
     int id;
     std::vector<Dynamic_Sphere> spheres; 
     double radius;
-    bool swell;
+    double min_radius;
     Eigen::Vector3d begin;
     Eigen::Vector3d end;
-    double volume_inc_perc;
     Projections projections;
-    Projections projections_max;
-    double min_radius;
+    double volume_inc_perc;
+    bool swell;
+
 
 
     /*!
@@ -43,23 +43,36 @@ public:
     ~Axon(){};
 
 
-    Axon(int id_, double radius_,  Eigen::Vector3d begin_,Eigen::Vector3d end_, double volume_inc_perc_, bool swell_ , int scale = 1){
+    Axon(int id_,  Eigen::Vector3d begin_,Eigen::Vector3d end_ , double volume_inc_perc_, bool swell_, double min_radius_ = 0.0, double max_radius= 0.0){
 
         id = id_;
-        begin = begin_*scale;
-        end = end_*scale;
-        volume_inc_perc = volume_inc_perc_;
+        begin = begin_;
+        end = end_;
         swell = swell_;
-
-        min_radius = radius = radius_*scale;
         spheres.clear();
+        volume_inc_perc = volume_inc_perc_;
 
-        if (swell){ 
-            radius = sqrt(1+volume_inc_perc)*radius;
+        if (min_radius_ == 0.0 && max_radius != 0.0){
+            min_radius = max_radius /(sqrt(1+volume_inc_perc));
+            if (!swell){
+                radius = min_radius;
+            }
+            else{
+                radius = max_radius;
+            }
         }
-
-        //projections.clear_projections();
-        //projections_max.clear_projections();
+        else if (min_radius_ != 0.0 && max_radius == 0.0){
+            min_radius = min_radius_;
+            if (swell){
+                radius = min_radius_*sqrt(1+volume_inc_perc);
+            }
+            else{
+                radius = min_radius_;
+            }
+        }
+        else{
+            std::cout << "Please give a valid radius for axon : " << id << endl;
+        }
 
     }
     Axon(Axon const &ax);

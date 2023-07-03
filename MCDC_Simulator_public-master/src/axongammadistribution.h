@@ -38,15 +38,13 @@ public:
     Eigen::Vector3d min_limits;                     /*!< voxel min limits (if any) (bottom left corner)                             */
     Eigen::Vector3d max_limits;                     /*!< voxel max limits (if any)                                                  */
     
-    bool active_state;
     bool tortuous;
 
     double duration; 
     std::vector<double> tortuosities;
     double c2;                                      /*!< ODF                                               */
     double step_length;
-    Eigen::Vector3d small_voxel_size;               /*!< size of small voxel where the aount of desired axons are fitted                                              */
-    std::string gamma_from_file;
+    int num_proc;
     /*!
      *  \param P_ Cylinder origin
      *  \param Q_ cylinder direction.
@@ -63,7 +61,7 @@ public:
      *  \param scale scale factor for the values passed. Useful when reading a file.
      *  \brief Initialize everything.
      */
-    AxonGammaDistribution(double, double, unsigned&, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, double min_radius = 0.001, bool active_state = false, double c2 = 1.0, bool tortuous = false, double step_length_ = barrier_tickness, std::string gamma_from_file = "");
+    AxonGammaDistribution(double, double, unsigned&, double, double,double,Eigen::Vector3d &,Eigen::Vector3d &, double, double, bool, double, int);
      
      /*!
      *  \brief Shows a small histogram of the gamma distribution
@@ -82,9 +80,6 @@ public:
     void printSubstrate(std::ostream& out);
     void find_target_point (double c2, double radius, Eigen::Vector3d& initial_point , Eigen::Vector3d& target_point);
     bool check_borders(Eigen::Vector3d pos, double distance_to_border, Eigen::Vector2d& twin_delta_pos);
-    //void add_periodic_voxel(int nbr_small_voxels, Eigen::Vector3d small_voxel_size);
-    //void flip(int flip_nbr, int j, int k, Eigen::Vector3d small_voxel_size, Eigen::Vector3d& initial_pos);
-    void combine_axons_and_save(Axon axon1, Axon axon2, int id_, std::vector<Axon>& axons_);
     void get_begin_end_point(Eigen::Vector3d& Q,Eigen::Vector3d& D, double radius);
 private:
 

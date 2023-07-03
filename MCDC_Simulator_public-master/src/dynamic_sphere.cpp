@@ -79,17 +79,6 @@ inline bool Dynamic_Sphere::handleCollition(Walker& walker, Collision &colision,
     }
 
 
-    //WARNING: Cuidar este patch
-    // Implementa Percolacion
-    if(percolation>0.0){
-        double _percolation_ (double(rand())/RAND_MAX);
-
-        if( percolation - _percolation_ > EPS_VAL ){
-            count_perc_crossings++;
-            return false;
-        }
-    }
-
     // a spin that's bouncing ignores collision at 0 (is in a wall)
     if(walker.status == Walker::bouncing){
 
@@ -134,6 +123,7 @@ inline bool Dynamic_Sphere::handleCollition(Walker& walker, Collision &colision,
     elasticBounceAgainsPlane(walker.pos_v,normal,colision.t,temp_step);
 
     colision.bounced_direction = temp_step.normalized();
+
 
     return true;
 

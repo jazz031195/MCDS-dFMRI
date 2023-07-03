@@ -64,7 +64,7 @@ def get_last_cylinder_array(file, N):
     return cylinder_array
 
 def traj_data(name):
-        with open(cur_path + '/MCDC_Simulator_public-master/instructions/demos/output/axons/Substrates/'+name+'.traj.txt') as f:
+        with open(cur_path + '/MCDC_Simulator_public-master/instructions/demos/output/cylinders/'+name+'.traj.txt') as f:
                 xp = []
                 yp = []
                 zp = []
@@ -198,26 +198,20 @@ def main(name):
 
 
 def main2(name, traj_name):
-    file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/axons/Substrates/{name}.txt"
+    file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/cylinders/Substrates/{name}.txt"
     size = get_size (file)
-    axons = get_spheres_array(file)
+    axons = get_spheres_array(size,file)
     axons_slice = []
-    z = 0.01
-    for axon in axons:
 
-        index, value =  min(enumerate(list(np.array(axon).T[2])), key=lambda x: abs(x[1]-z))
-        distance = np.abs(z-value)
-        R = axon[index][3]
-        if axon[index][4] == 1 :
+    for i,axon in enumerate(axons):
+        print(axon)
+
+        R = axon[-2]
+        if axon[-1] == 1 :
             R = R*np.sqrt(1.01)
-        if distance == 0:
-            new_r = R
-        else:
-            if distance < R :
-                new_r = np.sqrt(np.abs(R*R-distance*distance))
-            else:
-                continue
-        axons_slice.append([axon[index][0], axon[index][1], z, new_r, axon[index][4]])
+
+
+        axons_slice.append([axon[0], axon[1], R, axon[-1]])
     
     draw_cercles_with_trajectory(np.array(axons_slice), size, traj_name, swell = False)
 
@@ -244,6 +238,6 @@ def check_distances(name):
     return False
         
 
-main("icvf_0.7_swell_1.0_gamma_distributed_dyn_cylinder_list")
+main2("icvf_0.7_swell_1.0_gamma_distributed_dyn_cylinder_list", "cyl_straight_try_extra")
 #collides = check_distances("icvf_0.7_swell_1.0_gamma_distributed_dyn_cylinder_list")
 #print(collides)

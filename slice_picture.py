@@ -5,6 +5,9 @@ import seaborn as sns
 from pathlib import Path
 import os
 from scipy.linalg import norm
+import plotly.graph_objects as go
+import plotly.colors as colors
+from sklearn.neighbors import KNeighborsClassifier
 
 cur_path = os.getcwd()
 conf_file_path = cur_path + "/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedAxons.conf"
@@ -63,8 +66,8 @@ def get_last_cylinder_array(file, N):
 
     return cylinder_array
 
-def traj_data(name):
-        with open(cur_path + '/MCDC_Simulator_public-master/instructions/demos/output/axons/Substrates/'+name+'.traj.txt') as f:
+def traj_data(name, zmin, zmax):
+        with open(cur_path + '/MCDC_Simulator_public-master/instructions/demos/output/axons/'+name+'.traj.txt') as f:
                 xp = []
                 yp = []
                 zp = []
@@ -77,10 +80,8 @@ def traj_data(name):
                         elif i%3 == 2:
                                 zp.append(float(line))
                         i = i+1
-                z_min = 0.00
-                z_max = 0.01
 
-                indexes = [i for i,z in enumerate(zp) if z > z_min and z < z_max]
+                indexes = [i for i,z in enumerate(zp) if z > zmin and z < zmax]
 
                 xp = [xp[i] for i in indexes]
                 yp = [yp[i] for i in indexes]
@@ -88,13 +89,13 @@ def traj_data(name):
 
         return xp, yp, zp
 
-def draw_cercles_with_trajectory(cylinder_array, size, file_name,swell = False):
+def draw_cercles_with_trajectory(cylinder_array, size, file_name, zmin, zmax, swell = False):
     r = []
     fig, ax = plt.subplots(ncols = 2) 
 
     print(cylinder_array)
 
-    xp, yp, zp = traj_data(file_name)
+    xp, yp, zp = traj_data(file_name, zmin, zmax)
 
     for i in range(cylinder_array.shape[0]):
         radius = cylinder_array[i][-2]
@@ -177,7 +178,7 @@ def get_spheres_array(file):
 
 def main(name):
 
-    file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/cylinders/Substrates/{name}.txt"
+    file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/axons/Substrates/{name}.txt"
     size = get_size (file)
     axons = get_spheres_array(file)
     axons_slice = []
@@ -207,6 +208,7 @@ def main2(name, traj_name):
     axons = get_spheres_array(file)
     axons_slice = []
     z = 0.01
+    depth = 0.001
     for axon in axons:
 
         index, value =  min(enumerate(list(np.array(axon).T[2])), key=lambda x: abs(x[1]-z))
@@ -223,6 +225,141 @@ def main2(name, traj_name):
                 continue
         axons_slice.append([axon[index][0], axon[index][1], z, new_r, axon[index][4]])
     
-    draw_cercles_with_trajectory(np.array(axons_slice), size, traj_name, swell = False)
+    draw_cercles_with_trajectory(np.array(axons_slice), size, traj_name, z-depth/2, z+depth/2, swell = False)
+
+def split_list(lst, num_sublists):
+    sublist_size = len(lst) // num_sublists
+    remainder = len(lst) % num_sublists
     
-main("icvf_0.7_swell_0.7_gamma_distributed_dyn_cylinder_list")
+    sublists = []
+    start = 0
+    
+    for i in range(num_sublists):
+        sublist_length = sublist_size + 1 if i < remainder else sublist_size
+        sublists.append(lst[start:start+sublist_length])
+        start += sublist_length
+    
+    return sublists
+
+def main3(traj_name, zmin, zmax):
+
+
+    colours = colors.qualitative.Plotly[:10]
+    xs,ys,zs= traj_data(traj_name, zmin, zmax)
+
+    # Create a scatter plot for the first DataFrame
+    scatter = go.Scatter3d(
+        x=xs,
+        y=ys,
+        z=zs,
+        mode="markers",
+        name=f"DataFrame ",
+        marker=dict(
+            size=1,  # Set the size of scatter points for DataFrame 1
+            color=colours[0] # Set the color of scatter points for DataFrame 1
+        )
+    )
+
+    # Create the layout
+    layout = go.Layout(
+        scene=dict(
+            aspectmode="data"
+        )
+    )
+
+    # Create the figure
+    fig = go.Figure(data=scatter, layout=layout)
+
+
+    # Show the figure
+    fig.show()
+
+def main4(name):
+    file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/axons/Substrates/{name}.txt"
+    axons = get_spheres_array(file)
+    scatters = []
+    colours = colors.qualitative.Plotly[:10]
+    for e, axon in enumerate(axons) :
+
+        c = colours[e%10]
+        # Create a scatter plot for the first DataFrame
+        scatter = go.Scatter3d(
+            x=[s[0]*1000 for s in axon],
+            y=[s[1]*1000 for s in axon],
+            z=[s[2]*1000 for s in axon],
+            mode="markers",
+            name=f"Axon {e}",
+            marker=dict(
+                sizemode="diameter",
+                size=[s[3]*2000 for s in axon],  # Set the size of scatter points for DataFrame 1
+                color=c, # Set the color of scatter points for DataFrame 1
+                line=dict(
+                    color="rgba(0, 0, 0, 0)",  # Set color to transparent (alpha=0)
+                    width=0  # Set width to 0 to remove the contour
+                )
+            )
+            
+        )
+        scatters.append(scatter)
+
+    layout = go.Layout(
+    scene=dict(
+        xaxis=dict(title='X [um]'),
+        yaxis=dict(title='Y [um]'),
+        zaxis=dict(title='Z [um]')
+    )
+)
+
+    # Create the figure
+    fig = go.Figure(data=scatters, layout=layout)
+
+    # Show the figure
+    fig.show()
+
+def main5 (traj_name_intra, traj_name_extra, zmin, zmax):
+
+    xs,ys,zs= traj_data(traj_name_intra, zmin, zmax)
+
+    # Create a scatter plot for the first DataFrame
+    scatter_intra = go.Scatter3d(
+        x=xs,
+        y=ys,
+        z=zs,
+        mode="markers",
+        name=f"DataFrame ",
+        marker=dict(
+            size=1,  # Set the size of scatter points for DataFrame 1
+            color="green" # Set the color of scatter points for DataFrame 1
+        )
+    )
+    xs,ys,zs= traj_data(traj_name_extra, zmin, zmax)
+
+    # Create a scatter plot for the first DataFrame
+    scatter_extra = go.Scatter3d(
+        x=xs,
+        y=ys,
+        z=zs,
+        mode="markers",
+        name=f"DataFrame ",
+        marker=dict(
+            size=1,  # Set the size of scatter points for DataFrame 1
+            color="red" # Set the color of scatter points for DataFrame 1
+        )
+    )
+
+    # Create the layout
+    layout = go.Layout(
+        scene=dict(
+            aspectmode="data"
+        )
+    )
+
+    # Create the figure
+    fig = go.Figure(data=[scatter_intra, scatter_extra], layout=layout)
+
+    # Show the figure
+    fig.show()
+
+#main4( "icvf_0.6_swell_1.0_gamma_distributed_axon_list")
+# main3("straight_try", 0,0.03)
+main4("icvf_0.7_swell_1.0_gamma_distributed_axon_list")

@@ -40,11 +40,28 @@ public:
      *  \param scale  overall scale for when reading files.
      *  \brief Initialize everything.
      */
-    Dynamic_Sphere( Eigen::Vector3d center_, double radius_, double volume_inc_perc_, bool swell_, int ax_id_, int id_ , double scale=1): id(id_), center(center_*scale), radius(radius_*scale), volume_inc_perc(volume_inc_perc_), ax_id(ax_id_),swell(swell_){
-        
-        min_radius = radius;
-        if (swell){
-            radius = sqrt(1+volume_inc_perc)*radius;
+    Dynamic_Sphere(int id_, int ax_id_, Eigen::Vector3d center_, double volume_inc_perc_, bool swell_, double min_radius_ = 0.0, double max_radius = 0.0): id(id_), center(center_),  volume_inc_perc(volume_inc_perc_), ax_id(ax_id_),swell(swell_){
+
+        if (min_radius_ == 0.0 && max_radius != 0.0){
+            min_radius = max_radius /(sqrt(1+volume_inc_perc));
+            if (!swell){
+                radius = min_radius;
+            }
+            else{
+                radius = max_radius;
+            }
+        }
+        else if (min_radius_ != 0.0 && max_radius == 0.0){
+            min_radius = min_radius_;
+            if (swell){
+                radius = min_radius_*sqrt(1+volume_inc_perc);
+            }
+            else{
+                radius = min_radius_;
+            }
+        }
+        else{
+            std::cout << "Please give a valid radius for axon : " << id << endl;
         }
     }
 

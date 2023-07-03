@@ -10,6 +10,11 @@ cur_path = os.getcwd()
 # Some axons that could previously swell will become static
 
 def get_cyls_array(file):
+    """
+    Reads the file and saves the activity of each cylinder (0: rest, 1: active)
+    file : str, name of file (str)
+    cyls : list of the activity of each cylinder
+    """
 
     cyls = []
 
@@ -25,6 +30,15 @@ def get_cyls_array(file):
     return cyls
 
 def make_new(old_perc, new_perc, cyls_file):
+    """
+    Makes a new file with the same cylinders as list in the previous file but with a lower
+    swelling percentage. A portion of the swelling cylinders are set to rest to achieve the desired 
+    swelling percentage.
+
+    old_perc  : float, swelling percentage of file of reference
+    new_perc : float, swelling percentage of new file
+    cyls_file : str, name of file of reference
+    """
 
     cyls = get_cyls_array(cyls_file)
     if (new_perc> old_perc):
@@ -58,25 +72,34 @@ def make_new(old_perc, new_perc, cyls_file):
         cyl_nbr = 0
 
         for e,line in enumerate(firstfile):
-                if (len(line.split(' ')) > 4):
-                    activity = axon_activity[cyl_nbr]
-                    new_line = line.split(" ")
-                    new_line[-1] = str(int(activity))
-                    new_line = (" ").join(new_line)
-                    secondfile.write(new_line)
-                    secondfile.write("\n")
-                    cyl_nbr += 1
+            if (len(line.split(' ')) > 4):
+                activity = axon_activity[cyl_nbr]
+                new_line = line.split(" ")
+                new_line[-1] = str(int(activity))
+                new_line = (" ").join(new_line)
+                secondfile.write(new_line)
+                secondfile.write("\n")
+                cyl_nbr += 1
                     
+            else:
+                if e == 2:
+                    secondfile.write(str(new_perc))
+                    secondfile.write("\n")
                 else:
                     # write content to second file
                     secondfile.write(line)
-    return new_file
+    print(f"New File : {new_file}")
 
-lst = [0.7, 0.6, 0.5, 0.4, 0.3, 0.0]
+# main
+# list of desired swelling percentage
+lst = [0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]
+# icvf
+icvf = 0.7
 for i,v in enumerate(lst):
+    print(v)
     if i > 0:
         last_perc = lst[i-1]
     else:
         last_perc = 1.0
-    axons_file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/cylinders/Substrates/icvf_0.7_swell_{last_perc}_gamma_distributed_dyn_cylinder_list.txt"
-    new_file = make_new(last_perc, v,  axons_file)
+    axons_file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/cylinders/Substrates/icvf_{icvf}_swell_{last_perc}_gamma_distributed_dyn_cylinder_list.txt"
+    make_new(last_perc, v,  axons_file)

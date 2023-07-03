@@ -32,7 +32,7 @@ Parameters::Parameters()
     min_obstacle_radii  = 0;
     volume_inc_perc     = 0;
     dyn_perc            = 0; 
-    gamma_from_file = "";
+
 
     ini_walkers_file = "";
     num_proc    = 0;
@@ -76,6 +76,16 @@ void Parameters::readSchemeFile(std::string conf_file_path)
 
         else if(str_dist(tmp,"t") == 0){
             in >> num_steps;
+        }
+        else if(str_dist(tmp,"tortuous") <= 1){
+            string tortuous_str;
+            in >> tortuous_str;
+            if(tortuous_str.compare("false")== 0){
+                tortuous = false;
+            }
+            else if (tortuous_str.compare("true")== 0){
+                tortuous = true;
+            }
         }
         else if(str_dist(tmp,"duration") <= 1){
             in >> sim_duration;
@@ -221,9 +231,9 @@ void Parameters::readSchemeFile(std::string conf_file_path)
     }
 
     // if nbr of obstacles is not defined, estimate numbe of obstacles by taking 
-    // 0.35 um being the approx mean value of axons radii
+    // 0.5 um being the approx mean value of axons radii
     if (gamma_num_obstacles == 0 && max_limits[0] >EPS_VAL && gamma_icvf >EPS_VAL) {
-            gamma_num_obstacles = unsigned(gamma_icvf*max_limits[0]*max_limits[1]/(M_PI*(0.35e-3)*(0.35e-3)));
+            gamma_num_obstacles = unsigned(gamma_icvf*max_limits[0]*max_limits[1]/(M_PI*(0.5*1e-3)*(0.5*1e-3)));
             std::cout << " Num axons :" << gamma_num_obstacles << endl;
     }
 
@@ -437,16 +447,7 @@ void Parameters::readObstacles(ifstream& in)
             readPLYFileListScalePercolation(path);
             num_obstacles++;
         }
-        if(str_dist(tmp,"tortuous") <= 1){
-            string tortuous_str;
-            in >> tortuous_str;
-            if(tortuous_str.compare("false")== 0){
-                tortuous = false;
-            }
-            else if (tortuous_str.compare("true")== 0){
-                tortuous = true;
-            }
-        }
+
         if(str_dist(tmp,"<cylinder_hex_packing>") <=1){
             this->hex_cyl_packing = true;
             readHexagonalParams(in);

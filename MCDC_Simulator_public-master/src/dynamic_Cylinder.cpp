@@ -54,15 +54,6 @@ bool Dynamic_Cylinder::checkCollision(Walker &walker, Eigen::Vector3d &step, dou
     double k  = mm - radius*radius;
     double c  = k  - md*md;
 
-
-    //Parallel trajectory // WARNING: Check this stuff
-    if(fabs(a) < 1e-5 && fabs(c)<barrier_tickness){
-        colision.type = Collision::near;
-        colision.rn = c;
-        colision.obstacle_ind = id;
-        return true;
-    }
-
     double mn = m.dot(step);
     double b = mn - nd*md;
     double discr = b*b - a*c;
@@ -85,26 +76,8 @@ inline bool Dynamic_Cylinder::handleCollition(Walker& walker, Collision &colisio
     double t2 = (-b + sqrt(discr))/a;
 
 
-    //if we are completely sure that no collision happened
-    if( ( (t1 < 0.0) || (t1 > step_length+barrier_tickness) ) && ( (t2 < 0.0) || (t2 > step_length+barrier_tickness)) ){
-        colision.type = Collision::null;
-        return false;
-    }
-
-    //WARNING: Cuidar este patch
-    // Implementa Percolacion
-    if(percolation>0.0){
-        double _percolation_ ((double)rand()/RAND_MAX);
-
-        if( percolation - _percolation_ > EPS_VAL ){
-            count_perc_crossings++;
-            return false;
-        }
-    }
-
     // a spin that's bouncing ignores collision at 0 (is in a wall)
     if(walker.status == Walker::bouncing){
-
         //if the collision are too close or negative.
         if( ( (t1 < EPS_VAL) || (t1 > step_length+barrier_tickness)) && (( t2 < EPS_VAL) || (t2 > step_length+barrier_tickness)) ){
             colision.type = Collision::null;
@@ -117,6 +90,10 @@ inline bool Dynamic_Cylinder::handleCollition(Walker& walker, Collision &colisio
             colision.t = fmin(t2,step_length);
     }
     else{
+        if( ( (t1 < 0.0) || (t1 > step_length+barrier_tickness)) && (( t2 < 0.0) || (t2 > step_length+barrier_tickness)) ){
+            colision.type = Collision::null;
+            return false;
+        }
         if( t1>0.0 && t1 <t2)
             colision.t = fmin(t1,step_length);
         else

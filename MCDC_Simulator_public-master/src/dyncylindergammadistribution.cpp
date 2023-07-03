@@ -115,7 +115,7 @@ void DynCylinderGammaDistribution::createGammaSubstrate()
         }
         double jkr = distribution(generator);
 
-        if (jkr < min_radius)
+        if (jkr < min_radius  )
         {
             i--;
             tried++;
@@ -151,7 +151,7 @@ void DynCylinderGammaDistribution::createGammaSubstrate()
             Vector3d Q = {x, y, z};
             Vector3d D = {x, y, z + 1};
 
-            Dynamic_Cylinder* cyl = new Dynamic_Cylinder (Q, D, radiis[i], volume_inc_perc, bool_swell_cyl_id[i], dyn_cylinders.size());
+            Dynamic_Cylinder* cyl = new Dynamic_Cylinder ( dyn_cylinders.size(), Q, D, volume_inc_perc, bool_swell_cyl_id[i], radiis[i]);
 
             double min_distance;
             // creates dyn_cylinders_to_add

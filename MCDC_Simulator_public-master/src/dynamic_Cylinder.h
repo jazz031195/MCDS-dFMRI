@@ -36,15 +36,17 @@ public:
     ~Dynamic_Cylinder();
 
 
-    Dynamic_Cylinder(Eigen::Vector3d P_, Eigen::Vector3d Q_, double radius_,double volume_inc_perc_, bool swell_, int id_, double scale = 1):P(P_*scale),Q(Q_*scale),volume_inc_perc{volume_inc_perc_}, swell{swell_}{
+    Dynamic_Cylinder(int id_, Eigen::Vector3d P_, Eigen::Vector3d Q_,double volume_inc_perc_, bool swell_,  double min_radius_):P(P_),Q(Q_),volume_inc_perc{volume_inc_perc_}, swell{swell_}{
         D  = (Q_-P_).normalized();
         Q = P+D;
 
         id = id_;
-
-        min_radius = radius = radius_*scale;
-        if (swell){
-            radius = sqrt(1+volume_inc_perc)*radius;
+        min_radius = min_radius_;
+        if(swell){
+            radius = min_radius*sqrt(1+volume_inc_perc);
+        }  
+        else{
+            radius = min_radius;
         }
 
     }

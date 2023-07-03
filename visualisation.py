@@ -55,5 +55,5 @@ def plot(xp, yp, zp):
 
     plt.show()
 
-xp, yp, zp = traj_data('_')
+xp, yp, zp = traj_data('')
 plot(xp, yp, zp)

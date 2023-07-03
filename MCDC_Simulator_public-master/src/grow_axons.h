@@ -24,11 +24,12 @@ public:
     bool tortuous;
     bool success;
     bool finished;
+    double min_radius;
 
     Growth(){};
     ~Growth();
 
-    Growth (Axon*,  std::vector<Axon>, Eigen::Vector3d, bool);
+    Growth (Axon*,  std::vector<Axon>, Eigen::Vector3d, bool, double);
 
 
     void createTwinSpheres(std::vector<Dynamic_Sphere>& twin_spheres, Dynamic_Sphere s, Eigen::Vector2d twin_delta_pos);
