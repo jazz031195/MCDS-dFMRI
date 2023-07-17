@@ -168,7 +168,7 @@ public:
     bool isInsideNeurons(Eigen::Vector3d &position, int &neuron_id, double barrier_thickness);
 
     bool isIntraEdge(Eigen::Vector3d& position, bool low_edge, int& ax_id, bool init_loc_intra);
-private:    
+protected:    
 
     inline void generateStep(Eigen::Vector3d& step);
 
@@ -196,7 +196,7 @@ private:
      *          more the collision with the higher priority is saved /see #Collision#.
      *  \return returns true if there was any collision.
      */
-    inline bool checkObstacleCollision(Eigen::Vector3d& amended_step, double &tmax, Eigen::Vector3d &end_point, Collision &colision);
+    inline bool checkObstacleCollision(const Eigen::Vector3d& amended_step, double &tmax, Eigen::Vector3d &end_point, Collision &colision);
 
     /*! \fn     updateWalkerPositionAndHandleBouncinupdateDynamicCylindersg
      *  \param  amended_step, step to be "amended", this is corrected against bouncing and voxel limits

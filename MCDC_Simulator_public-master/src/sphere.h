@@ -24,7 +24,7 @@ public:
     /*!
      *  \brief Default constructor. Does nothing
      */
-    Sphere(){id = count++;}
+    Sphere(){count++;}
     /*!
      *  \brief Default destructor. Does nothing
      */
@@ -36,8 +36,9 @@ public:
      *  \param scale  overall scale for when reading files.
      *  \brief Initialize everything.
      */
-    Sphere(Eigen::Vector3d const& center_, double const& radius_,double const& scale =1):center(center_*scale),radius(radius_*scale){
-        id = count++;
+    Sphere(Eigen::Vector3d const& center_, double const& radius_, double const& scale =1):center(center_*scale),radius(radius_*scale)
+    {
+        count++;
     }
 
     /*!

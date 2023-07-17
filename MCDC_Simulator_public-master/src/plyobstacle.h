@@ -40,7 +40,7 @@ public:
 
 //  bool computeStepCollition(Walker &w, double step[3], const double &step_length,double end_point[3], Collision& colision);
     bool checkCollision(Walker &walker, Eigen::Vector3d &step, double const&step_lenght, Collision &colision);
-    bool checkCollision(Walker &walker, Eigen::Vector3d &step, double const&step_lenght, Collision &colision, std::vector<unsigned> const& triangle_list, unsigned const& list_end);
+    bool checkCollision(Walker &walker, const Eigen::Vector3d &step, double const&step_lenght, Collision &colision, std::vector<unsigned> const& triangle_list, unsigned const& list_end);
     double minDistance(Walker const& w, unsigned const& t) const;
 
 private:
@@ -52,7 +52,7 @@ private:
     void checkIfItsNearToTriangle(const Eigen::Vector3d end_point, const unsigned triangle_ind, Collision &colision);
 
     //Given the collision, handles the next walker status and the bouncing, if needed.
-    bool updateWalkerStatusAndHandleBouncing(Walker &walker, Eigen::Vector3d &ray_origin, Eigen::Vector3d &step, Collision &colision);
+    bool updateWalkerStatusAndHandleBouncing(Walker &walker, Eigen::Vector3d &ray_origin, const Eigen::Vector3d &step, Collision &colision);
 
 };
 

@@ -58,13 +58,13 @@ bool Dendrite::isPosInsideDendrite(Vector3d const& position,  double const& barr
 double Dendrite::minDistance(Vector3d const& pos) const
 {
     // TO IMPLEMENT
-    return 0;
+    assert(0);
 }
 
 double Dendrite::minDistance(Walker const& walker) const
 {
     // TO IMPLEMENT
-    return 0;
+    assert(0);
 }
 
 void Dendrite::add_subbranch(Axon& subbranch)

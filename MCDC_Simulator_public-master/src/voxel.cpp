@@ -28,7 +28,7 @@ Voxel::Voxel(Eigen::Vector3d min_limits_, Eigen::Vector3d max_limits_):min_limit
     walls[5] = Plane(d,c,g,h);
 }
 
-bool Voxel::CheckCollision(Walker &walker, Eigen::Vector3d& step, double& tmax, Collision &colision)
+bool Voxel::CheckCollision(Walker &walker, const Eigen::Vector3d& step, double& tmax, Collision &colision)
 {
     Collision colision_temp = colision;
 
@@ -55,7 +55,7 @@ Plane::Plane(Eigen::Vector3d& a, Eigen::Vector3d& b, Eigen::Vector3d& c, Eigen::
     d = normal.dot(a);
 }
 
-bool Plane::CheckCollision(Walker &walker, Eigen::Vector3d& step, double tmax, Collision& colision)
+bool Plane::CheckCollision(Walker &walker, const Eigen::Vector3d& step, double tmax, Collision& colision)
 {
     colision.type = Collision::null;
     // distance between walker and plane

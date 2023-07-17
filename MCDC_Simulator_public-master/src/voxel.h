@@ -33,7 +33,7 @@ public:
 
     Plane(Eigen::Vector3d &a, Eigen::Vector3d &b, Eigen::Vector3d &c, Eigen::Vector3d &d);
 
-    bool CheckCollision(Walker& walker, Eigen::Vector3d &step, double tmax, Collision &colision);
+    bool CheckCollision(Walker& walker, const Eigen::Vector3d &step, double tmax, Collision &colision);
 };
 
 /*! \class Voxel
@@ -52,7 +52,7 @@ public:
 
     Plane walls[6];
 
-    bool CheckCollision(Walker& walker, Eigen::Vector3d &step, double &tmax, Collision& colision);
+    bool CheckCollision(Walker& walker, const Eigen::Vector3d &step, double &tmax, Collision& colision);
 };
 
 

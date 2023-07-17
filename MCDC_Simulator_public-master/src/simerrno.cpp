@@ -1087,6 +1087,8 @@ void SimErrno::printSimulatinInfo(Parameters &params, ostream &out,bool color)
 
     answer = (params.PLY_files.size() > 0)?" true":" false";
     infoMenu(" PLY obstacles:         ------", answer, out, color,35);
+    if(params.PLY_files.size() > 0)
+        infoMenu(" PLY file name:         ------", params.PLY_files[0], out, color,35);
 
     if(params.PLY_files.size() > 0)
         infoMenu(" Number of PLYs:        ------", to_string( params.PLY_files.size()),out, color,35);

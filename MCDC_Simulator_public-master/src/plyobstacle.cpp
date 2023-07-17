@@ -219,7 +219,7 @@ bool PLYObstacle::checkCollision(Walker &walker, Eigen::Vector3d &step, double c
 
 }
 
-bool PLYObstacle::checkCollision(Walker &walker, Eigen::Vector3d &step, double const&step_lenght, Collision &colision, std::vector<unsigned> const& triangle_list, unsigned const& list_end)
+bool PLYObstacle::checkCollision(Walker &walker, const Eigen::Vector3d &step, double const&step_lenght, Collision &colision, std::vector<unsigned> const& triangle_list, unsigned const& list_end)
 {
     Collision colision_temp;
     colision.type = Collision::null;
@@ -322,7 +322,7 @@ void PLYObstacle::checkIfItsNearToTriangle(const Eigen::Vector3d end_point, cons
     }
 }
 
-bool PLYObstacle::updateWalkerStatusAndHandleBouncing(Walker &walker, Eigen::Vector3d &ray_origin, Eigen::Vector3d &step, Collision &colision)
+bool PLYObstacle::updateWalkerStatusAndHandleBouncing(Walker &walker, Eigen::Vector3d &ray_origin, const Eigen::Vector3d &step, Collision &colision)
 {
     if (colision.type == Collision::null){
         return 0;

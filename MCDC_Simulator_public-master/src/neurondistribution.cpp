@@ -98,11 +98,12 @@ void NeuronDistribution::createSubstrate()
             } // end for neurons
             for(size_t i=0; i < soma_centers.size(); ++i)
             {
-                Neuron neuron(soma_centers[i], soma_radius);
+                Neuron neuron(soma_centers[i], soma_radius, neurons.size());
                 growDendrites(neuron); 
                 neurons.push_back(neuron);
                 cout << " End of neuron " << i << endl;
             }
+
 
             // double icvf, somaFraction, dendritesFraction;
             // tie(icvf, somaFraction, dendritesFraction) = computeICVF(0);
@@ -142,7 +143,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
     {   
         cout << "dendrite " << i << endl;
         int tries = 0;
-        int nb_branching = 3;//generateNbBranching();
+        int nb_branching = 1;//generateNbBranching();
         // Radius of each dendrite sphere [mm]
         double sphere_radius = 0.6e-3;
         // Don't initiate dendrite too close from the borders

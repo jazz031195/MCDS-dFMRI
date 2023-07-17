@@ -41,7 +41,7 @@ Neuron(std::vector<Dendrite> const& dendrites, Eigen::Vector3d const& soma_cente
 *  \param soma_center Vector3d<Axon>, center of the soma.
 *  \param soma_radius double        , radius of the soma.
 */
-Neuron(Eigen::Vector3d const&soma_center, double const& soma_radius);
+Neuron(Eigen::Vector3d const&soma_center, double const& soma_radius, int const& neuron_id);
 /*! Copy constructor 
 *  \param neuron Neuron
 */
@@ -58,7 +58,7 @@ Neuron(Neuron const& neuron);
  * @return                     bool, true if collision with this.
  */
 bool checkCollision(Walker &walker, Eigen::Vector3d const&step_dir, double const&step_lenght, Collision &collision);
-bool checkCollision_branching(Walker &walker, std::vector<Dynamic_Sphere*> const& spheres, Eigen::Vector3d const& step, double const& step_lenght, Collision &colision);
+static bool checkCollision_branching(Walker &walker, std::vector<Dynamic_Sphere*>& spheres, Eigen::Vector3d const& step, double const& step_lenght, Collision &colision);
 std::vector<Dynamic_Sphere*> find_neighbor_spheres(Walker &walker, Eigen::Vector3d const& next_step, double const& step_length);
 /**
  * Calculate if position is inside this.
@@ -95,6 +95,22 @@ double minDistance(Walker const& walker) const;
 void add_dendrite(Dendrite& dendrite_to_add);
 std::vector <int> closest_subbranch(Eigen::Vector3d const& position, int const& dendrite_id, int const& subbranch_id, double const& step_length);
 std::vector <double> get_Volume() const;
+    /**
+     * Calculates if there is/are intersection(s) between the sphere s and a walker
+     * starting at traj_orig, with a direction step_dir. 
+     * There can be none, one or two intersections.
+     * 
+     * Taken from : https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
+     *
+     * @param intercept1         double, distance from traj_orig to the first potential intercept.
+     * @param intercept2         double, distance from traj_orig to the second potential intercept.
+     * @param s          Dynamic_sphere, sphere with which to calculate the intersection.
+     * @param step_length        double, step length of the walker
+     * @param traj_orig Eigen::Vector3d, trajectory origin of the walker
+     * @param c                  double, ||traj.orig - s.center||² - s.radius²
+     */
+    static bool intersection_sphere_vector(double& intercept1, double& intercept2, Dynamic_Sphere const& s, Eigen::Vector3d const& step_dir, 
+                                    double const& step_length, Eigen::Vector3d const& traj_orig, double & c);
 
 private:
 
@@ -127,22 +143,6 @@ private:
      *                                       dendrite_id : dendrite_id or -1.
     */
     std::tuple<std::string, std::vector<int>> isNearDendrite(Eigen::Vector3d const& position,  double const& barrier_thickness) const;
-    /**
-     * Calculates if there is/are intersection(s) between the sphere s and a walker
-     * starting at traj_orig, with a direction step_dir. 
-     * There can be none, one or two intersections.
-     * 
-     * Taken from : https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
-     *
-     * @param intercept1         double, distance from traj_orig to the first potential intercept.
-     * @param intercept2         double, distance from traj_orig to the second potential intercept.
-     * @param s          Dynamic_sphere, sphere with which to calculate the intersection.
-     * @param step_length        double, step length of the walker
-     * @param traj_orig Eigen::Vector3d, trajectory origin of the walker
-     * @param c                  double, ||traj.orig - s.center||² - s.radius²
-     */
-    bool intersection_sphere_vector(double& intercept1, double& intercept2, Dynamic_Sphere const& s, Eigen::Vector3d const& step_dir, 
-                                    double const& step_length, Eigen::Vector3d const& traj_orig, double & c) const;
     /**
      * Assign Dendrites to dendrites. 
      *

@@ -12,7 +12,7 @@ Sphere::Sphere(const Sphere &sph)
 {
     center = sph.center;
     radius = sph.radius;
-    id = count++;
+    id     = sph.id;
 }
 
 bool Sphere::checkCollision(Walker &walker, Vector3d const&step, double const&step_lenght, Collision &colision)

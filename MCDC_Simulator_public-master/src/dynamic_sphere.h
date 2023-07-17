@@ -72,7 +72,7 @@ public:
      */
     Dynamic_Sphere(Dynamic_Sphere const &sph);
 
-    Dynamic_Sphere(Eigen::Vector3d soma_center, double soma_radius);
+    Dynamic_Sphere(Eigen::Vector3d soma_center, double soma_radius, int const& sphere_id);
 
     /*! \fn  minDistance
      *  \param walker, Walker instance in the simulation.

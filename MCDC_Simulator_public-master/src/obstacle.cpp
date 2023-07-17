@@ -26,17 +26,12 @@ void Obstacle::elasticBounceAgainsPlane(Eigen::Vector3d& ray_origin, Eigen::Vect
 void Obstacle::elasticBounceAgainsPlane_intra(Eigen::Vector3d &ray_origin, Eigen::Vector3d &normal, double &t, Eigen::Vector3d &step)
 {
 
+    // should be the same as -step
     Eigen::Vector3d ray =  (-t*step).normalized();//
-
+    // ||ray||*||normal||*cos(alpha) = cos(alpha), because both vectors are unitary 
     double rn = ray.dot(normal);
-    if (cos(rn)== 0){
-        step = normal;
-    } 
-    else{
-        step = -ray + 2.0*normal*rn;
-    } 
-
-
+    // -ray should be the same as step
+    step = -ray + 2.0*normal*rn;
 }
 
 void Obstacle::elasticBounceAgainsPlane_extra(Eigen::Vector3d &ray_origin, Eigen::Vector3d &normal, double &t, Eigen::Vector3d &step)
@@ -45,10 +40,7 @@ void Obstacle::elasticBounceAgainsPlane_extra(Eigen::Vector3d &ray_origin, Eigen
     Eigen::Vector3d ray =  (-t*step).normalized();//
 
     double rn = ray.dot(normal);
-    if (cos(rn) <= 0){
-        step = -ray + 2.0*normal*rn;
-    } 
-
+    step = -ray + 2.0*normal*rn;
 
 }
 
