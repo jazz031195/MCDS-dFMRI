@@ -12,7 +12,19 @@
             "args": ["${file}"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "MIMode": "gdb",
+            "MIMode": "lldb",
         },
+
+        {
+            "name": "run tests",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            // "program": "${command:cmake.getLaunchTargetDirectory}/tests",
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "MIMode": "lldb",
+        },
+
     ]
 }
