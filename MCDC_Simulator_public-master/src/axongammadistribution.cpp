@@ -234,7 +234,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
     std::default_random_engine generator(rd());
     std::gamma_distribution<double> distribution(alpha, beta);
     
-    uint repetition = 1;
+    // uint repetition = 1;
     min_limits = {0., 0., 0.};
 
     std::mt19937 gen(rd());

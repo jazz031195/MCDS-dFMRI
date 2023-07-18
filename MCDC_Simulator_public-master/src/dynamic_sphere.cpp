@@ -18,7 +18,7 @@ Dynamic_Sphere::Dynamic_Sphere(Vector3d soma_center, double soma_radius, int con
 
 
 Dynamic_Sphere::Dynamic_Sphere(Dynamic_Sphere const& sph): 
-swell(sph.swell), volume_inc_perc(sph.volume_inc_perc), ax_id(sph.ax_id), id(sph.id), 
+swell(sph.swell), volume_inc_perc(sph.volume_inc_perc), id(sph.id), ax_id(sph.ax_id),
 min_radius(sph.min_radius), parent(sph.parent), children(sph.children)
 {   
     center = sph.center;

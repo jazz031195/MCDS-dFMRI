@@ -175,7 +175,7 @@ bool Growth::find_next_center(Axon* ax, Eigen::Vector3d destination, Dynamic_Sph
     double phi_to_target, theta_to_target;
     // phi and theta angles in spherical coordinates
     // that links previous position with current one
-    double prev_phi, prev_theta;
+    // double prev_phi, prev_theta;
     // number of tries 
     int tries = 0;
     // random
@@ -261,8 +261,8 @@ bool Growth::find_next_center(Axon* ax, Eigen::Vector3d destination, Dynamic_Sph
 
         // if angle difference is too much
         
-        Eigen::Vector3d v1 = (curr_pos - prev_pos).normalized();
-        Eigen::Vector3d v2 = (new_pos - curr_pos).normalized();
+        // Eigen::Vector3d v1 = (curr_pos - prev_pos).normalized();
+        // Eigen::Vector3d v2 = (new_pos - curr_pos).normalized();
         
         Dynamic_Sphere sphere_ (new_pos, rad,ax->volume_inc_perc,ax->swell, ax->id, -1);
         
