@@ -8,4 +8,4 @@
 #SBATCH -o OUTPUTS/out/%j.%a.%N.%x.out
 #SBATCH -e OUTPUTS/err/%j.%a.%N.%x.err
  
-./run2.sh
+./run.sh

@@ -1,5 +1,37 @@
 #!/bin/bash -l
 
+path="/scratch/ideriedm/Simulation/MCDS-dFMRI/MCDC_Simulator_public-master"
+
 ./MCDC_Simulator_public-master/compile.sh
-./MCDC_Simulator_public-master/MC-DC_Simulator "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/conf_file_examples/gammaDistributedAxons.conf"
+
+declare -a N=( "100" "1000" "5000" "10000" "15000"); 
+
+declare -a T=( "1000" "5000" "10000" "15000"); 
+
+icvf="0.3";
+
+for ((i=1;i<=5;i++)); 
+do
+    for n in "${N[@]}";
+    do
+        for t in "${T[@]}";
+        do
+            echo "Starting creation of substrate ... "
+            echo " N : $n"
+            echo " T : $t"
+            
+            # run code to create neurons list file
+	        chmod u+x make_conf_file.sh
+            if [ $n < 48];
+            then
+                ./make_conf_file.sh -i $icvf -l "$l" -p 10 -n "$n" -t "$t" -s "$s" -P "$path"
+            else
+                ./make_conf_file.sh -i $icvf -l "$l" -p 48 -n "$n" -t "$t" -s "$s" -P "$path"
+            fi
+            ./MCDC_Simulator_public-master/MC-DC_Simulator "${path}/docs/conf_file_examples/Neurons_from_file_run.conf"
+        done
+        
+    done
+done
+
         
