@@ -9,6 +9,8 @@ import seaborn as sns
 from pathlib import Path
 from scipy import stats
 import warnings
+import plotly.express as px
+
 warnings.filterwarnings("ignore")
 
 cur_path = os.getcwd()
@@ -537,10 +539,11 @@ def get_adc_diff_rest_active(folder, conf):
 
 
 # combine_intra_extra_adc("neurons")
-dwi_intra_path = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_01_DWI.txt"
-dwi_intra = create_data(dwi_intra_path)
+dwi_intra_path = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/mesh/mesh_nb_20_1_subbranch_245_span_DWI.txt"
+dwi_intra = create_data(dwi_intra_path, 200)
 print(dwi_intra)
 dwi_intra["loc"] = ["intra"]*dwi_intra["x"].size
+dwi_intra["simu"] = ["nb_20_1_subbranch_245_span"]*dwi_intra["x"].size
 data_x = dwi_intra.loc[(dwi_intra['x'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
 data_y = dwi_intra.loc[(dwi_intra['y'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
 data_z = dwi_intra.loc[(dwi_intra['z'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
@@ -548,6 +551,32 @@ bs = list(data_z["b [um²/ms]"])
 datas = [data_x,data_y,data_z]
 std = list(map(lambda x,y,z : np.std([x,y,z]), list(datas[0]["log(Sb/So)"]),list(datas[1]["log(Sb/So)"]),list(datas[2]["log(Sb/So)"])))
 dwi = dwi_intra
+
+dwi_intra_path = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/mesh/mesh_nb_20_1_subbranch_245_span_no_soma_rep_00_DWI.txt"
+dwi_intra = create_data(dwi_intra_path, 200)
+print(dwi_intra)
+dwi_intra["loc"] = ["intra"]*dwi_intra["x"].size
+dwi_intra["simu"] = ["nb_20_1_subbranch_245_span_no_soma"]*dwi_intra["x"].size
+data_x = dwi_intra.loc[(dwi_intra['x'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+data_y = dwi_intra.loc[(dwi_intra['y'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+data_z = dwi_intra.loc[(dwi_intra['z'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+bs = list(data_z["b [um²/ms]"])
+datas = [data_x,data_y,data_z]
+std = list(map(lambda x,y,z : np.std([x,y,z]), list(datas[0]["log(Sb/So)"]),list(datas[1]["log(Sb/So)"]),list(datas[2]["log(Sb/So)"])))
+dwi = dwi.append(dwi_intra)
+
+dwi_intra_path = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/mesh/mesh_soma_only_DWI.txt"
+dwi_intra = create_data(dwi_intra_path, 200)
+print(dwi_intra)
+dwi_intra["loc"] = ["intra"]*dwi_intra["x"].size
+dwi_intra["simu"] = ["soma_only"]*dwi_intra["x"].size
+data_x = dwi_intra.loc[(dwi_intra['x'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+data_y = dwi_intra.loc[(dwi_intra['y'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+data_z = dwi_intra.loc[(dwi_intra['z'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+bs = list(data_z["b [um²/ms]"])
+datas = [data_x,data_y,data_z]
+std = list(map(lambda x,y,z : np.std([x,y,z]), list(datas[0]["log(Sb/So)"]),list(datas[1]["log(Sb/So)"]),list(datas[2]["log(Sb/So)"])))
+dwi = dwi.append(dwi_intra)
 
 # print(std)
 # dwi_extra_path = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/extra/_DWI.txt"
@@ -562,9 +591,10 @@ dwi = dwi_intra
 # print(std)
 # dwi = dwi_intra.append(dwi_extra)
 
-import plotly.express as px
-fig = px.box(dwi[~dwi['b [um²/ms]'].isnull()], x='b [um²/ms]', y='Sb/So', color='loc')
+fig = px.box(dwi[~dwi['b [um²/ms]'].isnull()], x='b [um²/ms]', y='Sb/So', color='simu')
 fig.show()
+
+
 # intra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra_active__DWI.txt"
 # extra_active_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/extra_active__DWI.txt"
 # intra_rest_path = cur_path + "/MCDC_Simulator_public-master/instructions/demos/output/axons/intra__DWI.txt"

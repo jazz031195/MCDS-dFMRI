@@ -733,116 +733,121 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos, int &cy
         assert(0);
     }
 
+    // Not a neuron substrate
     uint32_t count = 0;
-    bool achieved= false;
-    // while(!achieved){
-
-    //     if(count > 100000){
-    //         SimErrno::error("Cannot initialize intra-axonal walkers within the given substrate",cout);
-    //         SimErrno::error("Max. number of tries to find an intra-celular compartment reached",cout);
-    //         assert(0);
-    //     }
-
-    //     double x = double(udist(gen));
-    //     double y = double(udist(gen));
-    //     double z = double(udist(gen));
-
-    //     x = x*(params.min_sampling_area[0]) + ( 1.0-x)*params.max_sampling_area[0];
-    //     y = y*(params.min_sampling_area[1]) + ( 1.0-y)*params.max_sampling_area[1];
-    //     z = z*(params.min_sampling_area[2]) + ( 1.0-z)*params.max_sampling_area[2];
-
-    //     Vector3d pos_temp = {x,y,z};
-
-    //     isintra = isInIntra(pos_temp, cyl_ind, ply_ind, sph_ind, ax_ind, neuron_ind, -barrier_tickness);
-    //     if(checkIfPosInsideVoxel(pos_temp) && (isintra)){
-            
-    //         //message = "is inside : "+std::to_string(isintra)+" \n";
-    //         //SimErrno::info(message,cout);
-    //         intra_pos = pos_temp;
-    //         achieved = true;
-    //     }
-    //     count++;
-    // }
-
-
-    double x = double(udist(gen));
-    double y = double(udist(gen));
-    double z = double(udist(gen));
-    double probaRadius = double(udist(gen));
-
-
-    vector<double> volume_soma_dendrite = (*neurons_list)[0].get_Volume();
-    double VolumeNeuron = volume_soma_dendrite[0] + volume_soma_dendrite[1];
-    double proba = double(udist(gen));
-
-    // In soma
-    if (proba < 0)//volume_soma_dendrite[0]/VolumeNeuron)
+    if(!params.neuron_packing)
     {
-        while(!achieved){
-            cout << "starts in soma" << endl;
-
-            if(count > 100000){
-                SimErrno::error("Cannot initialize intra-axonal walkers within the given substrate",cout);
-                SimErrno::error("Soma Max. number of tries to find an intra-celular compartment reached",cout);
-                assert(0);
-            }
-            Vector3d somaCenter = (*neurons_list)[0].soma.center;
-            double somaRadius   = (*neurons_list)[0].soma.radius;
-
-            double theta = 2 * M_PI * udist(gen);
-            double phi = acos(1 - 2 * udist(gen));
-            double x = sin(phi) * cos(theta) * probaRadius * somaRadius + somaCenter[0];
-            double y = sin(phi) * sin(theta) * probaRadius * somaRadius + somaCenter[1];
-            double z = cos(phi) * probaRadius * somaRadius + somaCenter[2];
-
-            Vector3d pos_temp = {x,y,z};
-
-            isintra = isInIntra(pos_temp, cyl_ind, ply_ind, sph_ind, ax_ind, neuron_ind, -barrier_tickness);
-            if(checkIfPosInsideVoxel(pos_temp) && (isintra)){
-                
-                //message = "is inside : "+std::to_string(isintra)+" \n";
-                //SimErrno::info(message,cout);
-                intra_pos = pos_temp;
-                achieved = true;
-            }
-            count++;
-        }
-    }
-    // In dendrite
-    else
-    {
-        while(!achieved){
-            cout << "starts in dendrite" << endl;
+        while(true){
 
             if(count > 100000){
                 SimErrno::error("Cannot initialize intra-axonal walkers within the given substrate",cout);
                 SimErrno::error("Max. number of tries to find an intra-celular compartment reached",cout);
                 assert(0);
             }
-            std::uniform_int_distribution<int> dendrite_dist(0, (*neurons_list)[0].dendrites.size()-1);
-            int dendrite_id = dendrite_dist(gen);
-            std::uniform_int_distribution<int> subbranch_dist(0, (*neurons_list)[0].dendrites[dendrite_id].subbranches.size()-1);
-            int subbranch_id = subbranch_dist(gen);
-            std::uniform_int_distribution<int> sphere_dist(0, (*neurons_list)[0].dendrites[dendrite_id].subbranches[subbranch_id].spheres.size()-1);
-            int sphere_id = sphere_dist(gen);
-            Vector3d center = (*neurons_list)[0].dendrites[dendrite_id].subbranches[subbranch_id].spheres[sphere_id].center;
-            x = center[0];
-            y = center[1];
-            z = center[2];
+
+            double x = double(udist(gen));
+            double y = double(udist(gen));
+            double z = double(udist(gen));
+
+            x = x*(params.min_sampling_area[0]) + ( 1.0-x)*params.max_sampling_area[0];
+            y = y*(params.min_sampling_area[1]) + ( 1.0-y)*params.max_sampling_area[1];
+            z = z*(params.min_sampling_area[2]) + ( 1.0-z)*params.max_sampling_area[2];
 
             Vector3d pos_temp = {x,y,z};
 
-            isintra = isInIntra(pos_temp,cyl_ind,ply_ind, sph_ind,ax_ind, neuron_ind, -barrier_tickness);
+            isintra = isInIntra(pos_temp, cyl_ind, ply_ind, sph_ind, ax_ind, neuron_ind, -0.1);
             if(checkIfPosInsideVoxel(pos_temp) && (isintra)){
                 
                 //message = "is inside : "+std::to_string(isintra)+" \n";
                 //SimErrno::info(message,cout);
                 intra_pos = pos_temp;
-                achieved = true;
+                return;
             }
             count++;
         }
     }
+    // Neuron substrate => for now, force the water inside dendrite, just to be sure
+    else
+    {
+        double x = double(udist(gen));
+        double y = double(udist(gen));
+        double z = double(udist(gen));
+        double probaRadius = double(udist(gen));
+
+
+        vector<double> volume_soma_dendrite = (*neurons_list)[0].get_Volume();
+        double VolumeNeuron = volume_soma_dendrite[0] + volume_soma_dendrite[1];
+        double proba = double(udist(gen));
+
+        // In soma
+        if (proba < 0)//volume_soma_dendrite[0]/VolumeNeuron)
+        {
+            while(true){
+                cout << "starts in soma" << endl;
+
+                if(count > 100000){
+                    SimErrno::error("Cannot initialize intra-axonal walkers within the given substrate",cout);
+                    SimErrno::error("Soma Max. number of tries to find an intra-celular compartment reached",cout);
+                    assert(0);
+                }
+                Vector3d somaCenter = (*neurons_list)[0].soma.center;
+                double somaRadius   = (*neurons_list)[0].soma.radius;
+
+                double theta = 2 * M_PI * udist(gen);
+                double phi = acos(1 - 2 * udist(gen));
+                double x = sin(phi) * cos(theta) * probaRadius * somaRadius + somaCenter[0];
+                double y = sin(phi) * sin(theta) * probaRadius * somaRadius + somaCenter[1];
+                double z = cos(phi) * probaRadius * somaRadius + somaCenter[2];
+
+                Vector3d pos_temp = {x,y,z};
+
+                isintra = isInIntra(pos_temp, cyl_ind, ply_ind, sph_ind, ax_ind, neuron_ind, -barrier_tickness);
+                if(checkIfPosInsideVoxel(pos_temp) && (isintra)){
+                    
+                    //message = "is inside : "+std::to_string(isintra)+" \n";
+                    //SimErrno::info(message,cout);
+                    intra_pos = pos_temp;
+                    return;
+                }
+                count++;
+            }
+        }
+        // In dendrite
+        else
+        {
+            while(true){
+                cout << "starts in dendrite" << endl;
+
+                if(count > 100000){
+                    SimErrno::error("Cannot initialize intra-axonal walkers within the given substrate",cout);
+                    SimErrno::error("Max. number of tries to find an intra-celular compartment reached",cout);
+                    assert(0);
+                }
+                std::uniform_int_distribution<int> dendrite_dist(0, (*neurons_list)[0].dendrites.size()-1);
+                int dendrite_id = dendrite_dist(gen);
+                std::uniform_int_distribution<int> subbranch_dist(0, (*neurons_list)[0].dendrites[dendrite_id].subbranches.size()-1);
+                int subbranch_id = subbranch_dist(gen);
+                std::uniform_int_distribution<int> sphere_dist(0, (*neurons_list)[0].dendrites[dendrite_id].subbranches[subbranch_id].spheres.size()-1);
+                int sphere_id = sphere_dist(gen);
+                Vector3d center = (*neurons_list)[0].dendrites[dendrite_id].subbranches[subbranch_id].spheres[sphere_id].center;
+                x = center[0];
+                y = center[1];
+                z = center[2];
+
+                Vector3d pos_temp = {x,y,z};
+
+                isintra = isInIntra(pos_temp,cyl_ind,ply_ind, sph_ind,ax_ind, neuron_ind, -barrier_tickness);
+                if(checkIfPosInsideVoxel(pos_temp) && (isintra)){
+                    
+                    //message = "is inside : "+std::to_string(isintra)+" \n";
+                    //SimErrno::info(message,cout);
+                    intra_pos = pos_temp;
+                    return;
+                }
+                count++;
+            }
+        }
+    }  
 }
 
 void DynamicsSimulation::getAnIntraCellularPositionOnEdge(Vector3d &intra_pos,int &cyl_ind, int& ply_ind, std::vector<int>& sph_ind, int& ax_ind, int& neuron_ind, double z)
@@ -1369,7 +1374,7 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
 
         for(unsigned t = 1 ; t <= params.num_steps; t++) //T+1 steps in total (avoid errors)
         {
-            cout << "t " << t << endl;
+            // cout << t << endl;
             //Get the time step in milliseconds
             getTimeDt(last_time_dt, time_dt, l, dataSynth, t, time_step);
 
@@ -1625,6 +1630,8 @@ bool DynamicsSimulation::updateWalkerPosition(Eigen::Vector3d& step) {
             if(walker.initial_location == Walker::intra)
             {
                 cout << "Warning: Walker crossed the boundary : intra to extra" << endl;
+                // cout << "pos" << walker.pos_v[0] << " " << walker.pos_v[1] << " " << walker.pos_v[2] << endl;
+                // cout << "last pos" << walker.last_pos_v[0] << " " << walker.last_pos_v[1] << " " << walker.last_pos_v[2] << endl;
                 // assert(0);
             }
                 
