@@ -145,7 +145,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
         int tries = 0;
         int nb_branching = 1;//generateNbBranching();
         // Radius of each dendrite sphere [mm]
-        double sphere_radius = 0.6e-3;
+        double sphere_radius = 0.5e-3;
         // Don't initiate dendrite too close from the borders
         double min_distance_from_border = barrier_tickness + sphere_radius + step_length;
         
@@ -178,7 +178,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                 for(int b=0; b < nb_branching; ++b)
                 {
                     // Length of a segment before branching
-                    double l_segment = generateLengthSegment();
+                    double l_segment = 245e-3;//generateLengthSegment();
                     // Number of spheres per segment
                     int nb_spheres = l_segment / (sphere_radius/4); //Let's assume that dendrites have a radius of 0.5microns so far
                     vector<int> proximal_branch;
@@ -522,6 +522,7 @@ void NeuronDistribution::printSubstrate(ostream &out) const
                     // }
                         
                 }
+                //TODO [ines] : add proximal & distal branching writing
                 out << "Segment " + to_string(k) << endl;
                 
             }

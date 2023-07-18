@@ -993,6 +993,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                     spheres_.clear();
                     subbranches_.push_back(subbranch);
                     cout << "adding segment "  << endl;
+                    //TODO [ines] : add proximal & distal branching reading
                 }
                 // If dendrite, create it from spheres_ and store it into axons_
                 else if( part.find("Dendrite") != std::string::npos && subbranches_.size() > 0)
@@ -1000,6 +1001,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                     Dendrite dendrite;
                     dendrite.set_dendrite(subbranches_);
                     subbranches_.clear();
+                    dendrites_.push_back(dendrite);
                     cout << "adding dendrite : "  << id << endl;
                 }
                 // If neuron, create it from soma and axons

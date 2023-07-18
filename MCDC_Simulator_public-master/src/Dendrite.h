@@ -95,7 +95,7 @@ void set_dendrite(std::vector<Axon> const& subbranches);
  * 
  * @param dendrite_id int, id of the dendrite
 */
-void add_projection(int const& dendrite_id);
+void add_projection();
 
 private:
 

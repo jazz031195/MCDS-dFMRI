@@ -76,6 +76,7 @@ void Dendrite::add_subbranch(Axon& subbranch)
 void Dendrite::set_dendrite(vector<Axon> const& subbranches_)
 {
     subbranches = subbranches_;
+    add_projection();
 }
 
 int Dendrite::get_nb_subbranches()
@@ -92,7 +93,7 @@ double Dendrite::volumeDendrite() const
     return volume;
 }
 
-void Dendrite::add_projection(int const& dendrite_id)
+void Dendrite::add_projection()
 {
     for(int axis=0; axis < 3 ; axis++)
     {
