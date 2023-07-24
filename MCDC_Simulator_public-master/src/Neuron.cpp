@@ -610,13 +610,13 @@ bool Neuron::checkCollision(Walker &walker, Vector3d const &step_dir, double con
     if (spheres_list.size() > 1)
     {
         isColliding = checkCollision_branching(walker, spheres_list, step_dir, step_lenght, colision);
-        for (size_t i = 0; i < spheres_list.size(); i++)
-            delete spheres_list[i];
-        spheres_list.clear();
     }
     else
         isColliding = soma.checkCollision(walker, step_dir, step_lenght, colision);
 
+    for (size_t i = 0; i < spheres_list.size(); i++)
+        delete spheres_list[i];
+    spheres_list.clear();
     if (!isPosInsideNeuron(walker.pos_v, EPS_VAL, false, walker.in_soma_index, walker.in_dendrite_index, walker.in_subbranch_index, walker.in_sph_index))
     {
         walker.location = Walker::extra;

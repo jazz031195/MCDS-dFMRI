@@ -843,7 +843,7 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos, int &cy
         double VolumeNeuron = volume_soma_dendrite[0] + volume_soma_dendrite[1];
         double proba = double(udist(gen));
         // In soma
-        if (proba < 0) // volume_soma_dendrite[0]/VolumeNeuron)
+        if (proba < volume_soma_dendrite[0]/VolumeNeuron)
         {
             while (true)
             {

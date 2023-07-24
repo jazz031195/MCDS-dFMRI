@@ -13,11 +13,11 @@ icvf="0.3";
 p="48";
 l="intra";
 
-for ((i=1;i<=1;i++)); 
+for n in "${N[@]}";
 do
-    for n in "${N[@]}";
+    for t in "${T[@]}";
     do
-        for t in "${T[@]}";
+        for ((i=1;i<=5;i++)); 
         do
             echo "Starting creation of substrate ... "
             echo " N : $n"

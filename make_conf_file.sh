@@ -48,5 +48,3 @@ sed -i'' -e s:replace_scheme_file:"${path_to_scheme}":g "${path_to_conf}"
 sed -i'' -e s:replace_neuron_list:"${path_to_neurons}":g "${path_to_conf}"
 sed -i'' -e s:replace_process:"${process}":g "${path_to_conf}"
 sed -i'' -e s:replace_loc:"${loc}":g "${path_to_conf}"
-
-rm "$path/docs/conf_file_examples/Neurons_from_file_run.conf-e"
