@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.24)
 project(MC-DC_Simulator VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -11,22 +11,28 @@ include(ExternalProject)
 ExternalProject_Add(
     doctest
     URL https://github.com/doctest/doctest/archive/refs/tags/v2.4.11.tar.gz
-    PREFIX ${CMAKE_BINARY_DIR}/externals/doctest
     DOWNLOAD_EXTRACT_TIMESTAMP ON
-    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/doctest"
+    # No need to build/install (cf. their README file, part "build system")
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
 )
-set(DOCTEST_INCLUDE_DIR ${CMAKE_BINARY_DIR}/doctest/include/doctest)
+ExternalProject_Get_Property(doctest SOURCE_DIR)
+set(DOCTEST_INCLUDE_DIR ${SOURCE_DIR}/doctest)
 
 ExternalProject_Add(
     eigen
     # 3.4.0 is not compatible with intellisense
     URL https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
-    PREFIX ${CMAKE_BINARY_DIR}/externals/eigen
     DOWNLOAD_EXTRACT_TIMESTAMP ON
     PATCH_COMMAND ${GIT_EXECUTABLE} apply --ignore-whitespace -v ${CMAKE_CURRENT_SOURCE_DIR}/eigen_warnings.patch
-    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/eigen"
+    # No need to build/install (cf. their INSTALL file)
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
 )
-set(EIGEN_INCLUDE_DIR ${CMAKE_BINARY_DIR}/eigen/include/eigen3)
+ExternalProject_Get_Property(eigen SOURCE_DIR)
+set(EIGEN_INCLUDE_DIR ${SOURCE_DIR})
 
 
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g0")
