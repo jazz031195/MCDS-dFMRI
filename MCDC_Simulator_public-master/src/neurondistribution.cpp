@@ -143,7 +143,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
     {   
         cout << "dendrite " << i << endl;
         int tries = 0;
-        int nb_branching = 1;//generateNbBranching();
+        int nb_branching = 2;//generateNbBranching();
         // Radius of each dendrite sphere [mm]
         double sphere_radius = 0.5e-3;
         // Don't initiate dendrite too close from the borders
@@ -178,7 +178,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                 for(int b=0; b < nb_branching; ++b)
                 {
                     // Length of a segment before branching
-                    double l_segment = 245e-3;//generateLengthSegment();
+                    double l_segment = generateLengthSegment();
                     // Number of spheres per segment
                     int nb_spheres = l_segment / (sphere_radius/4); //Let's assume that dendrites have a radius of 0.5microns so far
                     vector<int> proximal_branch;
@@ -246,10 +246,10 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
 NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& dendrite, NeuronDistribution::branching_pt const& parent, 
                                       int const& nb_spheres, double const& sphere_radius, vector<int> const& proximal_end, 
                                       vector<int> const& distal_end, double const& min_distance_from_border, bool& stop_growth,
-                                      int const& branch_id, int& largest_sphere)
+                                      int const& subbranch_id, int& largest_sphere)
 {
     Eigen::Vector3d begin;
-    Axon subbranch(branch_id, sphere_radius, begin, begin, 0, false, 1, proximal_end, distal_end);
+    Axon subbranch(subbranch_id, sphere_radius, begin, begin, 0, false, 1, proximal_end, distal_end);
     std::vector<Dynamic_Sphere> spheres_to_add;
     spheres_to_add.clear();
 
@@ -266,13 +266,13 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
     for(int sphere_id=largest_sphere; sphere_id < (largest_sphere + nb_spheres); ++sphere_id)
     {
         cout << "id " << endl;
-        center = (sphere_id-largest_sphere)*parent.direction*sphere_radius/4 + parent.origin;
+        center = (sphere_id + 1 - largest_sphere) * parent.direction * sphere_radius/4 + parent.origin;
 
         if(isInVoxel(center, min_distance_from_border))
         {
             if (!isSphereColliding(center, sphere_radius))
             {
-                Dynamic_Sphere sphere_to_add(center, sphere_radius, volume_inc_perc, swell, branch_id, sphere_id, scale);
+                Dynamic_Sphere sphere_to_add(center, sphere_radius, volume_inc_perc, swell, subbranch_id, sphere_id, scale);
                 if((proximal_end[0] == 0) && (sphere_id == 0))
                     sphere_to_add.set_parent(-1);
                 else
@@ -288,12 +288,10 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
                         sphere_to_add.set_parent(dendrite.subbranches[proximal_end[0]-1].spheres[dendrite.subbranches[proximal_end[0]-1].spheres.size()-1].id);
                     }
                     // The child is in the same subbranch
-                    if((spheres_to_add.size() < 1) && (branch_id > 1))
+                    if((spheres_to_add.size() < 1) && (subbranch_id > 1))
                         dendrite.subbranches[proximal_end[0]-1].spheres[dendrite.subbranches[proximal_end[0]-1].spheres.size()-1].add_children(sphere_id);
                     else if(sphere_id < nb_spheres - 1)
                         sphere_to_add.add_children(sphere_id + 1);  
-
-                    cout << "sph id " << sphere_to_add.id << "sph ax id " << sphere_to_add.ax_id << "sph parent " << sphere_to_add.parent <<endl; 
 
                 }
                 spheres_to_add.push_back(sphere_to_add);
@@ -330,7 +328,7 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
     cout << subbranch.projections.axon_projections[2][0] << " " << subbranch.projections.axon_projections[2][1];
     
     // Return the next branching point
-    return {spheres_to_add[spheres_to_add.size()-1].center, parent.direction, children_dir, branch_id};
+    return {spheres_to_add[spheres_to_add.size()-1].center, parent.direction, children_dir, subbranch_id};
     
 }
 

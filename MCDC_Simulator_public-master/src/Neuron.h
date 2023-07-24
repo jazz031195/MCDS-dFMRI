@@ -41,7 +41,7 @@ public:
     *  \param soma_center Vector3d<Axon>, center of the soma.
     *  \param soma_radius double        , radius of the soma.
     */
-    Neuron(Eigen::Vector3d const&soma_center, double const& soma_radius, int const& neuron_id);
+    Neuron(Eigen::Vector3d const& soma_center, double const& soma_radius, int const& neuron_id);
     /*! Copy constructor 
     *  \param neuron Neuron
     */
@@ -57,9 +57,29 @@ public:
      * @param collision       Collision, class to handle collision. 
      * @return                     bool, true if collision with this.
      */
-    bool checkCollision(Walker &walker, Eigen::Vector3d const&step_dir, double const&step_lenght, Collision &collision);
-    static bool checkCollision_branching(Walker &walker, std::vector<Dynamic_Sphere*>& spheres, Eigen::Vector3d const& step, double const& step_lenght, Collision &colision);
-    std::vector<Dynamic_Sphere*> find_neighbor_spheres(Walker &walker, Eigen::Vector3d const& next_step, double const& step_length);
+    bool checkCollision(Walker &walker, Eigen::Vector3d const& step_dir, double const& step_lenght, Collision &collision);
+    /**
+     * Check if there is a collision within a branch, between subranches or with the soma.
+     *
+     * @param walker             Walker.
+     * @param spheres  vector<vector<Dynamic_Sphere*>>, list of the spheres to check.
+     * @param step_dir  Eigen::Vector3d, direction of the step.
+     * @param step_lenght        double, length of the step. 
+     * @param collision       Collision, class to handle collision. 
+     * @return                     bool, true if collision.
+     */
+    static bool checkCollision_branching(Walker &walker, std::vector<std::vector<Dynamic_Sphere*>>& spheres, Eigen::Vector3d const& step_dir, double const& step_lenght, Collision &colision);
+    /**
+     * Find the neighboring spheres with which to check the potential collisions.
+     *
+     * @param walker                            Walker.
+     * @param next_step        Eigen::Vector3d, next walker position.
+     * @param step_lenght               double, length of the step. 
+     * @return vector<vector<Dynamic_Sphere*>>, list of list of the spheres of interest. 
+     *                                          One list per subbranch. Either soma only, 
+     *                                          soma + one subbranch or 3 subbranches.
+     */
+    std::vector<std::vector<Dynamic_Sphere*>> find_neighbor_spheres(Walker &walker, Eigen::Vector3d const& next_step, double const& step_length);
     /**
      * Calculate if position is inside this.
      *
@@ -93,7 +113,11 @@ public:
      * @param dendrite_to_add Dendrite.
      */
     void add_dendrite(Dendrite& dendrite_to_add);
-    std::vector <int> closest_subbranch(Eigen::Vector3d const& position, int const& dendrite_id, int const& subbranch_id, double const& step_length);
+    /**
+     * Gets the volume of the neuron = volume of soma + volume of all the dendrites' subbranches. 
+     *
+     * @return double, volume.
+     */
     std::vector <double> get_Volume() const;
     /**
      * Calculates if there is/are intersection(s) between the sphere s and a walker
@@ -119,10 +143,8 @@ public:
     */
     bool isNearSoma(Eigen::Vector3d const& position,  double const& barrier_thickness) const;
     /**
-     * Check if the position is in the close vicinity (bounding boxes) of a denrite.
-     * @return std::tuple<std::string, int>, {'neuron_part', dendrite_id}
-     *                                       neuron_part : "dendrite" or "none",
-     *                                       dendrite_id : dendrite_id or -1.
+     * Check if the position is in the close vicinity (bounding boxes) of a dendrite.
+     * @return std::vector<int>, dendrites id : {} if not close to any dendrite.
     */
     std::vector<int> isNearDendrite(Eigen::Vector3d const& position,  double const& barrier_thickness) const;
 

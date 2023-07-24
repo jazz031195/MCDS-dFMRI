@@ -65,14 +65,21 @@ private:
     std::vector<projection_pt> projections_y;       /*!< Projections of all dendrites spheres on y axis                             */
     std::vector<projection_pt> projections_z;       /*!< Projections of all dendrites spheres on z axis                             */
     /**
-     *  Compute the intracompartment volume fraction (ICVF) of the substrate. 
-     *  @return ICVF double.
+     *  Compute the intracompartment volume fraction (ICVF), soma end dendrites fraction of the substrate. 
+     *  @return std::tuple<double, double, double>, ICVF, somaFraction, dendritesFraction.
     */
     std::tuple<double, double, double> computeICVF(double const& min_distance_from_border) const;
     /**
      *  Compute the max_limits_vx based on the target icvf and the radiis of the axons 
     */
     // void computeMinimalSize(std::vector<double> const& radiis, double &icvf_, Eigen::Vector3d &l) const;
+    /**
+     * Check if a soma is colliding with other somas.
+     * 
+     * @param sphere_center        Eigen::Vector3d, center of the sphere to test.
+     * @param sphere_radius                 double, radius of the sphere to test.
+     * @param soma_centers vector<Eigen::Vector3d>, centers of the soma with which to test if there is a collision.
+    */
     bool isSphereColliding(Eigen::Vector3d const& sphere_center, double const& sphere_radius, vector<Eigen::Vector3d> const& soma_centers);
     /**
      * Check if a sphere sph is colliding with this.
@@ -88,6 +95,16 @@ private:
      * @param sphere_radius double         , radius of the sphere.
     */
     bool isSphereColliding(Eigen::Vector3d const& sphere_center, double const& sphere_radius);
+    /**
+     * Check if two spheres are colliding
+     * 
+     * @param pos1 Eigen::Vector3d, center of the sphere 1.
+     * @param pos2 Eigen::Vector3d, center of the sphere 2.
+     * @param radius1       double, radius of the sphere 1.
+     * @param radius2       double, radius of the sphere 2.
+     * @param minDistance   double, minimum distance to be considered in collision.
+     * 
+    */
     bool isSphereCollidingSphere(Eigen::Vector3d const& pos1, Eigen::Vector3d const& pos2, double const& radius1, double const& radius2, double const& minDistance) const; 
     void createTwinSphere(Eigen::Vector3d &center, double const& sphere_radius, bool &discard_dendrite, size_t const& j);
     /**
@@ -126,23 +143,32 @@ private:
      * @param upper_bound double, upper bound of the interval, in [rad].
      */
     double generateBifurcationAngle(double const& lower_bound=(M_PI/4 - M_PI/16), double const& upper_bound=(M_PI/4 + M_PI/16));
+    
+    Eigen::Vector3d generatePointOnSphere(Eigen::Vector3d const& center, double const& radius) const;
+    
     /**
      * Grow a subbranch/segment of dendrite.
      *
      * @param dendrite                  Dendrite, dendrite to grow. 
-     * @param parent  tuple<Eigen::Vector3d,int>, < origin of the subbranch, parent subbranch id>.
-     * @param dendrite_direction Eigen::Vector3d, direction of the dendrite / attractor point.
+     * @param parent                branching_pt, parent branching point (origin, direction, children_direction, subbranch_id).
      * @param nb_spheres                     int, number of spheres in the segment.
      * @param sphere_radius               double, radius of the spheres in the segment.
-     * @param proximal_end          TODO : to complete [ines]
-     * @param distal_end
-     * @param min_distance_from_border
+     * @param proximal_end           vector<int>, ids of the proximal end subbranches.
+     * @param distal_end             vector<int>, ids of the distal end subbranches.
+     * @param min_distance_from_border    double, minimum distance allowed to the voxel borders.
+     * @param stop_growth                   bool, whether to stop growth or not.
+     * @param subbranch_id                   int, id of the subbranch.
+     * @param largest_sphere                 int, largest sphere of the dendrite.
      */
-    Eigen::Vector3d generatePointOnSphere(Eigen::Vector3d const& center, double const& radius) const;
     branching_pt growSubbranch(Dendrite& dendrite, branching_pt const& parent, int const& nb_spheres, double const& sphere_radius, 
                                std::vector<int> const& proximal_end, std::vector<int> const& distal_end, double const& min_distance_from_border, 
-                               bool& stop_growth, int const& branch_id, int& largest_sphere);
-
+                               bool& stop_growth, int const& subbranch_id, int& largest_sphere);
+    /**
+     * Rotate the direction by a certain angle
+     *
+     * @param direction Eigen::Vector3d, direction to rotate. 
+     * @param angle              double, rotation angle in [rad].
+     */
     Eigen::Vector3d rotateDirection(Eigen::Vector3d const& direction, double const& angle) const;
 
 };

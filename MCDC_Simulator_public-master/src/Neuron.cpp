@@ -131,7 +131,7 @@ TEST_CASE("isPosInsideNeuron")
 
     Vector3d last_center(spheres_list[spheres_list.size()-1].center);
     Vector3d begin;
-    vector <int> proximal_end = {1};
+    vector <int> proximal_end = {0};
     vector <int> distal_end   = {2, 3};
     Axon subbranch(branch_id, radius_dendrite, begin, begin, 0, false, 1, proximal_end, distal_end);
     subbranch.set_spheres(spheres_list);
@@ -157,10 +157,10 @@ TEST_CASE("isPosInsideNeuron")
         Axon subbranch_(branch_id + rep + 1, radius_dendrite, begin, begin, 0, false, 1, proximal_end, distal_end);
         subbranch_.set_spheres(spheres_list);
         dendrite.add_subbranch(subbranch_);
-        branching_direction = - branching_direction;
+        branching_direction = {1, -1, 0};
+        branching_direction = branching_direction.normalized();
     }
     neuron.add_dendrite(dendrite);
-
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> udist(0,1);
@@ -184,10 +184,10 @@ TEST_CASE("isPosInsideNeuron")
                 double y = sin(phi) * sin(theta) * probaRadius * somaRadius + somaCenter[1];
                 double z = cos(phi) * probaRadius * somaRadius + somaCenter[2];
                 Vector3d pos_temp = {x,y,z};
-
                 bool inSoma_formula = pow(x-somaCenter[0], 2) + pow(y-somaCenter[1], 2) + pow(z-somaCenter[2], 2) <= somaRadius;
                 bool inSoma_function= neuron.isPosInsideNeuron(pos_temp, EPS_VAL, false, dummy, dummy, dummy, dummy1);
                 CHECK_EQ(inSoma_formula, inSoma_function);
+
             }
             SUBCASE("at soma surface")
             {
@@ -375,7 +375,7 @@ TEST_CASE("isNearDendrite")
 
     int branch_id = 0;
     vector<Dynamic_Sphere> spheres_list;
-    for (size_t i = 0; i < 10; ++i)
+    for (size_t i = 0; i < 11; ++i)
     {
         Vector3d next_center(center[0] + radius_soma + i * radius_dendrite / 4, center[1], center[2]);
         Dynamic_Sphere sphere_to_add(next_center, radius_dendrite, 0, false, branch_id, i, 1);
@@ -391,7 +391,7 @@ TEST_CASE("isNearDendrite")
     neuron.add_dendrite(dendrite);
 
     spheres_list.clear();
-    for (size_t i = 0; i < 10; ++i)
+    for (size_t i = 0; i < 11; ++i)
     {
         Vector3d next_center(center[0] - radius_soma + i * radius_dendrite / 4, center[1], center[2]);
         Dynamic_Sphere sphere_to_add(next_center, radius_dendrite, 0, false, branch_id, i, 1);
@@ -471,133 +471,287 @@ vector<int> Neuron::isNearDendrite(Vector3d const &position, double const &dista
     return dendrite_ids;
 }
 
-vector<Dynamic_Sphere *> Neuron::find_neighbor_spheres(Walker &walker, Vector3d const &step_dir, double const &step_length)
+TEST_CASE("find_neighboring_spheres")
 {
-    vector<Dynamic_Sphere *> spheres_list;
+    cout << "find_neighboring_spheres" << endl;
+    Vector3d center(0.05, 0.05, 0.05);
+    double radius_soma     = 10e-3;
+    double radius_dendrite = 0.5e-3;
+    Neuron neuron(center, radius_soma, 0);
+    Dendrite dendrite;
 
-    spheres_list.push_back(new Dynamic_Sphere(soma));
-
-    if (walker.in_soma_index == 0)
+    int branch_id = 0;
+    vector<Dynamic_Sphere> spheres_list;
+    for (size_t i = 0; i < 20; ++i)
     {
-        return spheres_list;
-    }
-    if ((walker.in_dendrite_index == -1) || (walker.in_subbranch_index == -1))
-    {
-        cout << "weird" << endl;
-        return spheres_list;
-    }
-
-    const auto subbranch = dendrites[walker.in_dendrite_index].subbranches[walker.in_subbranch_index];
-    for (size_t i = 0; i < subbranch.spheres.size(); i++)
-    {
-        spheres_list.push_back(new Dynamic_Sphere(subbranch.spheres[i]));
+        Vector3d next_center(center[0] + radius_soma + i * radius_dendrite / 4, center[1], center[2]);
+        Dynamic_Sphere sphere_to_add(next_center, radius_dendrite, 0, false, branch_id, i, 1);
+        spheres_list.push_back(sphere_to_add);
     }
 
-    // Vector3d O;
-    // walker.getVoxelPosition(O);
-    // Vector3d next_pt = O + step_length * step_dir;
-    // // We are in the soma
-    // if(walker.in_soma_index == 0)
+    Vector3d last_center(spheres_list[spheres_list.size()-1].center);
+    Vector3d begin;
+    vector <int> proximal_end = {0};
+    vector <int> distal_end   = {2, 3};
+    Axon subbranch(branch_id, radius_dendrite, begin, begin, 0, false, 1, proximal_end, distal_end);
+    subbranch.set_spheres(spheres_list);
+    dendrite.add_subbranch(subbranch);
+
+    // Add branching
+    Vector3d branching_direction(1, 1, 0);
+    branching_direction = branching_direction.normalized();
+
+    for(size_t rep=0; rep < 2; rep++)
+    {
+        spheres_list.clear();
+        for (size_t i = 1; i < 20; ++i)
+        {
+            Vector3d next_center(last_center[0] + i * radius_dendrite / 4 * branching_direction[0],
+                                 last_center[1] + i * radius_dendrite / 4 * branching_direction[1],
+                                 last_center[2] + i * radius_dendrite / 4 * branching_direction[2]);
+            Dynamic_Sphere sphere_to_add(next_center, radius_dendrite, 0, false, branch_id + rep + 1, i, 1);
+            spheres_list.push_back(sphere_to_add);
+        }
+        vector<int> proximal_end {1, int(3-rep)};
+        vector<int> distal_end {int(4+rep), int(5+rep)};
+        Axon subbranch_(branch_id + rep + 1, radius_dendrite, begin, begin, 0, false, 1, proximal_end, distal_end);
+        subbranch_.set_spheres(spheres_list);
+        dendrite.add_subbranch(subbranch_);
+        branching_direction = {1, -1, 0};
+        branching_direction = branching_direction.normalized();
+    }
+    neuron.add_dendrite(dendrite);
+
+    Walker walker;
+    auto empty_vect = vector<unsigned int>();
+    walker.dyn_cylinders_collision_sphere.collision_list = &empty_vect;
+    walker.cylinders_collision_sphere.collision_list     = &empty_vect;
+    walker.spheres_collision_sphere.collision_list       = &empty_vect;
+    walker.dyn_spheres_collision_sphere.collision_list   = &empty_vect;
+    walker.axons_collision_sphere.collision_list         = &empty_vect;
+    auto empty_vect_vect = vector<vector<unsigned int>>();
+    walker.ply_collision_sphere.collision_list           = &empty_vect_vect;
+
+    auto neur_list = vector<unsigned int>({0});
+    walker.neurons_collision_sphere.collision_list = &neur_list;
+    walker.neurons_collision_sphere.pushToBigSphere(0);
+    walker.neurons_collision_sphere.pushToSmallSphere(0);
+    walker.in_neuron_index = 0;
+
+    double step_length = 5.5e-4; 
+
+    SUBCASE("Soma center")
+    {
+        auto ini_pos = Vector3d(center[0], center[1], center[2]);
+        walker.setInitialPosition(ini_pos);
+        Vector3d step_dir(1, 0, 0);
+        neuron.isPosInsideNeuron(ini_pos, barrier_tickness, false, walker.in_soma_index, walker.in_dendrite_index,
+                                walker.in_subbranch_index, walker.in_sph_index);
+        vector<vector<Dynamic_Sphere *>> spheres_list = neuron.find_neighbor_spheres(walker, step_dir, step_length);
+        CHECK_EQ(spheres_list.size(), 1);
+        CHECK_EQ(spheres_list[0].size(), 1);
+        CHECK_EQ(spheres_list[0][0]->radius, 10e-3);
+    }
+    SUBCASE("Soma radius")
+    {
+        auto ini_pos = Vector3d(center[0] + radius_soma - 2*radius_dendrite, center[1], center[2]);
+        walker.setInitialPosition(ini_pos);
+        Vector3d step_dir(1, 0, 0);
+        neuron.isPosInsideNeuron(ini_pos, barrier_tickness, false, walker.in_soma_index, walker.in_dendrite_index,
+                                walker.in_subbranch_index, walker.in_sph_index);
+        vector<vector<Dynamic_Sphere *>> spheres_list = neuron.find_neighbor_spheres(walker, step_dir, step_length);
+        CHECK_EQ(spheres_list.size(), 2);
+        CHECK_EQ(spheres_list[0].size(), 1);
+        CHECK_EQ(spheres_list[1].size(), int(step_length/radius_dendrite*4));
+        CHECK_EQ(spheres_list[0][0]->radius, 10e-3);
+        CHECK_EQ(spheres_list[0][0]->id, 0);
+        CHECK_EQ(spheres_list[1][0]->radius, 0.5e-3);
+        CHECK_EQ(spheres_list[1][0]->id, 0);
+    }
+    SUBCASE("Branching")
+    {
+        SUBCASE("End subbranch 0")
+        {
+            auto ini_pos = neuron.dendrites[0].subbranches[0].spheres[19].center;
+            walker.setInitialPosition(ini_pos);
+            Vector3d step_dir(1, 0, 0);
+            neuron.isPosInsideNeuron(ini_pos, barrier_tickness, false, walker.in_soma_index, walker.in_dendrite_index,
+                                    walker.in_subbranch_index, walker.in_sph_index);
+            vector<vector<Dynamic_Sphere *>> spheres_list = neuron.find_neighbor_spheres(walker, step_dir, step_length);
+            CHECK_EQ(spheres_list.size(), 3);
+            CHECK_EQ(spheres_list[0][0]->radius, 0.5e-3);
+            CHECK_EQ(spheres_list[1][0]->radius, 0.5e-3);
+            CHECK_EQ(spheres_list[1][0]->id, 0);
+            CHECK_EQ(spheres_list[1].size(), 10);
+            CHECK_EQ(spheres_list[2][0]->radius, 0.5e-3);
+            CHECK_EQ(spheres_list[2][0]->id, 0);
+            CHECK_EQ(spheres_list[2].size(), 10);
+        }
+        SUBCASE("Begin subbranch 1")
+        {
+            auto ini_pos = neuron.dendrites[0].subbranches[1].spheres[0].center;
+            walker.setInitialPosition(ini_pos);
+            Vector3d step_dir(1, -1, 0);
+            step_dir = step_dir.normalized();
+            neuron.isPosInsideNeuron(ini_pos, barrier_tickness, false, walker.in_soma_index, walker.in_dendrite_index,
+                                    walker.in_subbranch_index, walker.in_sph_index);
+            vector<vector<Dynamic_Sphere *>> spheres_list = neuron.find_neighbor_spheres(walker, step_dir, step_length);
+            CHECK_EQ(spheres_list.size(), 3);
+            CHECK_EQ(spheres_list[0][0]->radius, 0.5e-3);
+            CHECK_EQ(spheres_list[1][0]->radius, 0.5e-3);
+            CHECK_EQ(spheres_list[1][0]->id, 0);
+            CHECK_EQ(spheres_list[1].size(), 10);
+            CHECK_EQ(spheres_list[2][0]->radius, 0.5e-3);
+            CHECK_EQ(spheres_list[2][0]->id, 0);
+            CHECK_EQ(spheres_list[2].size(), 10);
+        }
+        SUBCASE("Begin subbranch 2")
+        {
+            auto ini_pos = neuron.dendrites[0].subbranches[2].spheres[0].center;
+            walker.setInitialPosition(ini_pos);
+            Vector3d step_dir(-1, 1, 0);
+            step_dir = step_dir.normalized();
+            neuron.isPosInsideNeuron(ini_pos, barrier_tickness, false, walker.in_soma_index, walker.in_dendrite_index,
+                                    walker.in_subbranch_index, walker.in_sph_index);
+            vector<vector<Dynamic_Sphere *>> spheres_list = neuron.find_neighbor_spheres(walker, step_dir, step_length);
+            CHECK_EQ(spheres_list.size(), 3);
+            CHECK_EQ(spheres_list[0][0]->radius, 0.5e-3);
+            CHECK_EQ(spheres_list[1][0]->radius, 0.5e-3);
+            CHECK_EQ(spheres_list[1][0]->id, 0);
+            CHECK_EQ(spheres_list[1].size(), 10);
+            CHECK_EQ(spheres_list[2][0]->radius, 0.5e-3);
+            CHECK_EQ(spheres_list[2][0]->id, 0);
+            CHECK_EQ(spheres_list[2].size(), 10);
+            CHECK_EQ((spheres_list[0][spheres_list[0].size()-1]->center - spheres_list[1][0]->center).norm(),  doctest::Approx(radius_dendrite/4));
+            CHECK_EQ((spheres_list[0][spheres_list[0].size()-1]->center - spheres_list[2][0]->center).norm(),  doctest::Approx(radius_dendrite/4));
+        }
+    
+    }
+
+}
+
+vector<vector<Dynamic_Sphere *>> Neuron::find_neighbor_spheres(Walker &walker, Vector3d const &step_dir, double const &step_length)
+{
+    vector<vector<Dynamic_Sphere *>> spheres_list;
+    vector<Dynamic_Sphere *> spheres_sublist1, spheres_sublist2, spheres_sublist3;
+
+    // spheres_list.push_back(new Dynamic_Sphere(soma));
+
+    // if (walker.in_soma_index == 0)
     // {
-    //     cout << "in soma " << endl;
-    //     spheres_list.push_back(new Dynamic_Sphere(soma));
-    //    // Find in which dendrite it can go
-    //     int closest_dendrite_id = closest_dendrite_from_soma(next_pt, step_length);
-    //     cout << "closest dendrite id" << closest_dendrite_id << endl;
-    //     // If inside closest_dendrite_id dendrite => no collision
-    //     // TODO : check if enough to check only the first subbranch [ines]
-    //     if (closest_dendrite_id >= 0)
-    //     {
-    //         for(size_t i=0; i < 5; ++i)
-    //         {
-    //             spheres_list.push_back(new Dynamic_Sphere(dendrites[closest_dendrite_id].subbranches[0].spheres[i]));
-    //         }
-    //     }
+    //     return spheres_list;
     // }
-    // if(walker.in_dendrite_index >= 0)
+    // if ((walker.in_dendrite_index == -1) || (walker.in_subbranch_index == -1))
     // {
-    //     cout << " in dendrite " << endl;
-    //     // Calculate the dot product between step_dir and (subbranch.spheres[end-1].center - O)
-    //     auto current_subbranch = dendrites[walker.in_dendrite_index].subbranches[walker.in_subbranch_index];
-    //     Vector3d towards_end   = current_subbranch.spheres[current_subbranch.spheres.size()-1].center - O;
-    //     double dot_product     = step_dir.dot(towards_end);
-
-    //     cout << walker.in_sph_index.size() << int(walker.in_sph_index.size()/2) << endl;
-    //     cout << walker.in_sph_index[2] << endl;
-    //     cout << walker.in_sph_index[static_cast<int>(walker.in_sph_index.size()/2)];
-    //     int current_sphere = walker.in_sph_index[static_cast<int>(walker.in_sph_index.size()/2)];
-
-    //     // Towards distal part
-    //     if(dot_product > 0)
-    //     {
-    //         for(size_t sph_id=current_sphere; sph_id < current_subbranch.spheres.size(); ++ sph_id)
-    //             spheres_list.push_back(&current_subbranch.spheres[sph_id]);
-            
-    //         double dist_to_end = (current_subbranch.spheres[current_sphere].center - current_subbranch.spheres[current_subbranch.spheres.size()-1].center).norm();
-    //         vector<int> distal_branching = current_subbranch.distal_branching;
-
-    //         // May go to another subbranch
-    //         if(dist_to_end < step_length && distal_branching.size() > 0)
-    //         {
-    //             double nb_spheres_needed = (step_length - dist_to_end)/(current_subbranch.spheres[0].radius/4);
-    //             for(size_t nb_sub=0; nb_sub < distal_branching.size(); ++ nb_sub)
-    //             {
-    //                 for(size_t sph_id=0; sph_id < nb_spheres_needed; ++ sph_id)
-    //                 {
-    //                     // Check that the distal branch exists
-    //                     if(dendrites[walker.in_dendrite_index].subbranches.size() > distal_branching[nb_sub])
-    //                         spheres_list.push_back(&dendrites[walker.in_dendrite_index].subbranches[distal_branching[nb_sub]].spheres[sph_id]);
-    //                 }
-    //             }     
-    //         }
-    //     }
-
-    //     // Towards proximal part
-    //     if(dot_product < 0)
-    //     {
-    //         for(size_t sph_id=current_sphere; sph_id > 0; -- sph_id)
-    //             spheres_list.push_back(&current_subbranch.spheres[sph_id]);
-            
-    //         double dist_to_end = (current_subbranch.spheres[current_sphere].center - current_subbranch.spheres[0].center).norm();
-    //         // May go to another subbranch
-    //         if( dist_to_end < step_length)
-    //         {
-    //             double nb_spheres_needed = (step_length - dist_to_end)/(current_subbranch.spheres[0].radius/4);
-    //             vector<int> proximal_branching = current_subbranch.proximal_branching;
-    //             for(size_t nb_sub=0; nb_sub < proximal_branching.size(); ++ nb_sub)
-    //             {
-    //                 for(size_t sph_id=0; sph_id < nb_spheres_needed; ++ sph_id)
-    //                 {
-    //                     auto proximal_branch = dendrites[walker.in_dendrite_index].subbranches[proximal_branching[nb_sub]];
-    //                     if(proximal_branching[nb_sub] < current_subbranch.id)
-    //                     {
-    //                         spheres_list.push_back(&proximal_branch.spheres[proximal_branch.spheres.size()-1-sph_id]);
-    //                     }
-    //                     else
-    //                     {
-    //                         spheres_list.push_back(&proximal_branch.spheres[sph_id]);
-    //                     }
-    //                 }
-    //             }     
-    //         }
-    //     }
-
-    //     // Perpendicular
-    //     if(dot_product == 0)
-    //     {
-
-    //         for(size_t sph_id=1; sph_id < 5; ++ sph_id)
-    //         {
-    //             spheres_list.push_back(&current_subbranch.spheres[current_sphere]);
-    //             if(current_subbranch.spheres.size() > current_sphere + sph_id)
-    //                 spheres_list.push_back(&current_subbranch.spheres[current_sphere + sph_id]);
-    //             if(0 <= current_sphere - sph_id)
-    //                 spheres_list.push_back(&current_subbranch.spheres[current_sphere - sph_id]);
-                   
-    //         }
-    //     }
+    //     cout << "weird" << endl;
+    //     return spheres_list;
     // }
 
+    // const auto subbranch = dendrites[walker.in_dendrite_index].subbranches[walker.in_subbranch_index];
+    // for (size_t i = 0; i < subbranch.spheres.size(); i++)
+    // {
+    //     spheres_list.push_back(new Dynamic_Sphere(subbranch.spheres[i]));
+    // }
+
+    Vector3d O;
+    walker.getVoxelPosition(O);
+    Vector3d next_pt = O + step_length * step_dir;
+    // We are in the soma
+    if(walker.in_soma_index == 0)
+    {
+        spheres_sublist1.push_back(new Dynamic_Sphere(soma));
+       // Find in which dendrite it can go
+        int closest_dendrite_id = closest_dendrite_from_soma(next_pt, step_length);
+
+        // If inside closest_dendrite_id dendrite => no collision
+        // TODO : check if enough to check only the first subbranch [ines]
+        if (closest_dendrite_id >= 0)
+        {
+            size_t nb_spheres_needed = size_t(step_length / (dendrites[closest_dendrite_id].subbranches[0].spheres[0].radius/4));
+            for(size_t i=0; i < nb_spheres_needed; ++i)
+            {
+                spheres_sublist2.push_back(new Dynamic_Sphere(dendrites[closest_dendrite_id].subbranches[0].spheres[i]));
+            }
+        }
+        spheres_list.push_back(spheres_sublist1);
+        if(spheres_sublist2.size() > 0)
+            spheres_list.push_back(spheres_sublist2);
+    }
+    else if(walker.in_dendrite_index >= 0)
+    {
+        // Calculate the dot product between step_dir and (subbranch.spheres[end-1].center - O)
+        auto current_subbranch   = dendrites[walker.in_dendrite_index].subbranches[walker.in_subbranch_index];
+        size_t current_sphere_first = size_t(walker.in_sph_index[0]);
+        size_t current_sphere_last  = size_t(walker.in_sph_index[walker.in_sph_index.size() - 1]);
+
+        // Goes to proximal
+        if(current_sphere_first < 10)
+        {
+            //check proximal branching
+            vector<int> proximal_branching = current_subbranch.proximal_branching;
+            // Close to the soma
+            if(proximal_branching.size() == 1)
+                spheres_sublist1.push_back(new Dynamic_Sphere(soma));
+            else
+            {
+                for(size_t proximal_id=0; proximal_id < 10; ++ proximal_id)
+                {
+                    auto proximal_branch1_spheres = dendrites[walker.in_dendrite_index].subbranches[proximal_branching[0] - 1].spheres;
+                    if(proximal_branch1_spheres.size() > proximal_id)
+                        spheres_sublist1.push_back(new Dynamic_Sphere(proximal_branch1_spheres[proximal_branch1_spheres.size() - 10 + proximal_id]));
+                    auto proximal_branch2_spheres = dendrites[walker.in_dendrite_index].subbranches[proximal_branching[1] - 1].spheres;
+                    if(proximal_branch2_spheres.size() > proximal_id)
+                        spheres_sublist3.push_back(new Dynamic_Sphere(proximal_branch2_spheres[proximal_id]));
+                }
+            }
+            // Add the sphere in which the walker is
+            for(size_t sph_id=0; sph_id < walker.in_sph_index.size() + 10; ++ sph_id)
+                spheres_sublist2.push_back(new Dynamic_Sphere(current_subbranch.spheres[sph_id]));
+
+            if(spheres_sublist1.size() > 0)
+                spheres_list.push_back(spheres_sublist1);
+            if(spheres_sublist2.size() > 0)
+                spheres_list.push_back(spheres_sublist2);
+            if(spheres_sublist3.size() > 0)
+                spheres_list.push_back(spheres_sublist3);
+        }
+        // Goes to distal
+        else if(current_sphere_last + 10 > current_subbranch.spheres.size())
+        {
+            // Add the sphere in which the walker is
+            for(size_t sph_id=current_sphere_first - 10; sph_id < current_subbranch.spheres.size(); ++ sph_id)
+                spheres_sublist1.push_back(new Dynamic_Sphere(current_subbranch.spheres[sph_id]));
+
+            //check distal branching
+            vector<int> distal_branching = current_subbranch.distal_branching;
+            if(distal_branching[0] < dendrites[walker.in_dendrite_index].subbranches.size())
+            {
+                for(size_t distal_id=0; distal_id < 10; ++ distal_id)
+                {
+                    auto distal_branch1_spheres = dendrites[walker.in_dendrite_index].subbranches[distal_branching[0] - 1].spheres;
+                    if(distal_branch1_spheres.size() > distal_id)
+                        spheres_sublist2.push_back(new Dynamic_Sphere(distal_branch1_spheres[distal_id]));
+                    auto proximal_branch2_spheres = dendrites[walker.in_dendrite_index].subbranches[distal_branching[1] - 1].spheres;
+                    if(proximal_branch2_spheres.size() > distal_id)
+                        spheres_sublist3.push_back(new Dynamic_Sphere(proximal_branch2_spheres[distal_id]));
+                }
+            }
+            if(spheres_sublist1.size() > 0)
+                spheres_list.push_back(spheres_sublist1);
+            if(spheres_sublist2.size() > 0)
+                spheres_list.push_back(spheres_sublist2);
+            if(spheres_sublist3.size() > 0)
+                spheres_list.push_back(spheres_sublist3); 
+        }
+        else
+        {
+            // Add the sphere in which the walker is
+            for(size_t sph_id=current_sphere_first-10; sph_id < current_sphere_last + 10; ++ sph_id)
+                spheres_sublist1.push_back(new Dynamic_Sphere(current_subbranch.spheres[sph_id]));
+
+            spheres_list.push_back(spheres_sublist1);
+        }               
+    }
     return spheres_list;
 }
 
@@ -605,17 +759,15 @@ bool Neuron::checkCollision(Walker &walker, Vector3d const &step_dir, double con
 {
     bool isColliding = false;
 
-    vector<Dynamic_Sphere *> spheres_list = find_neighbor_spheres(walker, step_dir, step_lenght);
+    vector<vector<Dynamic_Sphere *>> spheres_list = find_neighbor_spheres(walker, step_dir, step_lenght);
 
-    if (spheres_list.size() > 1)
-    {
-        isColliding = checkCollision_branching(walker, spheres_list, step_dir, step_lenght, colision);
-        for (size_t i = 0; i < spheres_list.size(); i++)
-            delete spheres_list[i];
-        spheres_list.clear();
-    }
-    else
-        isColliding = soma.checkCollision(walker, step_dir, step_lenght, colision);
+    isColliding = checkCollision_branching(walker, spheres_list, step_dir, step_lenght, colision);
+
+
+    for (size_t i = 0; i < spheres_list.size(); i++)
+        for(size_t j = 0; j < spheres_list[i].size(); j++)
+            delete spheres_list[i][j];
+    spheres_list.clear();
 
     if (!isPosInsideNeuron(walker.pos_v, EPS_VAL, false, walker.in_soma_index, walker.in_dendrite_index, walker.in_subbranch_index, walker.in_sph_index))
     {
@@ -677,81 +829,220 @@ TEST_CASE("checkCollision_branching")
     double radius_dendrite = 0.5e-3;
     int sphere_id = 0;
 
-    vector<Dynamic_Sphere *> spheres_list;
-    spheres_list.push_back(new Dynamic_Sphere(center, radius_soma, sphere_id));
-    for (size_t i = 0; i < 10; ++i)
+    vector<vector<Dynamic_Sphere *>> spheres_list;
+    
+    SUBCASE("Soma + 1 branch")
     {
-        Vector3d next_center(center[0] + radius_soma + i * radius_dendrite / 4, center[1], center[2]);
-        spheres_list.push_back(new Dynamic_Sphere(next_center, radius_dendrite, i));
-    }
-    Collision colision;
-    colision.type = Collision::null;
-    colision.t = INFINITY_VALUE;
-
-    SUBCASE("no collision")
-    {
-        Vector3d direction(1, 0, 0);
-        double step_length = 5e-4;
-
-        Walker w;
-        // w.setNextDirection(direction);
-        w.setInitialPosition(center[0] + radius_soma, center[1], center[2]);
-        w.location = w.initial_location = Walker::intra;
-        w.in_soma_index = 0;
-
-        bool collided = Neuron::checkCollision_branching(w, spheres_list, direction, step_length, colision);
-        CHECK(!collided);
-        CHECK_EQ(colision.type, Collision::null);
-        CHECK_EQ(colision.t, INFINITY_VALUE);
-    }
-    SUBCASE("trivial bounce cycle")
-    {
-        Vector3d direction(0, 1, 0);
-        double step_length = 6e-4;
-
-        Walker w;
-        // w.setNextDirection(direction);
-        w.setInitialPosition(center[0] + radius_soma, center[1], center[2]);
-        w.location = w.initial_location = Walker::intra;
-        w.in_soma_index = 0;
-
-        SUBCASE("trivial hit")
+        spheres_list.push_back({new Dynamic_Sphere(center, radius_soma, sphere_id)});
+        vector<Dynamic_Sphere *> spheres_list_tmp;
+        for (size_t i = 0; i < 20; ++i)
         {
-            bool collided = Neuron::checkCollision_branching(w, spheres_list, direction, step_length, colision);
-            CHECK(collided);
-            CHECK_EQ(colision.type, Collision::hit);
-            CHECK_EQ(colision.t, doctest::Approx(radius_dendrite));
-            CHECK_EQ(colision.bounced_direction, -direction);
-            CHECK_EQ(colision.colision_point, w.pos_v + radius_dendrite * direction);
-            CHECK_EQ(w.status, Walker::free);
+            Vector3d next_center(center[0] + radius_soma + i * radius_dendrite / 4, center[1], center[2]);
+            spheres_list_tmp.push_back(new Dynamic_Sphere(next_center, radius_dendrite, i));
         }
-        SUBCASE("trivial bounce")
+        spheres_list.push_back(spheres_list_tmp);
+        Collision colision;
+        colision.type = Collision::null;
+        colision.t = INFINITY_VALUE;
+
+        SUBCASE("no collision")
         {
-            w.status = Walker::bouncing;
-            w.setRealPosition(w.pos_r + radius_dendrite * direction);
-            w.setVoxelPosition(w.pos_v + radius_dendrite * direction);
+            Vector3d direction(1, 0, 0);
+            double step_length = 5e-4;
 
-            colision.t = radius_dendrite;
-            colision.bounced_direction = -direction;
-            colision.colision_point = w.pos_v;
+            Walker w;
+            // w.setNextDirection(direction);
+            w.setInitialPosition(center[0] + radius_soma, center[1], center[2]);
+            w.location = w.initial_location = Walker::intra;
+            w.in_soma_index = 0;
 
-            bool collided = Neuron::checkCollision_branching(w, spheres_list, direction, step_length - radius_dendrite, colision);
-
+            bool collided = Neuron::checkCollision_branching(w, spheres_list, direction, step_length, colision);
             CHECK(!collided);
             CHECK_EQ(colision.type, Collision::null);
-            CHECK_EQ(colision.t, doctest::Approx(radius_dendrite));
-            CHECK_EQ(colision.bounced_direction, -direction);
-            CHECK_EQ(colision.colision_point, w.pos_v);
-            CHECK_EQ(w.status, Walker::bouncing);
+            CHECK_EQ(colision.t, INFINITY_VALUE);
+        }
+        SUBCASE("no collision: soma to dendrite")
+        {
+            Vector3d direction(1, 0, 0);
+            double step_length = 5e-4;
+
+            Walker w;
+            // w.setNextDirection(direction);
+            w.setInitialPosition(center[0] + radius_soma - step_length/2, center[1], center[2]);
+            w.location = w.initial_location = Walker::intra;
+            w.in_soma_index = 0;
+
+            bool collided = Neuron::checkCollision_branching(w, spheres_list, direction, step_length, colision);
+            CHECK(!collided);
+            CHECK_EQ(colision.type, Collision::null);
+            CHECK_EQ(colision.t, INFINITY_VALUE);
+        }
+        SUBCASE("no collision: dendrite to soma")
+        {
+            Vector3d direction(-1, 0, 0);
+            double step_length = 5e-4;
+
+            Walker w;
+            Vector3d center_first_dendrite(spheres_list[1][0]->center);
+            w.setInitialPosition(center_first_dendrite[0] + step_length/2, center_first_dendrite[1], center_first_dendrite[2]);
+            w.location = w.initial_location = Walker::intra;
+            w.in_soma_index = 0;
+
+            bool collided = Neuron::checkCollision_branching(w, spheres_list, direction, step_length, colision);
+            CHECK(!collided);
+            CHECK_EQ(colision.type, Collision::null);
+            CHECK_EQ(colision.t, INFINITY_VALUE);
+        }
+        SUBCASE("trivial bounce cycle")
+        {
+            Vector3d direction(0, 1, 0);
+            double step_length = 6e-4;
+
+            Walker w;
+            // w.setNextDirection(direction);
+            w.setInitialPosition(center[0] + radius_soma, center[1], center[2]);
+            w.location = w.initial_location = Walker::intra;
+            w.in_soma_index = 0;
+
+            SUBCASE("trivial hit")
+            {
+                bool collided = Neuron::checkCollision_branching(w, spheres_list, direction, step_length, colision);
+                CHECK(collided);
+                CHECK_EQ(colision.type, Collision::hit);
+                CHECK_EQ(colision.t, doctest::Approx(radius_dendrite));
+                CHECK_EQ(colision.bounced_direction, -direction);
+                CHECK_EQ(colision.colision_point, w.pos_v + radius_dendrite * direction);
+                CHECK_EQ(w.status, Walker::free);
+            }
+            SUBCASE("trivial bounce")
+            {
+                w.status = Walker::bouncing;
+                w.setRealPosition(w.pos_r + radius_dendrite * direction);
+                w.setVoxelPosition(w.pos_v + radius_dendrite * direction);
+
+                colision.t = radius_dendrite;
+                colision.bounced_direction = -direction;
+                colision.colision_point = w.pos_v;
+
+                bool collided = Neuron::checkCollision_branching(w, spheres_list, direction, step_length - radius_dendrite, colision);
+
+                CHECK(!collided);
+                CHECK_EQ(colision.type, Collision::null);
+                CHECK_EQ(colision.t, doctest::Approx(radius_dendrite));
+                CHECK_EQ(colision.bounced_direction, -direction);
+                CHECK_EQ(colision.colision_point, w.pos_v);
+                CHECK_EQ(w.status, Walker::bouncing);
+            }
         }
     }
+    SUBCASE("Branching")
+    {
+        int branch_id = 0;
+        vector<Dynamic_Sphere*> spheres_list_tmp1;
+        for (size_t i = 0; i < 10; ++i)
+        {
+            Vector3d next_center(center[0] + i * radius_dendrite / 4, center[1], center[2]);
+            spheres_list_tmp1.push_back(new Dynamic_Sphere(next_center, radius_dendrite, 0, false, branch_id, i, 1));
+        }
+        spheres_list.push_back(spheres_list_tmp1);
+        Vector3d last_center(spheres_list_tmp1[spheres_list_tmp1.size()-1]->center);
+
+        // Add branching
+        Vector3d branching_direction(1, 1, 0);
+        branching_direction = branching_direction.normalized();
+
+        for(size_t rep=0; rep < 2; rep++)
+        {
+            spheres_list_tmp1.clear();
+            for (size_t i = 1; i < 11; ++i)
+            {
+                Vector3d next_center(last_center[0] + i * radius_dendrite / 4 * branching_direction[0],
+                                     last_center[1] + i * radius_dendrite / 4 * branching_direction[1],
+                                     last_center[2] + i * radius_dendrite / 4 * branching_direction[2]);
+                spheres_list_tmp1.push_back(new Dynamic_Sphere(next_center, radius_dendrite, 0, false, branch_id + rep + 1, i, 1));
+            }
+            spheres_list.push_back(spheres_list_tmp1);
+            branching_direction = {1, -1, 1};
+        }
+
+        Collision colision;
+        colision.type = Collision::null;
+        colision.t = INFINITY_VALUE;
+
+        double step_length = 7e-4;
+
+        Walker w;
+        SUBCASE("proximal to distal")
+        {   
+            Vector3d center = spheres_list[0][spheres_list[0].size() - 1]->center;
+            w.setInitialPosition(center[0], center[1], center[2]);
+            w.location = w.initial_location = Walker::intra;
+            w.in_dendrite_index  = 0;
+            w.in_subbranch_index = 0;
+            w.in_sph_index       = {int(spheres_list[0].size() - 3), int(spheres_list[0].size() - 2), int(spheres_list[0].size() - 1)};
+
+            SUBCASE("proximal to distal 1")
+            { 
+                Vector3d direction(1, 1, 0);
+                direction = direction.normalized();
+
+                bool collided = Neuron::checkCollision_branching(w, spheres_list, direction, step_length, colision);
+                CHECK(!collided);
+                CHECK_EQ(colision.type, Collision::null);
+            }
+            SUBCASE("proximal to distal 2")
+            {   
+                Vector3d direction(1, -1, 0);
+                direction = direction.normalized();
+
+                bool collided = Neuron::checkCollision_branching(w, spheres_list, direction, step_length, colision);
+                CHECK(!collided);
+                CHECK_EQ(colision.type, Collision::null);
+            }
+        }
+        SUBCASE("Distal to proximal 1")
+        {
+            Vector3d center = spheres_list[1][0]->center;
+            w.setInitialPosition(center[0], center[1], center[2]);
+            w.location = w.initial_location = Walker::intra;
+            w.in_dendrite_index  = 0;
+            w.in_subbranch_index = 1;
+            w.in_sph_index       = {0, 1, 2};
+
+            Vector3d direction(-1, -1, 0);
+            direction = direction.normalized();
+
+            bool collided = Neuron::checkCollision_branching(w, spheres_list, direction, step_length, colision);
+            CHECK(!collided);
+            CHECK_EQ(colision.type, Collision::null);
+        }
+        SUBCASE("Distal to proximal 2")
+        {
+            Vector3d center = spheres_list[2][0]->center;
+            w.setInitialPosition(center[0], center[1], center[2]);
+            w.location = w.initial_location = Walker::intra;
+            w.in_dendrite_index  = 0;
+            w.in_subbranch_index = 1;
+            w.in_sph_index       = {0, 1, 2};
+
+            Vector3d direction(-1, 1, 0);
+            direction = direction.normalized();
+
+            bool collided = Neuron::checkCollision_branching(w, spheres_list, direction, step_length, colision);
+            CHECK(!collided);
+            CHECK_EQ(colision.type, Collision::null);
+        }
+    
+    }
+    
     // TODO: [ines] more complex cases
     for (size_t i = 0; i < spheres_list.size(); i++)
-        delete spheres_list[i];
+        for(size_t j = 0; j < spheres_list[i].size(); j++)
+            delete spheres_list[i][j];
     spheres_list.clear();
 }
 
-bool Neuron::checkCollision_branching(Walker &walker, vector<Dynamic_Sphere *> &spheres_list, Vector3d const &step, double const &step_lenght, Collision &colision)
+bool Neuron::checkCollision_branching(Walker &walker, vector<vector<Dynamic_Sphere *>> &spheres_list, Vector3d const &step, double const &step_lenght, Collision &colision)
 {
 
     string message;
@@ -764,147 +1055,267 @@ bool Neuron::checkCollision_branching(Walker &walker, vector<Dynamic_Sphere *> &
     std::vector<double> cs;
 
     std::vector<int> sph_ids;
+    std::vector<int> branch_ids;
     std::vector<double> all_cs;
 
-    for (size_t i = 0; i < spheres_list.size(); ++i)
+    for(size_t list_id=0; list_id < spheres_list.size(); ++list_id)
     {
-
-        // cout << "Sphere : " << i << ", sph_id :" << spheres[i].id <<", Ax :" << id << endl;
-
-        // distances to collision
-        double t1;
-        double t2;
-        double c;
-        bool intersect = intersection_sphere_vector(t1, t2, *spheres_list[i], step, step_lenght, O, c);
-        // TODO: [ines] check that opposite signs
-
-        double limit_length = -EPS_VAL;
-
-        if (intersect)
+        for (size_t i = 0; i < spheres_list[list_id].size(); ++i)
         {
-            all_cs.push_back(c);
-            // // check if the walker has previsouly collided with this sphere
-            // // bool same_colliding_object = false;
-            // std::vector<int> last_collision;
-            // walker.getLastCollision(last_collision);
 
-            // if ((last_collision).size() == 2) {
-            // cout << "Last collision of walker : sph : " << walker.last_collision[0] << ", ax : " << walker.last_collision[1] << endl;
+            // distances to collision
+            double t1;
+            double t2;
+            double c;
+            bool intersect = intersection_sphere_vector(t1, t2, *spheres_list[list_id][i], step, step_lenght, O, c);
+            double limit_length = -EPS_VAL;
 
-            //    if ((i == last_collision[0])&&(id == last_collision[1])) {
-            //        same_colliding_object = true;
-            // cout << "Same collision as previous !" << endl;
-            //    }
-            //}
-            // cout << "Intersects with sphere " << j <<", t1 :" << t1 << ", t2 : " << t2 <<", c :" << c << endl;
-            // if the new position is at edge of axon, at the edge of sphere[i] but inside the neighbours
-            bool condition = false;
-            if (i == 0)
+            if (intersect)
             {
-                condition = !(spheres_list[i + 1]->isInside(step * t1 + O, limit_length));
-            }
-            else if (i == spheres_list.size() - 1)
-            {
-                condition = !(spheres_list[i - 1]->isInside(step * t1 + O, limit_length));
-            }
-            else
-            {
-                condition = !(spheres_list[i + 1]->isInside(step * t1 + O, limit_length) || spheres_list[i - 1]->isInside(step * t1 + O, limit_length));
-                // cout <<  "spheres_list[" << i+1 << "].minDistance(step*t1+O) : "<<spheres_list[i+1].minDistance(step*t1+O) << endl;
-                // cout <<  "spheres_list[" << i-1 << "].minDistance(step*t1+O) : "<<spheres_list[i-1].minDistance(step*t1+O) << endl;
-                // cout << "this sphere : spheres_list[" << i << "].minDistance(step*t1+O) : "<<spheres_list[i].minDistance(step*t1+O) << endl;
-                // cout << "condition : " << condition << endl;
-            }
-            // condition = true;
-            if (condition)
-            {
+                all_cs.push_back(c);
+                
+                // if the new position is at edge of axon, at the edge of sphere[i] but inside the neighbours
+                bool condition = false;
 
-                // if the collision are too close or negative.
-                if (Walker::bouncing)
+                // Checking the first list
+                if(list_id == 0)
                 {
-                    if (t1 >= EPS_VAL && t1 <= step_lenght + barrier_tickness)
+                    // Colliding with soma only
+                    if((spheres_list[list_id].size() == 1) && (spheres_list.size() == 1))
                     {
-                        // cout << "   intersection, sphere (bouncing):" << i << endl;
-                        // cout << "       c :" << c << endl;
-                        // cout << "       t :" << t1 << endl;
-                        dist_intersections.push_back(t1);
-                        sph_ids.push_back(i);
-                        cs.push_back(c);
+                        condition = true;
+                    }
+                    // In the first branch
+                    else if ((i == 0) && (spheres_list[list_id].size() > 1))
+                    {
+                        condition = !(spheres_list[list_id][i + 1]->isInside(step * t1 + O, limit_length));
+                    }
+                    // We are at the distal end of the branch
+                    else if(i == spheres_list[list_id].size() - 1)
+                    {
+                        // There is a sphere before
+                        if (spheres_list[list_id].size() > 1)
+                        {
+                            condition = (spheres_list[list_id][i - 1]->isInside(step * t1 + O, limit_length));
+                        }
+                        // There is a distal branch 
+                        if(spheres_list.size() > 1)
+                        {
+                            for(size_t dist_branch=1; dist_branch < spheres_list.size(); dist_branch++)
+                            {
+                                condition = condition || (spheres_list[dist_branch][0]->isInside(step * t1 + O, limit_length));
+                            }
+                        }
+                        condition = !condition;
+                    }
+                    // We are in the middle of the branch
+                    else
+                    {   
+                        condition = !(spheres_list[list_id][i + 1]->isInside(step * t1 + O, limit_length) || spheres_list[list_id][i - 1]->isInside(step * t1 + O, limit_length));
+                    }
+
+                    if (condition)
+                    {
+
+                        // if the collision are too close or negative.
+                        if (Walker::bouncing)
+                        {
+                            if (t1 >= EPS_VAL && t1 <= step_lenght + barrier_tickness)
+                            {
+                                dist_intersections.push_back(t1);
+                                sph_ids.push_back(i);
+                                branch_ids.push_back(list_id);
+                                cs.push_back(c);
+                            }
+                        }
+                        else
+                        {
+                            if (t1 >= 0 && t1 <= step_lenght + barrier_tickness)
+                            {
+                                dist_intersections.push_back(t1);
+                                sph_ids.push_back(i);
+                                branch_ids.push_back(list_id);
+                                cs.push_back(c);
+                            }
+                        }
+                    }
+
+                    condition = false;
+
+                    // Colliding with soma only
+                    if((spheres_list[list_id].size() == 1) && (spheres_list.size() == 1))
+                    {
+                        condition = true;
+                    }
+                    // In the first branch
+                    else if ((i == 0) && (spheres_list[list_id].size() > 1))
+                    {
+                        condition = !(spheres_list[list_id][i + 1]->isInside(step * t2 + O, limit_length));
+                    }
+                    // We are at the distal end of the branch
+                    else if(i == spheres_list[list_id].size() - 1)
+                    {
+                        // There is a sphere before
+                        if (spheres_list[list_id].size() > 1)
+                        {
+                            condition = (spheres_list[list_id][i - 1]->isInside(step * t2 + O, limit_length));
+                        }
+                        // There is a distal branch 
+                        if(spheres_list.size() > 1)
+                        {
+                            for(size_t dist_branch=1; dist_branch < spheres_list.size(); dist_branch++)
+                                condition = condition || (spheres_list[dist_branch][0]->isInside(step * t2 + O, limit_length));
+                        }
+                        condition = !condition;
+                    }
+                    // We are in the middle of the branch
+                    else
+                    {
+                        condition = !(spheres_list[list_id][i + 1]->isInside(step * t2 + O, limit_length) || spheres_list[list_id][i - 1]->isInside(step * t2 + O, limit_length));
+                    }
+
+                    if (condition)
+                    {
+
+                        // if the collision are too close or negative.
+                        if (Walker::bouncing)
+                        {
+                            if (t2 >= EPS_VAL && t2 <= step_lenght + barrier_tickness)
+                            {
+                                dist_intersections.push_back(t2);
+                                sph_ids.push_back(i);
+                                branch_ids.push_back(list_id);
+                                cs.push_back(c);
+                            }
+                        }
+                        else
+                        {
+                            if (t2 >= 0 && t2 <= step_lenght + barrier_tickness)
+                            {
+                                dist_intersections.push_back(t2);
+                                sph_ids.push_back(i);
+                                branch_ids.push_back(list_id);
+                                cs.push_back(c);
+                            }
+                        }
                     }
                 }
+                // we are not in the first branch
                 else
                 {
-                    if (t1 >= 0 && t1 <= step_lenght + barrier_tickness)
+                    // We should check the proximal branches
+                    if(i == 0)
                     {
-                        // cout << "   intersection, sphere (bouncing):" << i << endl;
-                        // cout << "       c :" << c << endl;
-                        // cout << "       t :" << t1 << endl;
-                        dist_intersections.push_back(t1);
-                        sph_ids.push_back(i);
-                        cs.push_back(c);
-                    }
-                }
-            }
+                        // Check the last sphere of the first proximal branch
+                        condition = (spheres_list[0][spheres_list[0].size() - 1]->isInside(step * t1 + O, limit_length));
 
-            condition = false;
+                        // There is another proximal branch
+                        if(spheres_list.size() > 2)
+                        {
+                            condition = condition || (spheres_list[3-list_id][0]->isInside(step * t1 + O, limit_length));
+                        }
 
-            if (i == 0)
-            {
-                condition = !(spheres_list[i + 1]->isInside(step * t2 + O, limit_length));
-            }
-            else if (i == spheres_list.size() - 1)
-            {
-                condition = !(spheres_list[i - 1]->isInside(step * t2 + O, limit_length));
-            }
-            else
-            {
-                condition = !(spheres_list[i + 1]->isInside(step * t2 + O, limit_length) || spheres_list[i - 1]->isInside(step * t2 + O, limit_length));
-                // cout <<  "spheres[" << i+1 << "].minDistance(step*t1+O) : "<<spheres[i+1].minDistance(step*t2+O) << endl;
-                // cout <<  "spheres[" << i-1 << "].minDistance(step*t1+O) : "<<spheres[i-1].minDistance(step*t2+O) << endl;
-                // cout << "this sphere : spheres[" << i << "].minDistance(step*t1+O) : "<<spheres[i].minDistance(step*t2+O) << endl;
-                // cout << "condition : " << condition << endl;
-            }
-            // condition = true;
-            // if the new position is at edge of axon, at the edge of sphere[i] but inside the neighbours
-            if (condition)
-            {
-                if (Walker::bouncing)
-                {
-                    // You compare with esp_val to prevent taking the collision point into account for the next collision
-                    if (t2 >= EPS_VAL && t2 <= step_lenght + barrier_tickness)
-                    {
-                        // cout << "   intersection, sphere :" << i << endl;
-                        // cout << "       c :" << c<< endl;
-                        // cout << "       t :" << t2 << endl;
-                        dist_intersections.push_back(t2);
-                        sph_ids.push_back(i);
-                        cs.push_back(c);
+                        // Check the sphere after
+                        condition = !(condition || (spheres_list[list_id][i + 1]->isInside(step * t1 + O, limit_length)));
+
                     }
-                }
-                else
-                {
-                    if (t2 >= 0 && t2 <= step_lenght + barrier_tickness)
+                    // We are at the end of the branch => check only the sphere before
+                    else if(i == spheres_list[list_id].size() - 1)
+                        condition = !(spheres_list[list_id][i - 1]->isInside(step * t1 + O, limit_length));
+                    else
                     {
-                        // cout << "   intersection, sphere :" << i << endl;
-                        // cout << "       c :" << c<< endl;
-                        // cout << "       t :" << t2 << endl;
-                        dist_intersections.push_back(t2);
-                        sph_ids.push_back(i);
-                        cs.push_back(c);
+                        condition = !(spheres_list[list_id][i - 1]->isInside(step * t1 + O, limit_length) || spheres_list[list_id][i + 1]->isInside(step * t1 + O, limit_length));
+                    }
+
+                    if (condition)
+                    {
+
+                        // if the collision are too close or negative.
+                        if (Walker::bouncing)
+                        {
+                            if (t1 >= EPS_VAL && t1 <= step_lenght + barrier_tickness)
+                            {
+                                dist_intersections.push_back(t1);
+                                sph_ids.push_back(i);
+                                branch_ids.push_back(list_id);
+                                cs.push_back(c);
+                            }
+                        }
+                        else
+                        {
+                            if (t1 >= 0 && t1 <= step_lenght + barrier_tickness)
+                            {
+                                dist_intersections.push_back(t1);
+                                sph_ids.push_back(i);
+                                branch_ids.push_back(list_id);
+                                cs.push_back(c);
+                            }
+                        }
+                    }
+                    
+                    condition = false;
+
+                    // We should check the proximal branches
+                    if(i == 0)
+                    {
+                        // Check the last sphere of the first proximal branch
+                        condition = !(spheres_list[0][spheres_list[0].size() - 1]->isInside(step * t2 + O, limit_length));
+
+                        // There is another proximal branch
+                        if(spheres_list.size() > 2)
+                        {
+                            condition = condition || (spheres_list[3-list_id][0]->isInside(step * t2 + O, limit_length));
+                        }
+
+                        // Check the sphere after
+                        condition = !(condition || (spheres_list[list_id][i + 1]->isInside(step * t2 + O, limit_length)));
+                    }
+                    // We are at the end of the branch => check only the sphere before
+                    else if(i == spheres_list[list_id].size() - 1)
+                        condition = !(spheres_list[list_id][i - 1]->isInside(step * t2 + O, limit_length));
+                    else
+                    {
+                        condition = !(spheres_list[list_id][i - 1]->isInside(step * t2 + O, limit_length) || spheres_list[list_id][i + 1]->isInside(step * t2 + O, limit_length));
+                    }
+
+                    if (condition)
+                    {
+
+                        // if the collision are too close or negative.
+                        if (Walker::bouncing)
+                        {
+                            if (t2 >= EPS_VAL && t2 <= step_lenght + barrier_tickness)
+                            {
+                                dist_intersections.push_back(t2);
+                                sph_ids.push_back(i);
+                                branch_ids.push_back(list_id);
+                                cs.push_back(c);
+                            }
+                        }
+                        else
+                        {
+                            if (t2 >= 0 && t2 <= step_lenght + barrier_tickness)
+                            {
+                                dist_intersections.push_back(t2);
+                                sph_ids.push_back(i);
+                                branch_ids.push_back(list_id);
+                                cs.push_back(c);
+                            }
+                        }
                     }
                 }
             }
         }
     }
+    
 
     if (dist_intersections.size() > 0)
     {
-        // cout << "dist_intersections.size() :" << dist_intersections.size() << endl;
-
         auto min_distance_int = std::min_element(std::begin(dist_intersections), std::end(dist_intersections));
         unsigned index_ = std::distance(std::begin(dist_intersections), min_distance_int);
 
         int sphere_ind = sph_ids[index_];
+        int branch_ind = branch_ids[index_];
 
         double dist_to_collision = dist_intersections[index_];
 
@@ -914,89 +1325,35 @@ bool Neuron::checkCollision_branching(Walker &walker, vector<Dynamic_Sphere *> &
         if (walker.initial_location == Walker::intra)
         {
             if (check_inside_(all_cs))
-            {
                 colision.col_location = Collision::inside;
-            }
             else
-            {
                 colision.col_location = Collision::outside;
-            }
         }
         else if (walker.initial_location == Walker::extra)
         {
             if (check_outside_(all_cs))
-            {
                 colision.col_location = Collision::outside;
-            }
+        
             else
-            {
                 colision.col_location = Collision::inside;
-            }
         }
 
-        // cout << "Collision, sphere :" << sph_ids[index_] << endl;
         colision.t = fmin(dist_to_collision, step_lenght);
         colision.colision_point = walker.pos_v + colision.t * step;
 
-        Vector3d normal = (colision.colision_point - spheres_list[sphere_ind]->center).normalized();
+        Vector3d normal = (colision.colision_point - spheres_list[branch_ind][sphere_ind]->center).normalized();
 
         Vector3d temp_step = step;
         elasticBounceAgainsPlane_intra(walker.pos_v, normal, colision.t, temp_step);
         colision.bounced_direction = temp_step.normalized();
-        // colision.collision_objects = {sphere_ind, id};
 
         return true;
     }
     else
     {
-        // cout << " ----- " << endl;
-        // cout << "No collision" << endl;
         colision.type = Collision::null;
         return false;
     }
-}
-
-vector<int> Neuron::closest_subbranch(Vector3d const &position, int const &dendrite_id, int const &subbranch_id, double const &step_length)
-{
-    const auto &subbranch = dendrites[dendrite_id].subbranches[subbranch_id];
-    int nb_subbranches = dendrites[dendrite_id].subbranches.size();
-    int size_subbranch = subbranch.spheres.size() - 1;
-    double eps = 0.0005;
-    double distance_to_proximal_end = (subbranch.spheres[0].center - position).norm() - eps;
-    double distance_to_distal_end = (subbranch.spheres[size_subbranch].center - position).norm() - eps;
-
-    // cout << "d prox" << distance_to_proximal_end << endl;
-    // cout << "d dist" << distance_to_distal_end << endl;
-    if (distance_to_proximal_end <= step_length)
-    {
-        // The subbranch id starts at 1 but the indices in c++ start at 0
-        vector<int> proximal_branching = subbranch.proximal_branching;
-        if (proximal_branching.size() > 1)
-        {
-            proximal_branching[0] -= 1;
-            proximal_branching[1] -= 1;
-            //    cout << "p" << proximal_branching[0] << " " << proximal_branching[1] << endl;
-        }
-        return proximal_branching;
-    }
-    else if (distance_to_distal_end <= step_length)
-    {
-        // The subbranch id starts at 1 but the indices in c++ start at 0
-        vector<int> distal_branching = subbranch.distal_branching;
-
-        // No need to check the size, because there are always 2 distal branching
-        distal_branching[0] -= 1;
-        distal_branching[1] -= 1;
-        // cout << "d" << distal_branching[0] << " " << distal_branching[1] << endl;
-
-        // Distal end of the neuron
-        if ((distal_branching[0] >= nb_subbranches) || (distal_branching[1] >= nb_subbranches))
-            return {-2};
-
-        return distal_branching;
-    }
-    else
-        return {-1};
 }
 
 int Neuron::closest_dendrite_from_soma(Vector3d const &position, double const &step_length)
