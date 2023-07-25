@@ -98,6 +98,61 @@ def get_adc(dwi_path, b, b0):
     new_data["adc [um²/ms]"] = adcs
     return new_data
 
+def create_df(DWI_folder):
+
+    df_dwi = pd.DataFrame()
+    df_crossings = pd.DataFrame()
+
+    # Iterate through the files in the folder
+    for filename in os.listdir(DWI_folder):
+        # Check if the filename contains "_rep_" and "DWI"
+        if "DWI" in filename:
+            # Split the string by dots ('.') to separate the filename and extension
+            filename_without_ext, extension = filename.split('.')
+            # Split the filename by underscores
+            parts = filename_without_ext.split('_')
+            parts = parts[:-1]
+            # Add the desired suffix to the last element of the parts list
+            parts[-1] = f"{parts[-1]}_simulation_info"
+            # Join the parts back together using underscores
+            filename_simu_info = '_'.join(parts) + '.' + extension
+
+            # Initialize a variable to store the number of particles eliminated due to crossings
+            num_particles_crossings = None
+
+            # Open the file in read mode
+            with open(DWI_folder / filename_simu_info, 'r') as file:
+                # Read the file line by line
+                for line in file:
+                    if "Number of particles:" in line:
+                        # :-1 to remove the /n at the end
+                        n = line.split('-')[-1][:-1]
+                    if "Number of steps:" in line:
+                        t = line.split('-')[-1][:-1]
+                    # Check if the line contains the relevant information
+                    if 'Number of particles eliminated due crossings' in line:
+                        # Split the line to get the number of particles as the last element
+                        num_particles_crossings = int(line.split()[-1])
+                        # Break the loop, as we have found the information we need
+                        break
+                d = {'nb_crossings': [num_particles_crossings], 'N': [n], 'T': [t]}
+                df_avg_crossings = pd.DataFrame(d)
+                df_crossings = pd.concat([df_crossings, df_avg_crossings])
+
+            
+            dwi_intra = create_data(DWI_folder / filename)
+            data_x = dwi_intra.loc[(dwi_intra['x'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+            data_y = dwi_intra.loc[(dwi_intra['y'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+            data_z = dwi_intra.loc[(dwi_intra['z'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+            datas= [data_x, data_y, data_z]
+            mean = list(map(lambda x,y,z : np.mean([x,y,z]), list(datas[0]["Sb/So"]),list(datas[1]["Sb/So"]),list(datas[2]["Sb/So"])))
+            b_labels = data_x["b [um²/ms]"].unique()
+            d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_labels}
+            df_avg_dwi = pd.DataFrame(d)
+            df_dwi = pd.concat([df_dwi, df_avg_dwi])
+
+    return df_dwi, df_crossings
+
 
 
 
@@ -106,76 +161,34 @@ def get_adc(dwi_path, b, b0):
 
 # combine_intra_extra_adc("neurons")
 DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/")
+
 plot = True
-df_dwi = pd.DataFrame()
-df_crossings = pd.DataFrame()
-# Iterate through the files in the folder
-for filename in os.listdir(DWI_folder):
-    # Check if the filename contains "_rep_" and "DWI"
-    if "_rep_" in filename and "DWI" in filename:
-        # Add the filename to the list of matching files
-        filename_split = filename.split("_")
-        n = filename_split[1]
-        t = filename_split[3]
-        
-        dwi_intra = create_data(DWI_folder / filename)
-        # print(dwi_intra)
-        
-        data_x = dwi_intra.loc[(dwi_intra['x'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
-        data_y = dwi_intra.loc[(dwi_intra['y'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
-        data_z = dwi_intra.loc[(dwi_intra['z'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
-        datas= [data_x, data_y, data_z]
-        mean = list(map(lambda x,y,z : np.mean([x,y,z]), list(datas[0]["Sb/So"]),list(datas[1]["Sb/So"]),list(datas[2]["Sb/So"])))
-        b_labels = data_x["b [um²/ms]"].unique()
-        d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_labels}
-        df_avg_dwi = pd.DataFrame(d)
-        df_dwi = pd.concat([df_dwi, df_avg_dwi])
-    
-    
-    if "_rep_" in filename and "simulation_info" in filename:
-        filename_split = filename.split("_")
-        n = filename_split[1]
-        t = filename_split[3]
-
-        # Initialize a variable to store the number of particles eliminated due to crossings
-        num_particles_crossings = None
-
-        # Open the file in read mode
-        with open(DWI_folder / filename, 'r') as file:
-            # Read the file line by line
-            for line in file:
-                # Check if the line contains the relevant information
-                if 'Number of particles eliminated due crossings' in line:
-                    # Split the line to get the number of particles as the last element
-                    num_particles_crossings = int(line.split()[-1])
-                    # Break the loop, as we have found the information we need
-                    break
-            d = {'nb_crossings': [num_particles_crossings], 'N': [n], 'T': [t]}
-            df_avg_crossings = pd.DataFrame(d)
-            df_crossings = pd.concat([df_crossings, df_avg_crossings])
+df_dwi, df_crossings = create_df(DWI_folder)
         
 T_labels = df_dwi['T'].unique()
 N_labels = df_dwi['N'].unique()
+b_labels = df_dwi["b [um²/ms]"].unique()
 means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
 stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
 
 means_crossings = df_crossings.groupby(['N', 'T'])['nb_crossings'].mean()
-stds_crossings  = df_crossings.groupby(['N', 'T'])['nb_crossings'].std()
+# means.index N, T, b
+# print(means.values, means.index.values)
 
-if plot:
-    NUM_COLORS = 20
-    LINE_STYLES = ['solid', 'dashed', 'dashdot', 'dotted']
-    NUM_STYLES = len(LINE_STYLES)
-    cm = plt.get_cmap('gist_rainbow')
-    fig, ax = plt.subplots(2, 2)
-    ax = ax.ravel()
-    i = 0
 heatmaps_stds = np.zeros((5, 4))
 heatmaps_crossings = np.zeros((5, 4))
 N_indices = np.argsort(N_labels.astype(float))
 T_indices = np.argsort(T_labels.astype(float))
 T_labels  = T_labels[T_indices]
 N_labels  = N_labels[N_indices]
+
+stds_crossings  = df_crossings.groupby(['N', 'T'])['nb_crossings'].std()
+
+if plot:
+    fig, ax = plt.subplots(2, 2)
+    ax = ax.ravel()
+    i = 0
+
 for t_i, t in enumerate(T_labels):
     for n_i, n in enumerate(N_labels):
         signal_tmp = []
@@ -209,14 +222,17 @@ for t_i, t in enumerate(T_labels):
 
         if np.sum(np.isnan(err_tmp)) == 0 and plot:
             b_labels_shifted = [b_lab + n_i*0.05 for b_lab in b_labels]
-            lines = ax[t_i].errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N_{n}", fmt='.')
+            lines = ax[t_i].errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}", fmt='.')
             # lines[0].set_linestyle(LINE_STYLES[i%NUM_STYLES])
             ax[t_i].set_title(f"T = {T_labels[t_i]}")
             ax[t_i].set_xlabel('b values')
             ax[t_i].set_ylabel('S/S0')
+            ax[t_i].legend(loc=1)
             i = i + 1
 
+# Analytical solutions & Mesh
 if plot:
+    # Analytical solutions
     G         = np.array([0, 0.015, 0.034, 0.048, 0.059]) # in T/m
     Delta     = np.array([0.05]*G.size)  # in s
     delta     = np.array([0.0165]*G.size)# in s
@@ -250,30 +266,55 @@ if plot:
 
         both_signal.append(neurite_fraction * Ain + soma_fraction * math.exp(-mlnS))
 
-    # Replace the NaN corresponding to b=0 to 1
-    neurites_signal[0] = both_signal[0] = 1
-    for i in range(len(T_labels)):
-        ax[i].errorbar([b_lab + (len(N_labels))*0.05 for b_lab in b_labels], soma_signal, 
-                        yerr=[0], label=f"Soma", fmt='*')
-        ax[i].errorbar([b_lab + (len(N_labels) + 1)*0.05 for b_lab in b_labels], neurites_signal, 
-                        yerr=[0], label=f"Neurites", fmt='*')
-        ax[i].errorbar([b_lab + (len(N_labels) + 2)*0.05 for b_lab in b_labels], both_signal, 
-                        yerr=[0], label=f"Neurites & soma", fmt='*')
-        ax[i].legend()
-
-    fig.suptitle('S/S0 average over x, y, z direction, average over 10 rep')
-    plt.show()
 
 
-    # # Convert the array of strings to an array of floats and sort it
-    # N_double = np.sort(N_labels.astype(float))
-    # # Find the corresponding indices in the original array
-    # corresponding_indices = np.argsort(N_labels.astype(float))
+    DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/mesh/")
 
+    df_dwi, _ = create_df(DWI_folder)
+    
+    means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
+    stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
+    i = 0
+    for t_i, t in enumerate(T_labels):
+        signal_tmp = []
+        err_tmp    = []
+        for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
+            N1 = group[0]
+            T1 = group[1]
+            b1 = group[2]
+            S1 = data.values[0]
+            if t == T1:
+                signal_tmp.append(S1)
+        
+        for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
+            err = data2.values[0]
+            T2 = group2[1]
+            if t == T2:
+                err_tmp.append(err)
+
+        if np.sum(np.isnan(err_tmp)) == 0 and plot:
+            b_labels_shifted = [b_lab + (n_i + 4)*0.05 for b_lab in b_labels]
+            ax2 = ax[i].twinx()
+            ax2.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n} soma (mesh)", fmt='o')
+            
+            # Replace the NaN corresponding to b=0 to 1
+            neurites_signal[0] = both_signal[0] = 1
+            ax2.errorbar([b_lab + (len(N_labels) )*0.05 for b_lab in b_labels], soma_signal, 
+                            yerr=[0], label=f"Soma (analytic)", fmt='*')
+            ax2.errorbar([b_lab + (len(N_labels) + 1)*0.05 for b_lab in b_labels], neurites_signal, 
+                            yerr=[0], label=f"Neurites (analytic)", fmt='*')
+            ax2.errorbar([b_lab + (len(N_labels) + 2)*0.05 for b_lab in b_labels], both_signal, 
+                            yerr=[0], label=f"Neurites & soma (analytic)", fmt='*')
+            ax2.legend(loc=3)
+            ax2.set_yticklabels([])
+            ax2.set_yticks([])
+            i = i + 1
+
+fig.suptitle('S/S0 average over x, y, z direction, average over 10 rep', y=0.95)
+plt.show()
+
+if plot:
     fig, ax = plt.subplots(1,1)
-    # heatmaps_stds_sorted = heatmaps_stds[corresponding_indices, :]
-    # N_labels_sorted = N_labels[corresponding_indices]
-
     img = ax.imshow(heatmaps_stds[:, :])
     ax.set_xticks(list(range(4)))
     ax.set_xticklabels(T_labels)
@@ -287,9 +328,6 @@ if plot:
 
 
     fig, ax = plt.subplots(1,1)
-    # heatmaps_crossings_sorted = heatmaps_crossings[corresponding_indices, :]
-    # N_labels_sorted = N_labels[corresponding_indices]
-
     img = ax.imshow(heatmaps_crossings)
     ax.set_xticks(list(range(4)))
     ax.set_xticklabels(T_labels)
