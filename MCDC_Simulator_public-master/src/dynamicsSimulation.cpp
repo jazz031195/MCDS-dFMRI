@@ -530,7 +530,7 @@ void DynamicsSimulation::writeDWSignal(SimulableSequence *dataSynth)
     }
 }
 
-void DynamicsSimulation::iniWalkerPosition()
+void DynamicsSimulation::iniWalkerPosition(Vector3d& initial_position)
 {
     walker.initial_location = Walker::unknown;
     walker.location = Walker::unknown;
@@ -576,8 +576,11 @@ void DynamicsSimulation::iniWalkerPosition()
     }
     else if (params.ini_walker_flag.compare("intra") == 0)
     {
-        Vector3d intra_pos;
-        getAnIntraCellularPosition(intra_pos, walker.in_obj_index, walker.in_ply_index, walker.in_sph_index, walker.in_ax_index, walker.in_neuron_index);
+        Vector3d intra_pos = initial_position;
+        // If walker was not discarded 
+        // => initial_position re-assigned to [-1, -1, -1]
+        if(initial_position[0] == -1)
+            getAnIntraCellularPosition(intra_pos, walker.in_obj_index, walker.in_ply_index, walker.in_sph_index, walker.in_ax_index, walker.in_neuron_index);
         walker.setInitialPosition(intra_pos);
         walker.intra_extra_consensus--;
         walker.initial_location = Walker::intra;
@@ -1295,7 +1298,6 @@ bool DynamicsSimulation::isInsideAxons(Vector3d &position, int &ax_id, double di
         {
             ax_id = i;
             return true;
-            break;
         }
     }
     return false;
@@ -1442,16 +1444,14 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth)
     for (w = 0; w < params.num_walkers; w++)
     {
 
-        cout << "Walker : " << w << "\n"
-             << endl;
+        cout << "Walker : " << w << "\n" << endl;
 
         // flag in case there was any error with the particle.
         back_tracking = false;
 
         walker.setIndex(w);
-
         // Initialize the walker initial position
-        iniWalkerPosition();
+        iniWalkerPosition(walker.ini_pos);
 
         // Selects only obstacles that are close enough to collide and the ones inside a collision sphere
         initWalkerObstacleIndexes();
@@ -1513,6 +1513,9 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth)
             w--;
             continue;
         }
+
+        // If no backtracking, delete the initial position
+        walker.ini_pos = Vector3d(-1, -1, -1);
 
         // updates the phase shift.
         if (dataSynth)

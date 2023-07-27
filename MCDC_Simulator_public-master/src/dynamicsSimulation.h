@@ -258,9 +258,11 @@ protected:
     /*! \fn     iniWalkerPosition
      * \brief   initialize the first walker position depending if a file was passed, the voxel limits,
      *          ot any other flag (as it can be intra, extra, delta position (not implemented yet)).
+     *          If the walker was discarded, set the next walker to the same initial position.
+     * \param initial_position (Eigen::Vector3d) : walker.ini_pos
      * \todo    Add the flags " onlyIntra", "onlyExtra" and "singlePos".
      */
-    inline void iniWalkerPosition();
+    inline void iniWalkerPosition(Eigen::Vector3d& initial_position);
 
     /*!
      * \brief   fill the list of indexes in walkers such that the obstacle is close enough for collision.

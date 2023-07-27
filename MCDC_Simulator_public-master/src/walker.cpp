@@ -26,6 +26,7 @@ Walker::Walker()
     in_sph_index.clear();
     in_cyl_index = -1;
     last_collision.clear();
+    ini_pos = Eigen::Vector3d(-1, -1, -1);
 
 }
 
