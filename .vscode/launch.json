@@ -3,6 +3,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+
     
         {
             "name": "run current conf file",
@@ -16,6 +17,17 @@
         },
 
         {
+            "name": "run current conf file (LINUX)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": ["${file}"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb",
+        },
+
+        {
             "name": "run tests",
             "type": "cppdbg",
             "request": "launch",
@@ -24,6 +36,17 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "MIMode": "lldb",
+        },
+
+        {
+            "name": "run tests (LINUX)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            // "program": "${command:cmake.getLaunchTargetDirectory}/tests",
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb",
         },
 
     ]
