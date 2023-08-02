@@ -88,6 +88,8 @@
         "unordered_set": "cpp",
         "variant": "cpp",
         "__nullptr": "cpp",
-        "__string": "cpp"
+        "__string": "cpp",
+        "hash_map": "cpp",
+        "cinttypes": "cpp"
     }
 }
