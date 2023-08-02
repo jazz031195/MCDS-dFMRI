@@ -10,9 +10,9 @@ projection = True
 z_slice = [0.02, 0.04, 0.06, 0.08]
 # position = np.array([0.044359383652472821, 0.073838872992544963, 0.053730584153105686])
 # position2 = np.array([0.0450215294826024, 0.073325599802571709, 0.053024812566757319])
-max_lim = 0.1
-neuron_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_08_neurons_list.txt'
-traj_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_08.traj.txt'
+max_lim = 1
+neuron_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_10_neurons_list.txt'
+traj_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_10.traj.txt'
 with open(neuron_file) as f:
     lines = f.readlines()
     if plot_3d:
@@ -79,7 +79,7 @@ with open(neuron_file) as f:
                 # if max_lim < coords[0]:
                 #     max_lim = coords[0]
                 # Plot only one sphere out of four for the dendrites (otherwise, too expensive)
-                a = random.randint(1, 10)
+                a = random.randint(1, 50)
                 # draw sphere
                 u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
                 x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])

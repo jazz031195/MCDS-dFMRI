@@ -387,7 +387,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
                 int succes_ind;
                 success = false;
-                bool stop = false;
+                // bool stop = false;
                 
                 for (unsigned int j =0; j < growths.size(); j++){
                     growing_threads[j].join();
@@ -395,7 +395,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
                         if (growths[j]->success) {
                             success =true;
                             succes_ind = j;
-                            stop = true;
+                            // stop = true;
                         }
                     }
                 } 

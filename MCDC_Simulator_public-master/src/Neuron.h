@@ -58,7 +58,7 @@ public:
      * @return                     bool, true if collision with this.
      */
     bool checkCollision(Walker &walker, Eigen::Vector3d const&step_dir, double const&step_lenght, Collision &collision);
-    static bool checkCollision_branching(Walker &walker, std::vector<Dynamic_Sphere*>& spheres, Eigen::Vector3d const& step, double const& step_lenght, Collision &colision);
+    static bool checkCollision_branching(Walker &walker, Dynamic_Sphere* const& sphere, Eigen::Vector3d const& step, double const& step_lenght, Collision &colision);
     std::vector<Dynamic_Sphere*> find_neighbor_spheres(Walker &walker, Eigen::Vector3d const& next_step, double const& step_length);
     /**
      * Calculate if position is inside this.
@@ -72,7 +72,7 @@ public:
      * @return                    bool, true if position is inside this.
      */
     bool isPosInsideNeuron(Eigen::Vector3d const& position,  double const& barrier_thickness, bool const& swell_, int& in_soma_index, 
-                        int& in_dendrite_index, int& in_subbranch_index, std::vector<int>& in_sph_index);
+                           int& in_dendrite_index, int& in_subbranch_index, std::vector<int>& in_sph_index);
     /**
      * Minimal distance between a position pos and this.
      *
@@ -93,7 +93,7 @@ public:
      * @param dendrite_to_add Dendrite.
      */
     void add_dendrite(Dendrite& dendrite_to_add);
-    std::vector <int> closest_subbranch(Eigen::Vector3d const& position, int const& dendrite_id, int const& subbranch_id, double const& step_length);
+    // std::vector <int> closest_subbranch(Eigen::Vector3d const& position, int const& dendrite_id, int const& subbranch_id, double const& step_length);
     std::vector <double> get_Volume() const;
     /**
      * Calculates if there is/are intersection(s) between the sphere s and a walker
@@ -156,15 +156,15 @@ private:
      * @param upper_bound int, upper bound of the interval, in [mm].
      */
     void generateSpanRadius(double const& lower_bound=0.2, double const& upper_bound=0.5);
-    /**
-     * Find the closest dendrite from the soma. Indeed, the walker can go from the 
-     * soma to the dendrites.
-     *
-     * @param position Eigen::Vector3d, initial position of the walker.
-     * @param step_length       double, length of the step of the walker.
-     * @returns        dendrite_id int, index of the dendrite. 
-     */
-    int closest_dendrite_from_soma(Eigen::Vector3d const& position, double const& step_length);
+    // /**
+    //  * Find the closest dendrite from the soma. Indeed, the walker can go from the 
+    //  * soma to the dendrites.
+    //  *
+    //  * @param position Eigen::Vector3d, initial position of the walker.
+    //  * @param step_length       double, length of the step of the walker.
+    //  * @returns        dendrite_id int, index of the dendrite. 
+    //  */
+    // std::vector<int> close_dendrites_from_soma(Eigen::Vector3d const& position, double const& step_length);
 };
 
 

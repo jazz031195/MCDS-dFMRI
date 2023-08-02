@@ -170,7 +170,68 @@ bool Axon::isNearAxon(Vector3d const&position,  double const& distance_to_be_ins
     return false;
 }
 
-bool Axon::isPosInsideAxon(Vector3d const& position,  double const& distance_to_be_inside, std::vector<int>& sphere_ids){
+bool Axon::isPosInsideAxon(Vector3d const& position,  double const& distance_to_be_inside, vector<int>& sphere_ids, vector<double>& distances){
+    // when checking collision with walker -> check with normal radius
+    // when checking with collisions of other axons -> check with max_radius so there is room for swelling
+    std::vector<std::vector<Projections::projection_pt>> coliding_projs;
+    bool colliding_all_axes;
+    Dynamic_Sphere sphere_ ;
+    double rad;
+    sphere_ids.clear();
+    distances.clear();
+
+    // if position is in box with axon inside
+    if(isNearAxon(position, distance_to_be_inside)){
+        // find all projections in between the two projections of the edges
+
+        rad = radius+1000*barrier_tickness + distance_to_be_inside;
+        
+        coliding_projs = projections.find_collisions_all_axes(position, rad, id, distance_to_be_inside);
+
+        if (coliding_projs.size() == 3){ 
+
+            // for all coliding objects in x 
+            for(unsigned j = 0; j < coliding_projs[0].size() ; j++){ 
+
+                const Projections::projection_pt coliding_proj = coliding_projs[0][j];
+                // if the same coliding objects are also in y and z but are not from same objects
+
+                colliding_all_axes = (projections.isProjInside(coliding_projs[1], coliding_proj) && projections.isProjInside(coliding_projs[2], coliding_proj));
+
+                if (colliding_all_axes){
+                    sphere_ = spheres[coliding_proj.sph_id];
+                    if (sphere_.minDistance(position) < distance_to_be_inside){ 
+
+                        sphere_ids.push_back(coliding_proj.sph_id);
+                        distances.push_back((sphere_.center - position).norm());
+                    }  
+                } 
+            }
+        }
+        if (sphere_ids.size() > 0){
+            double min_dist_to_center = 1000;
+            int min_id = 1000;
+            for(size_t sph_id=0; sph_id < sphere_ids.size(); ++ sph_id)
+            {
+                if (distances[sph_id] < min_dist_to_center)
+                {
+                    min_dist_to_center = distances[sph_id];
+                    min_id = sphere_ids[sph_id];
+                }
+                    
+            }
+            sphere_ids.clear();
+            sphere_ids.push_back(min_id);
+            return true;
+        }
+        else
+            return false;
+    }
+
+    return false;
+} 
+
+bool Axon::isPosInsideAxon(Vector3d const& position,  double const& distance_to_be_inside, vector<int>& sphere_ids){
     // when checking collision with walker -> check with normal radius
     // when checking with collisions of other axons -> check with max_radius so there is room for swelling
     std::vector<std::vector<Projections::projection_pt>> coliding_projs;
@@ -199,16 +260,15 @@ bool Axon::isPosInsideAxon(Vector3d const& position,  double const& distance_to_
 
                 if (colliding_all_axes){
                     sphere_ = spheres[coliding_proj.sph_id];
-                    
                     if (sphere_.minDistance(position) < distance_to_be_inside){ 
 
                         sphere_ids.push_back(coliding_proj.sph_id);
                         
-                        /*
-                        cout << " Axon : "<< id <<"Position : [" << position[0] << ", "<< position[1] << ", " << position[2] << "]" << endl; 
-                        cout << "           distance to sphere :" << coliding_proj.sph_id << " : " <<  sphere_.minDistance(position) ;
-                        cout << ", Sphere position : [" << sphere_.center[0] << ", "<< sphere_.center[1] << ", " << sphere_.center[2] << "]" << endl;  
-                        */
+                        
+                        // cout << " Axon : "<< id <<"Position : [" << position[0] << ", "<< position[1] << ", " << position[2] << "]" << endl; 
+                        // cout << "           distance to sphere :" << coliding_proj.sph_id << " : " <<  sphere_.minDistance(position) ;
+                        // cout << ", Sphere position : [" << sphere_.center[0] << ", "<< sphere_.center[1] << ", " << sphere_.center[2] << "]" << endl;  
+                        
                     }  
                 } 
             }
@@ -216,6 +276,25 @@ bool Axon::isPosInsideAxon(Vector3d const& position,  double const& distance_to_
         if (sphere_ids.size() > 0){
             // sort by value
             sort(sphere_ids.begin(), sphere_ids.end());
+            double min_dist_to_center = 1000;
+            int min_id = 1000;
+            for(size_t sph_id=0; sph_id < sphere_ids.size(); ++ sph_id)
+            {
+                double dist_tmp = (spheres[sphere_ids[sph_id]].center - position).norm();
+                cout << "dist " << sphere_ids[sph_id] << " " << dist_tmp << " " << sphere_ids[sph_id] << endl;
+                if (dist_tmp < min_dist_to_center)
+                {
+                    min_dist_to_center = dist_tmp;
+                    min_id = sphere_ids[sph_id];
+                }
+                    
+            }
+            cout << "min dist" << min_dist_to_center << endl;
+            sphere_ids.clear();
+            sphere_ids.push_back(min_id);
+            // cout << "sph_ids size" << sphere_ids.size() << endl;
+            // for(size_t i=0; i < spheres[sphere_ids[0]].neighboring_spheres.size(); ++i)
+            //     cout << (spheres[sphere_ids[0]].neighboring_spheres[i]->center - position).norm() << endl;
             return true;
         }
         else{
@@ -228,7 +307,6 @@ bool Axon::isPosInsideAxon(Vector3d const& position,  double const& distance_to_
 
     return false;
 } 
-
 
 std::vector<double> Axon::Distances_to_Spheres(Vector3d const& pos) const {
     std::vector<double> distances;

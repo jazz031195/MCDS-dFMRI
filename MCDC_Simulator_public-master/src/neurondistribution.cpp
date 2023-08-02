@@ -143,7 +143,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
     {   
         cout << "dendrite " << i << endl;
         int tries = 0;
-        int nb_branching = 1;//generateNbBranching();
+        int nb_branching = 3;//generateNbBranching();
         // Radius of each dendrite sphere [mm]
         double sphere_radius = 0.5e-3;
         // Don't initiate dendrite too close from the borders
@@ -171,30 +171,28 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                 vector<Vector3d> children_dir;
                 vector<branching_pt> branching_points     = {{dendrite_start, dendrite_direction, children_dir, 0}};
                 vector<branching_pt> branching_points_new;
-                int branch_id      = 1;
-                int largest_node   = 1;
-                int largest_sphere = 0;
+                int branch_id      = 0;
+                int largest_node   = 0;
                 // Create the subbranches
                 for(int b=0; b < nb_branching; ++b)
                 {
                     // Length of a segment before branching
-                    double l_segment = 245e-3;//generateLengthSegment();
+                    double l_segment = 245e-3 / nb_branching;//generateLengthSegment();
                     // Number of spheres per segment
                     int nb_spheres = l_segment / (sphere_radius/4); //Let's assume that dendrites have a radius of 0.5microns so far
                     vector<int> proximal_branch;
                     vector<int> distal_branch;
                     if(b == 0)
                     {
-                        proximal_branch = {0};
+                        proximal_branch = {};
                         distal_branch = {largest_node + 1, largest_node + 2};
                         largest_node  = largest_node + 2;
                         bool stop_growth = false;
                         cout << "P id " << branching_points[0].subbranch_id << endl;
                         cout << "C id " << branch_id << endl;
-                        cout << "prox " << proximal_branch[0] << endl;
                         cout << "dist " << distal_branch[0] << distal_branch[1] << endl;
                         branching_pt branching_pt_new = growSubbranch(dendrite, branching_points[0], nb_spheres, sphere_radius, proximal_branch, distal_branch, 
-                                                                      min_distance_from_border, stop_growth, branch_id, largest_sphere);
+                                                                      min_distance_from_border, stop_growth, branch_id, &neuron.soma);
                         branch_id++;
                         branching_points[0] = branching_pt_new;
                         cout << "Subbranch 1 added " << endl;
@@ -220,7 +218,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                                 cout << "dist " << distal_branch[0] << distal_branch[1] << endl;
                                 branching_pt branching_pt_new = growSubbranch(dendrite, branching_points[p], nb_spheres, sphere_radius, 
                                                                               proximal_branch, distal_branch, min_distance_from_border, 
-                                                                              stop_growth, branch_id, largest_sphere);
+                                                                              stop_growth, branch_id, &neuron.soma);
                                 
                                 branch_id++; 
                                 if(stop_growth)
@@ -246,7 +244,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
 NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& dendrite, NeuronDistribution::branching_pt const& parent, 
                                       int const& nb_spheres, double const& sphere_radius, vector<int> const& proximal_end, 
                                       vector<int> const& distal_end, double const& min_distance_from_border, bool& stop_growth,
-                                      int const& branch_id, int& largest_sphere)
+                                      int const& branch_id, Dynamic_Sphere* soma)
 {
     Eigen::Vector3d begin;
     Axon subbranch(branch_id, sphere_radius, begin, begin, 0, false, 1, proximal_end, distal_end);
@@ -258,44 +256,49 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
     double volume_inc_perc = 0;
     bool swell             = false;
     double scale           = 1;
-    int largest_sphere_tmp = largest_sphere;
-    if (largest_sphere > 1)
-        largest_sphere++;
-
-    cout << largest_sphere << " " << nb_spheres << endl;
-    for(int sphere_id=largest_sphere; sphere_id < (largest_sphere + nb_spheres); ++sphere_id)
+   
+    for(int sphere_id=0; sphere_id < nb_spheres ; ++sphere_id)
     {
-        cout << "id " << endl;
-        center = (sphere_id-largest_sphere)*parent.direction*sphere_radius/4 + parent.origin;
+        if(branch_id == 0)
+            center = sphere_id * parent.direction * sphere_radius/4 + parent.origin;
+        else
+            center = (sphere_id + 1) * parent.direction * sphere_radius/4 + parent.origin;
 
         if(isInVoxel(center, min_distance_from_border))
         {
             if (!isSphereColliding(center, sphere_radius))
             {
                 Dynamic_Sphere sphere_to_add(center, sphere_radius, volume_inc_perc, swell, branch_id, sphere_id, scale);
-                if((proximal_end[0] == 0) && (sphere_id == 0))
-                    sphere_to_add.set_parent(-1);
-                else
+                if(sphere_id == 0)
                 {
-                    // The parent is in the same subbranch
-                    if (spheres_to_add.size() >= 1)
+                    if(proximal_end.size() == 0)
                     {
-                        sphere_to_add.set_parent(spheres_to_add[spheres_to_add.size()-1].id);
-                    }   
-                    // The parent is in another subbranch
+                        sphere_to_add.add_neighbor(soma);
+                        soma->add_neighbor(new Dynamic_Sphere(sphere_to_add));
+                    }  
                     else
                     {
-                        sphere_to_add.set_parent(dendrite.subbranches[proximal_end[0]-1].spheres[dendrite.subbranches[proximal_end[0]-1].spheres.size()-1].id);
+                        sphere_to_add.add_neighbor(new Dynamic_Sphere(dendrite.subbranches[proximal_end[0]].spheres[dendrite.subbranches[proximal_end[0]].spheres.size()-1]));
+                        dendrite.subbranches[proximal_end[0]].spheres[dendrite.subbranches[proximal_end[0]].spheres.size()-1].add_neighbor(new Dynamic_Sphere(sphere_to_add));
+                        cout << "b id " << branch_id << endl;
+                        cout << "current sph id" << sphere_to_add.id << " ax id " << sphere_to_add.ax_id << endl;
+                        cout << "sph id " << dendrite.subbranches[proximal_end[0]].spheres[dendrite.subbranches[proximal_end[0]].spheres.size()-1].id << endl;
+                        cout << "ax id " << dendrite.subbranches[proximal_end[0]].spheres[dendrite.subbranches[proximal_end[0]].spheres.size()-1].ax_id<< endl;
+                        if(branch_id > proximal_end[1])
+                        {
+                            sphere_to_add.add_neighbor(new Dynamic_Sphere(dendrite.subbranches[proximal_end[1]].spheres[0]));
+                            dendrite.subbranches[proximal_end[1]].spheres[0].add_neighbor(new Dynamic_Sphere(sphere_to_add));
+                            cout << "sph id " << dendrite.subbranches[proximal_end[1]].spheres[0].id<< endl;
+                            cout << "ax id " << dendrite.subbranches[proximal_end[1]].spheres[0].ax_id<< endl;
+                        }
                     }
-                    // The child is in the same subbranch
-                    if((spheres_to_add.size() < 1) && (branch_id > 1))
-                        dendrite.subbranches[proximal_end[0]-1].spheres[dendrite.subbranches[proximal_end[0]-1].spheres.size()-1].add_children(sphere_id);
-                    else if(sphere_id < nb_spheres - 1)
-                        sphere_to_add.add_children(sphere_id + 1);  
-
-                    cout << "sph id " << sphere_to_add.id << "sph ax id " << sphere_to_add.ax_id << "sph parent " << sphere_to_add.parent <<endl; 
-
                 }
+                else
+                {
+                    spheres_to_add[spheres_to_add.size() - 1].add_neighbor(new Dynamic_Sphere(sphere_to_add));
+                    sphere_to_add.add_neighbor(new Dynamic_Sphere(spheres_to_add[spheres_to_add.size() - 1]));
+                }
+                
                 spheres_to_add.push_back(sphere_to_add);
             }
         }
@@ -308,9 +311,7 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
             }
             return {};
         } 
-        largest_sphere_tmp = sphere_id;       
     }
-    largest_sphere = largest_sphere_tmp;
     if (!discard_dendrite)
     {
         subbranch.set_spheres(spheres_to_add);
@@ -325,9 +326,9 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
         children_dir.push_back(rotatedDir);
         bifurcationAngle = -bifurcationAngle;
     }
-    cout << subbranch.projections.axon_projections[0][0] << " " << subbranch.projections.axon_projections[0][1];
-    cout << subbranch.projections.axon_projections[1][0] << " " << subbranch.projections.axon_projections[1][1];
-    cout << subbranch.projections.axon_projections[2][0] << " " << subbranch.projections.axon_projections[2][1];
+    // cout << subbranch.projections.axon_projections[0][0] << " " << subbranch.projections.axon_projections[0][1];
+    // cout << subbranch.projections.axon_projections[1][0] << " " << subbranch.projections.axon_projections[1][1];
+    // cout << subbranch.projections.axon_projections[2][0] << " " << subbranch.projections.axon_projections[2][1];
     
     // Return the next branching point
     return {spheres_to_add[spheres_to_add.size()-1].center, parent.direction, children_dir, branch_id};

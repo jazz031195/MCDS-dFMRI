@@ -21,8 +21,7 @@ public:
     double volume_inc_perc;
     int ax_id; /* Id of the subbranch*/
     double min_radius;
-    int parent; /* Id of the parent sphere */
-    vector<int> children; /* Id of the children sphere(s) */
+    vector<Dynamic_Sphere*> neighboring_spheres; /* Direct neighboring sphere(s) */
 
 
     /*!
@@ -48,8 +47,6 @@ public:
         if (swell){
             radius = sqrt(1+volume_inc_perc)*radius;
         }
-        parent   = {-1};
-        children = {-1, -1};
     }
 
     // /*!
@@ -83,8 +80,7 @@ public:
     bool isInside(Eigen::Vector3d pos, double distance_to_be_inside) const;
     bool distSmallerThan(Eigen::Vector3d pos, double distance);
     void set_center(Eigen::Vector3d center_);
-    void set_parent(int const& parent_id_);
-    void add_children(int const& children_id_);
+    void add_neighbor(Dynamic_Sphere* const neighbor);
 
 private:
 

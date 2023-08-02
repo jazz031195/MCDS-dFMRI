@@ -96,7 +96,8 @@ public:
     void set_spheres(std::vector<Dynamic_Sphere>& spheres_to_add);
     void add_projection();
     bool isNearAxon(Eigen::Vector3d const&position,  double const& distance_to_be_inside);
-    bool isPosInsideAxon(Eigen::Vector3d const&position,  double const& distance_to_be_inside,  std::vector<int>& sphere_ids);
+    bool isPosInsideAxon(Eigen::Vector3d const&position,  double const& distance_to_be_inside, vector<int>& sphere_ids);
+    bool isPosInsideAxon(Eigen::Vector3d const&position,  double const& distance_to_be_inside, vector<int>& sphere_ids, vector<double>& distances);
     /* Calculate the volume of the current axon and update its tortuosity */
     double volumeAxon() const;
 

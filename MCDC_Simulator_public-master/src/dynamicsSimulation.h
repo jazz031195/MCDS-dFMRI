@@ -167,7 +167,6 @@ public:
 
     bool isInsideNeurons(Eigen::Vector3d &position, int &neuron_id, double barrier_thickness);
 
-    bool isIntraEdge(Eigen::Vector3d& position, bool low_edge, int& ax_id, bool init_loc_intra);
 protected:    
 
     inline void generateStep(Eigen::Vector3d& step);
@@ -224,7 +223,6 @@ protected:
      *          the voxel limits.
      */
     inline void mapWalkerIntoVoxel(Eigen::Vector3d &amended_step, Collision &colision, double barrier_thickness);
-    inline void mapWalkerIntoVoxel_tortuous(Eigen::Vector3d &amended_step, Collision &colision, double barrier_thickness);
     
 
     /*! \fn     getTimeDt

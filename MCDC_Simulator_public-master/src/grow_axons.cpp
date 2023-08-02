@@ -274,7 +274,7 @@ bool Growth::find_next_center(Axon* ax, Eigen::Vector3d destination, Dynamic_Sph
                 std::vector<Dynamic_Sphere> twin_spheres;
                 collides_with_border = true;
                 createTwinSpheres(twin_spheres, sphere_, twin_delta_pos);
-                int nbr_non_colliding_twins = 0;
+                size_t nbr_non_colliding_twins = 0;
                 for (unsigned j=0; j< twin_spheres.size(); ++j){
                     if(!isSphereColliding(twin_spheres[j])){
                         nbr_non_colliding_twins +=1;
@@ -439,7 +439,7 @@ std::vector<Dynamic_Sphere> Growth::GrowAxon(Axon* ax, Eigen::Vector3d destinati
         if(check_borders(s1.center, s1.radius, twin_delta_pos_)){
             std::vector<Dynamic_Sphere> first_twin_spheres;
             createTwinSpheres(first_twin_spheres, s1, twin_delta_pos_);
-            int non_colliders = 0;
+            size_t non_colliders = 0;
             // check if all twins don't collide with environment 
             for (unsigned i = 1; i < first_twin_spheres.size(); i++){
                 if (!isSphereColliding(first_twin_spheres[i])){
