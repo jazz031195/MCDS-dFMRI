@@ -810,7 +810,7 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos, int &cy
 
     // Not a neuron substrate
     uint32_t count = 0;
-    if (!params.neuron_packing)
+    if (!params.neuron_packing && !(params.neurons_files.size() > 0))
     {
         while (true)
         {

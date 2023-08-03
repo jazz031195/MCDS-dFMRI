@@ -969,7 +969,25 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                 r = stod(jkr[3]);
                 s = stod(jkr[4]);
                 sphere_ = Dynamic_Sphere(Eigen::Vector3d(x,y,z), r, volume_inc_perc, s, ax_id, id, scale);
+                if(spheres_.size() > 0)
+                {
+                    sphere_.add_neighbor(new Dynamic_Sphere(spheres_[spheres_.size() - 1]));
+                    spheres_[spheres_.size() - 1].add_neighbor(new Dynamic_Sphere(sphere_));
+                }
+                
                 spheres_.push_back(sphere_);
+        
+                if(subbranches_.size() > 0 && spheres_.size() == 0)
+                {
+                    sphere_.add_neighbor(new Dynamic_Sphere(subbranches_[0].spheres[0]));
+                    subbranches_[0].spheres[0].add_neighbor(new Dynamic_Sphere(sphere_));
+                    
+                }
+                else if (spheres_.size() == 0)
+                {
+                    soma.add_neighbor(new Dynamic_Sphere(sphere_));
+                    sphere_.add_neighbor(new Dynamic_Sphere(soma));
+                }
                 cout << "adding sphere,  min radius :" << sphere_.min_radius << ", radius :" << sphere_.radius << ", swell : " << sphere_.swell << endl;
             
             }
