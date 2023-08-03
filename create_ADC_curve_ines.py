@@ -183,7 +183,7 @@ T_labels  = T_labels[T_indices]
 N_labels  = N_labels[N_indices]
 
 stds_crossings  = df_crossings.groupby(['N', 'T'])['nb_crossings'].std()
-y_lim_min = 0.2
+y_lim_min = 0.
 y_lim_max = 1.1
 
 if plot:
@@ -234,23 +234,23 @@ for t_i, t in enumerate(T_labels):
 if plot:
     # Analytical solutions
     G         = np.array([0, 0.015, 0.034, 0.048, 0.059]) # in T/m
-    Delta     = np.array([0.05]*G.size)  # in s
-    delta     = np.array([0.0165]*G.size)# in s
-    TE        = np.array([0.067]*G.size) # in s
+    Delta     = np.array([0.05] * G.size)  # in s
+    delta     = np.array([0.0165] * G.size)# in s
+    TE        = np.array([0.067] * G.size) # in s
     r_soma    = 10e-6 #m
     r_neurite = 0.5e-6 #m
     D0        = 2.5e-9 #m²/s
     gamma     = 2.6751525e8 #rad/(s*T)
-    bb        = gamma**2 * G**2 * delta**2 * (Delta - delta/3)
+    bb        = gamma**2 * G**2 * delta**2 * (Delta - delta/3) # rad² * s / m²
 
     nb_neurites     = 20
-    l_neurite       = 245 # um
-    volume_neurites = nb_neurites * 2*np.pi*r_neurite*l_neurite # in um³
-    volume_soma     = 4/3 * np.pi * r_soma**3 # in um³
+    l_neurite       = 245 # m
+    volume_neurites = nb_neurites * np.pi*(r_neurite*1e6)**2*l_neurite # in m³
+    volume_soma     = 4/3 * np.pi * (r_soma*1e6)**3 # in m³
     volume_neuron   = volume_neurites + volume_soma
     neurite_fraction= volume_neurites / volume_neuron
     soma_fraction   = volume_soma / volume_neuron
-
+    print(soma_fraction)
 
     soma_signal   = []
     neurites_signal = []
