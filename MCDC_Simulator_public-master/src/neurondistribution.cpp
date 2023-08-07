@@ -367,7 +367,7 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
     random_device dev;
     mt19937 rng(dev());
     normal_distribution<float> theta_distr(M_PI/4, M_PI/16);
-    float delta_theta = M_PI/8;//theta_distr(rng) / 2;
+    float delta_theta = theta_distr(rng) / 2;
     float theta = theta_to_target + delta_theta;
     float delta_x, delta_y, delta_z;
     vector<Vector3d> children_dir;
@@ -384,7 +384,23 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
         // phi = phi;
         theta = theta_to_target - delta_theta;
     }
-   
+    
+    uniform_real_distribution<double> rot_distr(0, M_PI);
+
+    double rot = rot_distr(rng);
+    double ux = parent.direction[0];
+    double uy = parent.direction[1];
+    double uz = parent.direction[2];
+    Matrix3d m;
+    m << cos(rot) + ux*ux*(1 - cos(rot)), ux*uy*(1-cos(rot)) - uz*sin(rot), ux*uz*(1-cos(rot)) + uy*sin(rot),
+        uy*ux*(1-cos(rot)) + uz*sin(rot), cos(rot) + uy*uy*(1 - cos(rot)), uy*uz*(1-cos(rot)) - ux*sin(rot),
+        uz*ux*(1-cos(rot)) - uy*sin(rot), uz*uy*(1-cos(rot)) + ux*sin(rot), cos(rot) + uz*uz*(1 - cos(rot)); 
+    
+
+    children_dir[0] = (m * children_dir[0]).normalized();
+    children_dir[1] = (m * children_dir[1]).normalized();
+    // cout << acos(children_dir[0].dot(children_dir[1])) << endl;
+    // cout << 2*delta_theta << endl;
     // cout << subbranch.projections.axon_projections[0][0] << " " << subbranch.projections.axon_projections[0][1];
     // cout << subbranch.projections.axon_projections[1][0] << " " << subbranch.projections.axon_projections[1][1];
     // cout << subbranch.projections.axon_projections[2][0] << " " << subbranch.projections.axon_projections[2][1];
@@ -395,15 +411,6 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
 }
 
 
-
-int NeuronDistribution::generateNbBranching(int const& lower_bound, int const& upper_bound)
-{
-    random_device dev;
-    mt19937 rng(dev());
-    uniform_int_distribution<int> nbBranching(lower_bound, upper_bound);
-
-    return nbBranching(rng);
-}
 
 double NeuronDistribution::generateLengthSegment(double const& lower_bound, double const& upper_bound)
 {
