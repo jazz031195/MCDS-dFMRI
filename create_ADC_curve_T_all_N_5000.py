@@ -119,7 +119,6 @@ def create_df(DWI_folder, T, N):
 
             # Initialize a variable to store the number of particles eliminated due to crossings
             num_particles_crossings = None
-
             # Open the file in read mode
             with open(DWI_folder / filename_simu_info, 'r') as file:
                 # Read the file line by line
@@ -138,7 +137,6 @@ def create_df(DWI_folder, T, N):
                 d = {'nb_crossings': [num_particles_crossings], 'N': [n], 'T': [t]}
                 df_avg_crossings = pd.DataFrame(d)
                 df_crossings = pd.concat([df_crossings, df_avg_crossings])
-                
                 if t in T and n == N:
                     dwi_intra = create_data(DWI_folder / filename)
                     data_x = dwi_intra.loc[(dwi_intra['x'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
@@ -150,7 +148,6 @@ def create_df(DWI_folder, T, N):
                     d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_labels}
                     df_avg_dwi = pd.DataFrame(d)
                     df_dwi = pd.concat([df_dwi, df_avg_dwi])
-
     return df_dwi, df_crossings
 
 
@@ -160,11 +157,11 @@ def create_df(DWI_folder, T, N):
 
 
 # combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/branching")
 
 plot = True
 T = ['1000', '5000', '10000', '15000']
-N = str(5000)
+N = str(10000)
 df_dwi, _ = create_df(DWI_folder, T, N)
 T_labels = T
 N_labels = [str(N)]
@@ -239,7 +236,7 @@ if plot:
         both_signal.append(neurite_fraction * Ain + soma_fraction * math.exp(-mlnS))
 
 
-    mesh_folders = ['soma', 'nb_20_1_subbranch_245_span']
+    mesh_folders = ['soma']
     ax2 = ax.twinx()
     ax2.set_ylim([0, 1.1])
     # Replace the NaN corresponding to b=0 to 1
@@ -252,10 +249,9 @@ if plot:
     ax2.errorbar(b_labels, both_signal, 
                     yerr=[0], label=f"Neurites & soma (analytic)", fmt='-*')
     for mesh in mesh_folders:
-        DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/mesh") / mesh
-
+        DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/mesh/") / mesh
+        N = str(5000)
         df_dwi, _ = create_df(DWI_folder, T, N)
-        
         means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
         stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
         
@@ -285,6 +281,6 @@ ax2.legend(loc=3)
 ax2.set_yticklabels([])
 ax2.set_yticks([])
 
-fig.suptitle('S/S0 average over x, y, z direction, average over 10 rep', y=0.95)
+fig.suptitle('S/S0 average over x, y, z direction, average over 5 rep', y=0.95)
 plt.show()
 

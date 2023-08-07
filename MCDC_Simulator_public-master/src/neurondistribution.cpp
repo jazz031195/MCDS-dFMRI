@@ -143,7 +143,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
     {   
         cout << "dendrite " << i << endl;
         int tries = 0;
-        int nb_branching = 1;//generateNbBranching();
+        int nb_branching = 3;//generateNbBranching();
         // Radius of each dendrite sphere [mm]
         double sphere_radius = 0.5e-3;
         // Don't initiate dendrite too close from the borders
@@ -241,6 +241,49 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
     } 
 }
 
+std::tuple<double, double>  phi_theta_to_target (Eigen::Vector3d parent_dir) 
+{
+    /*
+    Find phi and theta angles in spherical coordinates
+    see : http://douglashalse.com/index.php/2019/09/25/spherical-coordinates/
+    */
+   
+    Vector3d vector_to_target = parent_dir.normalized();
+    double phi_to_target;
+    double theta_to_target;
+    // theta is angle between (1,0) and (x,y)
+    // varies between 0 and 2pi
+    theta_to_target = atan2(vector_to_target[1], vector_to_target[0]);
+    if (theta_to_target < 0)
+    {
+        theta_to_target += 2 * M_PI;
+    }
+    // phi is angle between (0,0,1) and (x,y,z)
+    // varies between 0 and pi
+    if (vector_to_target[2] == 0)
+    {
+        phi_to_target = M_PI / 2;
+    }
+    else if (vector_to_target == Eigen::Vector3d({0, 0, -1}))
+    {
+        phi_to_target = M_PI;
+    }
+    else if (vector_to_target == Eigen::Vector3d({0, 0, 1}))
+    {
+        phi_to_target = 0;
+    }
+    else
+    {
+        // varies between -pi/2 and pi/2
+        phi_to_target = atan((sqrt(vector_to_target[0] * vector_to_target[0] + vector_to_target[1] * vector_to_target[1])) / vector_to_target[2]);
+        if (phi_to_target < 0)
+        {
+            phi_to_target += M_PI;
+        }
+    }
+    return std::make_tuple(phi_to_target, theta_to_target);
+}
+
 NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& dendrite, NeuronDistribution::branching_pt const& parent, 
                                       int const& nb_spheres, double const& sphere_radius, vector<int> const& proximal_end, 
                                       vector<int> const& distal_end, double const& min_distance_from_border, bool& stop_growth,
@@ -318,14 +361,30 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
         dendrite.add_subbranch(subbranch);
     } 
     
-    double bifurcationAngle = generateBifurcationAngle()/2.0;
+    float phi_to_target, theta_to_target;
+    tie(phi_to_target, theta_to_target) = phi_theta_to_target(parent.direction);
+
+    random_device dev;
+    mt19937 rng(dev());
+    normal_distribution<float> theta_distr(M_PI/4, M_PI/16);
+    float delta_theta = M_PI/8;//theta_distr(rng) / 2;
+    float theta = theta_to_target + delta_theta;
+    float delta_x, delta_y, delta_z;
     vector<Vector3d> children_dir;
     for(int c=0; c < 2; c++)
     {
-        Vector3d rotatedDir = rotateDirection(parent.direction, bifurcationAngle);
-        children_dir.push_back(rotatedDir);
-        bifurcationAngle = -bifurcationAngle;
+        delta_x = cos(theta);
+        delta_y = sin(theta);
+        delta_z = parent.direction[2];
+
+        Vector3d new_dir(delta_x, delta_y, delta_z);
+        new_dir = new_dir.normalized();
+        children_dir.push_back(new_dir);
+
+        // phi = phi;
+        theta = theta_to_target - delta_theta;
     }
+   
     // cout << subbranch.projections.axon_projections[0][0] << " " << subbranch.projections.axon_projections[0][1];
     // cout << subbranch.projections.axon_projections[1][0] << " " << subbranch.projections.axon_projections[1][1];
     // cout << subbranch.projections.axon_projections[2][0] << " " << subbranch.projections.axon_projections[2][1];
@@ -334,6 +393,8 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
     return {spheres_to_add[spheres_to_add.size()-1].center, parent.direction, children_dir, branch_id};
     
 }
+
+
 
 int NeuronDistribution::generateNbBranching(int const& lower_bound, int const& upper_bound)
 {

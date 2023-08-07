@@ -146,11 +146,11 @@ def create_df(DWI_folder, T, N):
 
 
 # combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/branching")
 
 plot = False
 T = ['1000', '5000', '10000', '15000']
-N = str(5000)
+N = str(10000)
 df_dwi, _ = create_df(DWI_folder, T, N)
 df_dwi = df_dwi[df_dwi['b [um²/ms]'] > 0]
 b_labels = df_dwi['b [um²/ms]'].unique()

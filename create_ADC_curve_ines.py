@@ -160,7 +160,7 @@ def create_df(DWI_folder):
 
 
 # combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/branching")
 
 plot = True
 df_dwi, df_crossings = create_df(DWI_folder)
@@ -168,6 +168,7 @@ df_dwi, df_crossings = create_df(DWI_folder)
 T_labels = df_dwi['T'].unique()
 N_labels = df_dwi['N'].unique()
 b_labels = df_dwi["b [um²/ms]"].unique()
+print(b_labels)
 means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
 stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
 
@@ -175,8 +176,8 @@ means_crossings = df_crossings.groupby(['N', 'T'])['nb_crossings'].mean()
 # means.index N, T, b
 # print(means.values, means.index.values)
 
-heatmaps_stds = np.zeros((5, 4))
-heatmaps_crossings = np.zeros((5, 4))
+heatmaps_stds = np.zeros((N_labels.shape[0], T_labels.shape[0]))
+heatmaps_crossings = np.zeros((N_labels.shape[0], T_labels.shape[0]))
 N_indices = np.argsort(N_labels.astype(float))
 T_indices = np.argsort(T_labels.astype(float))
 T_labels  = T_labels[T_indices]
@@ -223,12 +224,13 @@ for t_i, t in enumerate(T_labels):
 
         if np.sum(np.isnan(err_tmp)) == 0 and plot:
             b_labels_shifted = [b_lab + n_i*0.05 for b_lab in b_labels]
-            lines = ax[t_i].errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}", fmt='.')
-            # lines[0].set_linestyle(LINE_STYLES[i%NUM_STYLES])
-            ax[t_i].set_xlabel('b values')
-            ax[t_i].set_ylabel('S/S0')
-            ax[t_i].legend(loc=1)
-            ax[t_i].set_ylim([y_lim_min, y_lim_max])
+            if(len(signal_tmp) > 0):
+                lines = ax[t_i].errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}", fmt='.')
+                # lines[0].set_linestyle(LINE_STYLES[i%NUM_STYLES])
+                ax[t_i].set_xlabel('b values')
+                ax[t_i].set_ylabel('S/S0')
+                ax[t_i].legend(loc=1)
+                ax[t_i].set_ylim([y_lim_min, y_lim_max])
 
 # Analytical solutions & Mesh
 if plot:
@@ -244,13 +246,14 @@ if plot:
     bb        = gamma**2 * G**2 * delta**2 * (Delta - delta/3) # rad² * s / m²
 
     nb_neurites     = 20
-    l_neurite       = 245 # m
-    volume_neurites = nb_neurites * np.pi*(r_neurite*1e6)**2*l_neurite # in m³
-    volume_soma     = 4/3 * np.pi * (r_soma*1e6)**3 # in m³
+    l_neurite       = 245e-6 # m
+    volume_neurites = nb_neurites * np.pi*r_neurite**2*l_neurite # in m³
+    volume_soma     = 4/3 * np.pi * r_soma**3 # in m³
     volume_neuron   = volume_neurites + volume_soma
     neurite_fraction= volume_neurites / volume_neuron
     soma_fraction   = volume_soma / volume_neuron
-    print(soma_fraction)
+    print("{:e}".format((volume_neuron*1e9)))
+    print("{:e}".format(1e10 * (volume_neuron*1e9)))
 
     soma_signal   = []
     neurites_signal = []
@@ -297,7 +300,7 @@ if plot:
         if np.sum(np.isnan(err_tmp)) == 0 and plot:
             b_labels_shifted = [b_lab + (n_i + 4)*0.05 for b_lab in b_labels]
             ax2 = ax[i].twinx()
-            ax2.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n} soma (mesh)", fmt='o')
+            ax2.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {N1} soma (mesh)", fmt='o')
             
             # Replace the NaN corresponding to b=0 to 1
             neurites_signal[0] = both_signal[0] = 1
@@ -315,7 +318,7 @@ if plot:
             ax2.set_title(f"T = {T_labels[i]}, step length = {step_length*1e6:.3f} um")
             i = i + 1
 
-fig.suptitle('S/S0 average over x, y, z direction, average over 10 rep', y=0.95)
+fig.suptitle('S/S0 average over x, y, z direction, average over 5 rep', y=0.95)
 plt.show()
 
 if plot:
