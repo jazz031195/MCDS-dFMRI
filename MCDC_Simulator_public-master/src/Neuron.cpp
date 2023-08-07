@@ -666,7 +666,19 @@ bool Neuron::checkCollision_branching(Walker &walker, Dynamic_Sphere* const& sph
     }
     else
     {
-        assert(0);
+        double dist_to_collision;
+        if(t1 >= 0)
+            dist_to_collision = t1;
+        else if (t2 >= 0)
+            dist_to_collision = t2;
+        colision.type = Collision::hit;
+        colision.t = fmin(dist_to_collision, step_lenght);
+        colision.colision_point = walker.pos_v + colision.t * step;
+        Vector3d normal = (colision.colision_point - sphere->center).normalized();
+        Vector3d temp_step = step;
+        elasticBounceAgainsPlane_intra(walker.pos_v, normal, colision.t, temp_step);
+        colision.bounced_direction = temp_step.normalized();
+        return true;
     }
 
     // If they are some intersections to consider
