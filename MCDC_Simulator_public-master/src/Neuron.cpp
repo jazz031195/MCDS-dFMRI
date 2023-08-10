@@ -873,7 +873,7 @@ vector<double> Neuron::get_Volume() const
     double VolumeSoma = 0;
     double VolumeDendrites = 0;
     // Calculate the volume of the soma
-    VolumeSoma += 4 / 3 * M_PI * pow(soma.radius, 3);
+    VolumeSoma += 4.0 / 3.0 * M_PI * pow(soma.radius, 3);
 
     // Calculate the cylindrical volume of each dendrite
     for (uint8_t j = 0; j < dendrites.size(); j++)
