@@ -246,7 +246,7 @@ if plot:
     bb        = gamma**2 * G**2 * delta**2 * (Delta - delta/3) # rad² * s / m²
 
     nb_neurites     = 20
-    l_neurite       = 245e-6 # m
+    l_neurite       = 240e-6 # m
     volume_neurites = nb_neurites * np.pi*r_neurite**2*l_neurite # in m³
     volume_soma     = 4/3 * np.pi * r_soma**3 # in m³
     volume_neuron   = volume_neurites + volume_soma

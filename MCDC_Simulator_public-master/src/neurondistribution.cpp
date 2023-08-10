@@ -143,7 +143,7 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
     {   
         cout << "dendrite " << i << endl;
         int tries = 0;
-        int nb_branching = 3;//generateNbBranching();
+        int nb_branching = 1;//generateNbBranching();
         // Radius of each dendrite sphere [mm]
         double sphere_radius = 0.5e-3;
         // Don't initiate dendrite too close from the borders

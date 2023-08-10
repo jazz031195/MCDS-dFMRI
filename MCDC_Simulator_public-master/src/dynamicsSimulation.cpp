@@ -890,6 +890,7 @@ Vector3d DynamicsSimulation::getAnIntraCellularPosition_soma(bool const& random_
             }
             std::uniform_int_distribution<int> neuron_dist(0, neurons_list->size() - 1);
             int neuron_id = neuron_dist(gen);
+            walker.in_soma_index = neuron_id;
             Vector3d somaCenter = (*neurons_list)[neuron_id].soma.center;
             double probaRadius = double(udist(gen));
             double somaRadius = (*neurons_list)[neuron_id].soma.radius;
@@ -958,12 +959,16 @@ Vector3d DynamicsSimulation::getAnIntraCellularPosition_dendrite(bool const& ran
             }
             std::uniform_int_distribution<int> neuron_dist(0, (*neurons_list).size() - 1);
             int neuron_id = neuron_dist(gen);
+            walker.in_neuron_index = neuron_id;
             std::uniform_int_distribution<int> dendrite_dist(0, (*neurons_list)[neuron_id].dendrites.size() - 1);
             int dendrite_id = dendrite_dist(gen);
+            walker.in_dendrite_index = dendrite_id;
             std::uniform_int_distribution<int> subbranch_dist(0, (*neurons_list)[neuron_id].dendrites[dendrite_id].subbranches.size() - 1);
             int subbranch_id = subbranch_dist(gen);
+            walker.in_subbranch_index = subbranch_id;
             std::uniform_int_distribution<int> sphere_dist(0, (*neurons_list)[neuron_id].dendrites[dendrite_id].subbranches[subbranch_id].spheres.size() - 1);
             int sphere_id = sphere_dist(gen);
+            walker.in_sph_index.push_back(sphere_id);
             Vector3d center = (*neurons_list)[neuron_id].dendrites[dendrite_id].subbranches[subbranch_id].spheres[sphere_id].center;
             Vector3d pos_temp = center;
             bool isintra = isInIntra(pos_temp, walker.in_cyl_index, walker.in_ply_index, walker.in_sph_index, walker.in_ax_index, walker.in_neuron_index, walker.in_dendrite_index, walker.in_subbranch_index, -barrier_tickness);

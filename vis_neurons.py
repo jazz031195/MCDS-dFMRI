@@ -5,14 +5,14 @@ import os
 import plotly.graph_objs as go
 wd = os.getcwd()
 plot_3d = False
-plot_traj = True
+plot_traj = False
 projection = True
 z_slice = [0.02, 0.04, 0.06, 0.08]
-# position = np.array([0.044359383652472821, 0.073838872992544963, 0.053730584153105686])
+# position = np.array([0.49941, 0.462557, 0.453693])
 # position2 = np.array([0.0450215294826024, 0.073325599802571709, 0.053024812566757319])
 max_lim = 1
-neuron_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_10_neurons_list.txt'
-traj_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_10.traj.txt'
+neuron_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_neurons_list.txt'
+traj_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/.traj.txt'
 with open(neuron_file) as f:
     lines = f.readlines()
     if plot_3d:
@@ -81,25 +81,33 @@ with open(neuron_file) as f:
                 # Plot only one sphere out of four for the dendrites (otherwise, too expensive)
                 a = random.randint(1, 50)
                 # draw sphere
-                u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
-                x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
-                y = np.sin(u)*np.sin(v)*float(coords[3]) + float(coords[1])
-                z = np.cos(v)*float(coords[3]) + float(coords[2])
-                r = float(coords[3])
                 # if np.linalg.norm(coords[:3] - position) <= r:
                 #     print("d", coords)
                 if a==1:
                     
                     if plot_3d:
+                        u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+                        x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
+                        y = np.sin(u)*np.sin(v)*float(coords[3]) + float(coords[1])
+                        z = np.cos(v)*float(coords[3]) + float(coords[2])
+                        r = float(coords[3])
                         ax.plot_wireframe(x, y, z, color="r")
                         # # Creating the plot
                         # line_marker = dict(color='blue', width=2)
                         # for l, m, n in zip(x, y, z):
                         #     lines_plot.append(go.Scatter3d(x=l, y=m, z=n, mode='lines', line=line_marker))
                     elif projection:
-                        axs[0].plot(x, y, color="r")
-                        axs[1].plot(x, z, color="r")
-                        axs[2].plot(z, y, color="r")
+                        # if((float(coords[0]) < position[0] + 5e-3) and (float(coords[0]) > position[0] - 5e-3) and \
+                        #    (float(coords[1]) < position[1] + 5e-3) and (float(coords[1]) > position[1] - 5e-3) and \
+                        #    (float(coords[2]) < position[2] + 5e-3) and (float(coords[2]) > position[2] - 5e-3)):
+                        x = float(coords[0])
+                        y = float(coords[1])
+                        z = float(coords[2])
+                        r = float(coords[3])
+                        
+                        axs[0].add_patch(plt.Circle((x, y), r, fill=False, color='r'))
+                        axs[1].add_patch(plt.Circle((x, z), r, fill=False, color='r'))
+                        axs[2].add_patch(plt.Circle((z, y), r, fill=False, color='r'))
                     else:
                         if ((coords[2] - coords[3]) < slice_) and ((coords[2] + coords[3]) > slice_):
                             idx = ((x - coords[0])**2 + (y - coords[1])**2 < coords[3]**2 - (slice_ - coords[2])**2)
