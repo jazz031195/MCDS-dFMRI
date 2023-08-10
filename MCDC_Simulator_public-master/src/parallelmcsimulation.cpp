@@ -1023,7 +1023,7 @@ void ParallelMCSimulation::addObstaclesFromFiles()
                     cout << "adding dendrite : "  << id << endl;
                 }
                 // If neuron, create it from soma and axons
-                else if( part.find("Neuron") != std::string::npos && dendrites_.size() > 0)
+                else if( part.find("Neuron") != std::string::npos)
                 {
                     Neuron neuron(dendrites_, soma);
                     neurons_list.push_back(neuron);
