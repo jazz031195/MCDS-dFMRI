@@ -461,7 +461,6 @@ vector<int> Neuron::isNearDendrite(Vector3d const &position, double const &dista
 bool Neuron::checkCollision(Walker &walker, Vector3d const &step_dir, double const &step_lenght, Collision &colision)
 {
     bool isColliding = false;
-    cout << walker.in_soma_index << walker.in_dendrite_index << endl;
     // If in the soma, check Collision with soma
     if(walker.in_soma_index == 0)
     {
@@ -484,11 +483,14 @@ bool Neuron::checkCollision(Walker &walker, Vector3d const &step_dir, double con
     }
 
     
- 
+    int in_soma_id_store = walker.in_soma_index;
+    int in_dend_id_store = walker.in_dendrite_index;
     if (!isPosInsideNeuron(colision.colision_point, barrier_tickness, false, walker.in_soma_index, walker.in_dendrite_index, walker.in_subbranch_index, walker.in_sph_index))
     {
         walker.location = Walker::extra;
         cout << "extra" << endl;
+        walker.in_soma_index = in_soma_id_store;
+        walker.in_dendrite_index = in_dend_id_store;
     }
 
 

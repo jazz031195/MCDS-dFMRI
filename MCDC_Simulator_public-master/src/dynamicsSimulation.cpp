@@ -920,6 +920,7 @@ Vector3d DynamicsSimulation::getAnIntraCellularPosition_soma(bool const& random_
                 assert(0);
             }
             Vector3d somaCenter = (*neurons_list)[walker.in_neuron_index].soma.center;
+            walker.in_soma_index = walker.in_neuron_index;
             double probaRadius = double(udist(gen));
             double somaRadius = (*neurons_list)[walker.in_neuron_index].soma.radius;
             double theta = 2 * M_PI * udist(gen);
@@ -1524,7 +1525,10 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth)
     /*                                                     */
     /*********************   WARNING  **********************/
     unsigned w = 0;
-
+    int32_t count_soma_begin       = 0;
+    int32_t count_dendrites_begin  = 0;
+    int32_t count_soma_end         = 0;
+    int32_t count_dendrites_end    = 0;
     for (w = 0; w < params.num_walkers; w++)
     {
 
@@ -1543,6 +1547,11 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth)
         // Initial position;
         walker.setRealPosLog(walker.pos_r, 0);
         walker.setVoxPosLog(walker.pos_v, 0);
+
+        if(walker.in_soma_index == 0)
+            ++ count_soma_begin;
+        else
+            ++ count_dendrites_begin;
 
         for (unsigned t = 1; t <= params.num_steps; t++) // T+1 steps in total (avoid errors)
         {
@@ -1601,6 +1610,11 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth)
         // If no backtracking, delete the initial position
         walker.ini_pos = Vector3d(-1, -1, -1);
 
+        if(walker.in_soma_index == 0)
+            ++ count_soma_end;
+        else
+            ++ count_dendrites_end;
+
         // updates the phase shift.
         if (dataSynth)
             dataSynth->update_phase_shift(this->time_step, walker.pos_r_log);
@@ -1626,6 +1640,13 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth)
         }
 
     } // for w
+
+    ofstream out(params.output_base_name+"_count_walker.txt", std::ofstream::app);
+    out << "Number walker in soma, begin : " << count_soma_begin << endl;
+    out << "Number walker in soma, end : " << count_soma_end << endl;
+    out << "Number walker in dendrites, begin : " << count_dendrites_begin << endl;
+    out << "Number walker in dendrites, end : " << count_dendrites_end << endl;
+    out.close();
 
     /*********************   WARNING  **********************/
     /*                                                     */
