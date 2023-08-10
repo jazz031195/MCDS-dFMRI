@@ -208,147 +208,147 @@ for t_i, t in enumerate(T_labels):
                 ax.legend(loc=1)
                 ax.set_ylim([y_lim_min, y_lim_max])
 
-# # combine_intra_extra_adc("neurons")
-# DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/dendrites_only")
+# combine_intra_extra_adc("neurons")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/dendrites_only")
 
-# plot = True
-# df_dwi, df_crossings = create_df(DWI_folder)
+plot = True
+df_dwi, df_crossings = create_df(DWI_folder)
 
-# T_labels = df_dwi['T'].unique()
-# N_labels = df_dwi['N'].unique()
-# b_labels = df_dwi["b [um²/ms]"].unique()
-# means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
-# stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
+T_labels = df_dwi['T'].unique()
+N_labels = df_dwi['N'].unique()
+b_labels = df_dwi["b [um²/ms]"].unique()
+means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
+stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
 
-# N_indices = np.argsort(N_labels.astype(float))
-# T_indices = np.argsort(T_labels.astype(float))
-# T_labels  = T_labels[T_indices]
-# N_labels  = N_labels[N_indices]
+N_indices = np.argsort(N_labels.astype(float))
+T_indices = np.argsort(T_labels.astype(float))
+T_labels  = T_labels[T_indices]
+N_labels  = N_labels[N_indices]
 
-# for t_i, t in enumerate(T_labels):
-#     for n_i, n in enumerate(N_labels):
-#         signal_tmp = []
-#         err_tmp    = []
-#         nb_crossings_tmp = []
-#         for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
-#             N1 = group[0]
-#             T1 = group[1]
-#             b1 = group[2]
-#             S1 = data[0]
+for t_i, t in enumerate(T_labels):
+    for n_i, n in enumerate(N_labels):
+        signal_tmp = []
+        err_tmp    = []
+        nb_crossings_tmp = []
+        for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
+            N1 = group[0]
+            T1 = group[1]
+            b1 = group[2]
+            S1 = data[0]
 
-#             if log:
-#                 signal_tmp.append(np.log(S1))
-#             else:
-#                 signal_tmp.append(S1)
+            if log:
+                signal_tmp.append(np.log(S1))
+            else:
+                signal_tmp.append(S1)
         
-#         for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
-#             err = data2[0]
-#             N2 = group2[0]
-#             T2 = group2[1]
-#             if t==T2 and n==N2:
-#                 err_tmp.append(err)
+        for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
+            err = data2[0]
+            N2 = group2[0]
+            T2 = group2[1]
+            if t==T2 and n==N2:
+                err_tmp.append(err)
 
-#         if np.sum(np.isnan(err_tmp)) == 0 and plot:
-#             b_labels_shifted = [b_lab + 2*0.05 for b_lab in b_labels]
-#             if(len(signal_tmp) > 0):
-#                 lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, dendrites only", fmt='.')
-#                 ax.legend(loc=1)
-#                 ax.set_ylim([y_lim_min, y_lim_max])
+        if np.sum(np.isnan(err_tmp)) == 0 and plot:
+            b_labels_shifted = [b_lab + 2*0.05 for b_lab in b_labels]
+            if(len(signal_tmp) > 0):
+                lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, dendrites only", fmt='.')
+                ax.legend(loc=1)
+                ax.set_ylim([y_lim_min, y_lim_max])
 
-# # combine_intra_extra_adc("neurons")
-# DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/soma_dendrites")
+# combine_intra_extra_adc("neurons")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/soma_dendrites")
 
-# plot = True
-# df_dwi, df_crossings = create_df(DWI_folder)
+plot = True
+df_dwi, df_crossings = create_df(DWI_folder)
 
-# T_labels = df_dwi['T'].unique()
-# N_labels = df_dwi['N'].unique()
-# b_labels = df_dwi["b [um²/ms]"].unique()
-# means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
-# stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
-
-
-# N_indices = np.argsort(N_labels.astype(float))
-# T_indices = np.argsort(T_labels.astype(float))
-# T_labels  = T_labels[T_indices]
-# N_labels  = N_labels[N_indices]
+T_labels = df_dwi['T'].unique()
+N_labels = df_dwi['N'].unique()
+b_labels = df_dwi["b [um²/ms]"].unique()
+means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
+stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
 
 
-# for t_i, t in enumerate(T_labels):
-#     for n_i, n in enumerate(N_labels):
-#         signal_tmp = []
-#         err_tmp    = []
-#         nb_crossings_tmp = []
-#         for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
-#             N1 = group[0]
-#             T1 = group[1]
-#             b1 = group[2]
-#             S1 = data[0]
+N_indices = np.argsort(N_labels.astype(float))
+T_indices = np.argsort(T_labels.astype(float))
+T_labels  = T_labels[T_indices]
+N_labels  = N_labels[N_indices]
 
-#             if log:
-#                 signal_tmp.append(np.log(S1))
-#             else:
-#                 signal_tmp.append(S1)
 
-#         for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
-#             err = data2[0]
-#             N2 = group2[0]
-#             T2 = group2[1]
-#             if t==T2 and n==N2:
-#                 err_tmp.append(err)
+for t_i, t in enumerate(T_labels):
+    for n_i, n in enumerate(N_labels):
+        signal_tmp = []
+        err_tmp    = []
+        nb_crossings_tmp = []
+        for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
+            N1 = group[0]
+            T1 = group[1]
+            b1 = group[2]
+            S1 = data[0]
 
-#         if np.sum(np.isnan(err_tmp)) == 0 and plot:
-#             b_labels_shifted = [b_lab + 4*0.05 for b_lab in b_labels]
-#             if(len(signal_tmp) > 0):
-#                 lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, soma & dendrites", fmt='.')
-#                 ax.legend(loc=1)
-#                 ax.set_ylim([y_lim_min, y_lim_max])
+            if log:
+                signal_tmp.append(np.log(S1))
+            else:
+                signal_tmp.append(S1)
 
-# DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/soma_dendrites_ex")
+        for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
+            err = data2[0]
+            N2 = group2[0]
+            T2 = group2[1]
+            if t==T2 and n==N2:
+                err_tmp.append(err)
 
-# plot = True
-# df_dwi, df_crossings = create_df(DWI_folder)
+        if np.sum(np.isnan(err_tmp)) == 0 and plot:
+            b_labels_shifted = [b_lab + 4*0.05 for b_lab in b_labels]
+            if(len(signal_tmp) > 0):
+                lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, soma & dendrites", fmt='.')
+                ax.legend(loc=1)
+                ax.set_ylim([y_lim_min, y_lim_max])
 
-# T_labels = df_dwi['T'].unique()
-# N_labels = df_dwi['N'].unique()
-# b_labels = df_dwi["b [um²/ms]"].unique()
-# means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
-# stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/soma_dendrites_ex")
 
-# N_indices = np.argsort(N_labels.astype(float))
-# T_indices = np.argsort(T_labels.astype(float))
-# T_labels  = T_labels[T_indices]
-# N_labels  = N_labels[N_indices]
+plot = True
+df_dwi, df_crossings = create_df(DWI_folder)
 
-# for t_i, t in enumerate(T_labels):
-#     for n_i, n in enumerate(N_labels):
-#         signal_tmp = []
-#         err_tmp    = []
-#         nb_crossings_tmp = []
-#         for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
-#             N1 = group[0]
-#             T1 = group[1]
-#             b1 = group[2]
-#             S1 = data[0]
+T_labels = df_dwi['T'].unique()
+N_labels = df_dwi['N'].unique()
+b_labels = df_dwi["b [um²/ms]"].unique()
+means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
+stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
 
-#             if log:
-#                 signal_tmp.append(np.log(S1))
-#             else:
-#                 signal_tmp.append(S1)
+N_indices = np.argsort(N_labels.astype(float))
+T_indices = np.argsort(T_labels.astype(float))
+T_labels  = T_labels[T_indices]
+N_labels  = N_labels[N_indices]
 
-#         for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
-#             err = data2[0]
-#             N2 = group2[0]
-#             T2 = group2[1]
-#             if t==T2 and n==N2:
-#                 err_tmp.append(err)
+for t_i, t in enumerate(T_labels):
+    for n_i, n in enumerate(N_labels):
+        signal_tmp = []
+        err_tmp    = []
+        nb_crossings_tmp = []
+        for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
+            N1 = group[0]
+            T1 = group[1]
+            b1 = group[2]
+            S1 = data[0]
 
-#         if np.sum(np.isnan(err_tmp)) == 0 and plot:
-#             b_labels_shifted = [b_lab + 5*0.05 for b_lab in b_labels]
-#             if(len(signal_tmp) > 0):
-#                 lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, soma & dendrites ex", fmt='2', color='g')
-#                 ax.legend(loc=1)
-#                 ax.set_ylim([y_lim_min, y_lim_max])
+            if log:
+                signal_tmp.append(np.log(S1))
+            else:
+                signal_tmp.append(S1)
+
+        for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
+            err = data2[0]
+            N2 = group2[0]
+            T2 = group2[1]
+            if t==T2 and n==N2:
+                err_tmp.append(err)
+
+        if np.sum(np.isnan(err_tmp)) == 0 and plot:
+            b_labels_shifted = [b_lab + 5*0.05 for b_lab in b_labels]
+            if(len(signal_tmp) > 0):
+                lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, soma & dendrites ex", fmt='2', color='g')
+                ax.legend(loc=1)
+                ax.set_ylim([y_lim_min, y_lim_max])
 
 # Analytical solutions & Mesh
 if plot:
@@ -365,7 +365,7 @@ if plot:
     print((D0/(gamma*G))**(1/3))
 
     nb_neurites     = 20
-    l_neurite       = 245e-6 # m
+    l_neurite       = 240e-6 # m
     volume_neurites = nb_neurites * np.pi*r_neurite**2*l_neurite # in m³
     volume_soma     = 4/3 * np.pi * r_soma**3 # in m³
     volume_neuron   = volume_neurites + volume_soma
