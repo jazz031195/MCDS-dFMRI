@@ -17,7 +17,7 @@ import math
 
 cur_path = os.getcwd()
 giro = 2.6751525e8 #Gyromagnetic radio given in rad/(ms*T)
-scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_sample_scheme_new.scheme"
+scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_3_dir_5_b.scheme"
 icvf = 0.38
 def get_dwi_array(dwi_path):
     # create array with dwi values
@@ -157,7 +157,7 @@ def create_df(DWI_folder, T, N):
 
 
 # combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/branching")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/3_dir/no_branching")
 
 plot = True
 T = ['1000', '5000', '10000', '15000']
@@ -215,7 +215,7 @@ if plot:
     bb        = gamma**2 * G**2 * delta**2 * (Delta - delta/3) # rad² * s / m²
 
     nb_neurites     = 20
-    l_neurite       = 245 # m
+    l_neurite       = 240 # m
     volume_neurites = nb_neurites * np.pi*(r_neurite*1e6)**2*l_neurite # in m³
     volume_soma     = 4/3 * np.pi * (r_soma*1e6)**3 # in m³
     volume_neuron   = volume_neurites + volume_soma
@@ -236,7 +236,7 @@ if plot:
         both_signal.append(neurite_fraction * Ain + soma_fraction * math.exp(-mlnS))
 
 
-    mesh_folders = ['soma']
+    # mesh_folders = ['soma']
     ax2 = ax.twinx()
     ax2.set_ylim([0, 1.1])
     # Replace the NaN corresponding to b=0 to 1
@@ -248,32 +248,32 @@ if plot:
                     yerr=[0], label=f"Neurites (analytic)", fmt='-*')
     ax2.errorbar(b_labels, both_signal, 
                     yerr=[0], label=f"Neurites & soma (analytic)", fmt='-*')
-    for mesh in mesh_folders:
-        DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/mesh/") / mesh
-        N = str(5000)
-        df_dwi, _ = create_df(DWI_folder, T, N)
-        means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
-        stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
+    # for mesh in mesh_folders:
+        # DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/mesh/") / mesh
+        # N = str(5000)
+        # df_dwi, _ = create_df(DWI_folder, T, N)
+        # means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
+        # stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
         
-        signal_tmp = []
-        err_tmp    = []
-        for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
-            N1 = group[0]
-            T1 = group[1]
-            b1 = group[2]
-            S1 = data.values[0]
-            if T1 == '5000':
-                signal_tmp.append(S1)
+        # signal_tmp = []
+        # err_tmp    = []
+        # for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
+        #     N1 = group[0]
+        #     T1 = group[1]
+        #     b1 = group[2]
+        #     S1 = data.values[0]
+        #     if T1 == '5000':
+        #         signal_tmp.append(S1)
         
-        for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
-            err = data2.values[0]
-            T2 = group2[1]
-            if T2 == '5000':
-                err_tmp.append(err)
+        # for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
+        #     err = data2.values[0]
+        #     T2 = group2[1]
+        #     if T2 == '5000':
+        #         err_tmp.append(err)
 
-        if np.sum(np.isnan(err_tmp)) == 0 and plot:
-            if signal_tmp:
-                ax2.errorbar(b_labels, signal_tmp, yerr=err_tmp, label=f"N {n} {mesh} (mesh)", fmt='-o')
+        # if np.sum(np.isnan(err_tmp)) == 0 and plot:
+        #     if signal_tmp:
+        #         ax2.errorbar(b_labels, signal_tmp, yerr=err_tmp, label=f"N {n} {mesh} (mesh)", fmt='-o')
                 
                 
 

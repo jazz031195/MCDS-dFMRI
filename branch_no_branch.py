@@ -14,11 +14,13 @@ warnings.filterwarnings("ignore")
 sys.path.insert(1, '/home/localadmin/Documents/analytical_formula/')
 from my_murdaycotts import my_murdaycotts
 import math
+import statannot
+
 
 cur_path = os.getcwd()
 giro = 2.6751525e8 #Gyromagnetic radio given in rad/(ms*T)
-scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_21_dir.scheme"
-# scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_sample_scheme_new.scheme"
+# scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_21_dir.scheme"
+scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_3_dir_5_b.scheme"
 icvf = 0.38
 def get_dwi_array(dwi_path):
     # create array with dwi values
@@ -80,7 +82,7 @@ def create_data(dwi_path):
     return data_dwi
 
 
-def create_df(DWI_folder):
+def create_df(DWI_folder, T, N):
 
     df_dwi = pd.DataFrame()
     df_crossings = pd.DataFrame()
@@ -101,7 +103,6 @@ def create_df(DWI_folder):
 
             # Initialize a variable to store the number of particles eliminated due to crossings
             num_particles_crossings = None
-
             # Open the file in read mode
             with open(DWI_folder / filename_simu_info, 'r') as file:
                 # Read the file line by line
@@ -120,21 +121,17 @@ def create_df(DWI_folder):
                 d = {'nb_crossings': [num_particles_crossings], 'N': [n], 'T': [t]}
                 df_avg_crossings = pd.DataFrame(d)
                 df_crossings = pd.concat([df_crossings, df_avg_crossings])
-
-            dwi_intra = create_data(DWI_folder / filename)
-            nb_G   = len(dwi_intra["G"].unique())
-            nb_dir = int(len(dwi_intra["x"].values) / nb_G)
-            for i in range(nb_G):
-                sb_so = []
-                for j in range(nb_dir):
-                    sb_so.append(dwi_intra.iloc[nb_G*j + i, :]["Sb/So"])
-                    b_lab = dwi_intra.iloc[nb_G*j + i, :]["b [um²/ms]"]
-                mean = np.mean(sb_so)
-                b_labels = dwi_intra["b [um²/ms]"].unique()
-                d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_lab}
-                df_avg_dwi = pd.DataFrame(d, index=[i])
-                df_dwi = pd.concat([df_dwi, df_avg_dwi])
-
+                if t in T and n == N:
+                    dwi_intra = create_data(DWI_folder / filename)
+                    data_x = dwi_intra.loc[(dwi_intra['x'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+                    data_y = dwi_intra.loc[(dwi_intra['y'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+                    data_z = dwi_intra.loc[(dwi_intra['z'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
+                    datas= [data_x, data_y, data_z]
+                    mean = list(map(lambda x,y,z : np.mean([x,y,z]), list(datas[0]["Sb/So"]),list(datas[1]["Sb/So"]),list(datas[2]["Sb/So"])))
+                    b_labels = data_x["b [um²/ms]"].unique()
+                    d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_labels}
+                    df_avg_dwi = pd.DataFrame(d)
+                    df_dwi = pd.concat([df_dwi, df_avg_dwi])
     return df_dwi, df_crossings
 
 
@@ -142,12 +139,15 @@ def create_df(DWI_folder):
 
 
 
-branching = 'no_branching'
-# combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_benchmark/" + branching)
 
+# combine_intra_extra_adc("neurons")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/3_dir/no_branching")
+# volumeSoma = 4/3*np.pi*10**3
+# volumeDendrites = 20*80*7*np.pi*0.5**2
 plot = True
-df_dwi, df_crossings = create_df(DWI_folder)
+T = ['1000', '5000', '10000', '15000']
+N = str(15000)
+df_dwi, _ = create_df(DWI_folder, T, N)
 
 T_labels = df_dwi['T'].unique()
 N_labels = df_dwi['N'].unique()
@@ -156,18 +156,11 @@ print(b_labels)
 means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
 stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
 
-means_crossings = df_crossings.groupby(['N', 'T'])['nb_crossings'].mean()
-# means.index N, T, b
-# print(means.values, means.index.values)
-
-heatmaps_stds = np.zeros((N_labels.shape[0], T_labels.shape[0]))
-heatmaps_crossings = np.zeros((N_labels.shape[0], T_labels.shape[0]))
 N_indices = np.argsort(N_labels.astype(float))
 T_indices = np.argsort(T_labels.astype(float))
 T_labels  = T_labels[T_indices]
 N_labels  = N_labels[N_indices]
 
-stds_crossings  = df_crossings.groupby(['N', 'T'])['nb_crossings'].std()
 y_lim_min = 0.
 y_lim_max = 1.1
 
@@ -196,20 +189,59 @@ for t_i, t in enumerate(T_labels):
             if t==T2 and n==N2:
                 err_tmp.append(err)
 
-        for group3, data3 in means_crossings.groupby(['N', 'T']):
-            nb_crossings = data3.values[0]
-            N3 = group3[0]
-            T3 = group3[1]
-            if t==T3 and n==N3:
-                nb_crossings_tmp.append(nb_crossings/int(N3)*100)
+        if np.sum(np.isnan(err_tmp)) == 0 and plot:
+            b_labels_shifted = [b_lab + n_i*0.05 for b_lab in b_labels]
+            if(len(signal_tmp) > 0):
+                lines = ax[t_i].errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n} no branch", fmt='.')
+                # lines[0].set_linestyle(LINE_STYLES[i%NUM_STYLES])
+                ax[t_i].set_xlabel('b values [um²/ms]')
+                ax[t_i].set_ylabel('S/S0')
+                ax[t_i].legend(loc=1)
+                ax[t_i].set_ylim([y_lim_min, y_lim_max])
+
+
+# combine_intra_extra_adc("neurons")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/3_dir/branching")
+
+df_dwi, _ = create_df(DWI_folder, T, N)
+
+T_labels = df_dwi['T'].unique()
+N_labels = df_dwi['N'].unique()
+b_labels = df_dwi["b [um²/ms]"].unique()
+print(b_labels)
+means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
+stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
+
+N_indices = np.argsort(N_labels.astype(float))
+T_indices = np.argsort(T_labels.astype(float))
+T_labels  = T_labels[T_indices]
+N_labels  = N_labels[N_indices]
+
+for t_i, t in enumerate(T_labels):
+    for n_i, n in enumerate(N_labels):
+        signal_tmp = []
+        err_tmp    = []
+        nb_crossings_tmp = []
+        for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
+            N1 = group[0]
+            T1 = group[1]
+            b1 = group[2]
+            S1 = data[0]
+
+            if t==T1 and n==N1:
+                signal_tmp.append(S1)
         
-        heatmaps_stds[n_i, t_i] = np.mean(err_tmp)
-        heatmaps_crossings[n_i, t_i] = np.mean(nb_crossings_tmp)
+        for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
+            err = data2[0]
+            N2 = group2[0]
+            T2 = group2[1]
+            if t==T2 and n==N2:
+                err_tmp.append(err)
 
         if np.sum(np.isnan(err_tmp)) == 0 and plot:
             b_labels_shifted = [b_lab + n_i*0.05 for b_lab in b_labels]
             if(len(signal_tmp) > 0):
-                lines = ax[t_i].errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}", fmt='.')
+                lines = ax[t_i].errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n} branch", fmt='.')
                 # lines[0].set_linestyle(LINE_STYLES[i%NUM_STYLES])
                 ax[t_i].set_xlabel('b values')
                 ax[t_i].set_ylabel('S/S0')
@@ -219,7 +251,7 @@ for t_i, t in enumerate(T_labels):
 # Analytical solutions & Mesh
 if plot:
     # Analytical solutions
-    G         = np.array([0, 0.015, 0.034, 0.048, 0.059, 0.107]) # in T/m
+    G         = np.array([0, 0.015, 0.034, 0.048, 0.059]) # in T/m
     Delta     = np.array([0.05] * G.size)  # in s
     delta     = np.array([0.0165] * G.size)# in s
     TE        = np.array([0.067] * G.size) # in s
@@ -236,6 +268,7 @@ if plot:
     volume_neuron   = volume_neurites + volume_soma
     neurite_fraction= volume_neurites / volume_neuron
     soma_fraction   = volume_soma / volume_neuron
+    print('soma fraction ', soma_fraction)
     print("{:e}".format((volume_neuron*1e9)))
     print("{:e}".format(1e10 * (volume_neuron*1e9)))
 
@@ -265,11 +298,11 @@ if plot:
             # Replace the NaN corresponding to b=0 to 1
             neurites_signal[0] = both_signal[0] = 1
             ax2.errorbar([b_lab + (len(N_labels) )*0.05 for b_lab in b_labels], soma_signal, 
-                            yerr=[0], label=f"Soma (analytic)", fmt='*')
+                            yerr=[0], label=f"Soma (analytic)", fmt='-')
             ax2.errorbar([b_lab + (len(N_labels) + 1)*0.05 for b_lab in b_labels], neurites_signal, 
-                            yerr=[0], label=f"Neurites (analytic)", fmt='*')
+                            yerr=[0], label=f"Neurites (analytic)", fmt='-')
             ax2.errorbar([b_lab + (len(N_labels) + 2)*0.05 for b_lab in b_labels], both_signal, 
-                            yerr=[0], label=f"Neurites & soma (analytic)", fmt='*')
+                            yerr=[0], label=f"Neurites & soma (analytic)", fmt='-')
             ax2.legend(loc=3)
             ax2.set_yticklabels([])
             ax2.set_yticks([])
@@ -277,34 +310,57 @@ if plot:
             step_length = np.sqrt(6 * D0 * TE[0] / int(t))
             ax2.set_title(f"T = {T_labels[i]}, step length = {step_length*1e6:.3f} um")
             i = i + 1
-
-fig.suptitle('S/S0 average over x, y, z direction, average over 5 rep, ' + branching, y=0.95)
-plt.show()
-
 if plot:
-    fig, ax = plt.subplots(1,1)
-    img = ax.imshow(heatmaps_stds[:, :])
-    ax.set_xticks(list(range(4)))
-    ax.set_xticklabels(T_labels)
-    ax.set_xlabel("T")
-    ax.set_yticks(list(range(len(N_labels[:]))))
-    ax.set_yticklabels(N_labels[:])
-    ax.set_ylabel("N")
-    fig.colorbar(img)
-    plt.title("STD between runs " + branching)
+    fig.suptitle('S/S0 average over x, y, z direction, average over 5 rep', y=0.95)
     plt.show()
 
 
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/3_dir/no_branching")
+T = ['5000']
+df_dwi, _ = create_df(DWI_folder, T, N)
+df_dwi = df_dwi[df_dwi['b [um²/ms]'] > 0]
+b_labels = df_dwi['b [um²/ms]'].unique()
+df_dwi['branch'] = 'no branching'
 
-    fig, ax = plt.subplots(1,1)
-    img = ax.imshow(heatmaps_crossings)
-    ax.set_xticks(list(range(4)))
-    ax.set_xticklabels(T_labels)
-    ax.set_xlabel("T")
-    ax.set_yticks(list(range(len(N_labels))))
-    ax.set_yticklabels(N_labels)
-    ax.set_ylabel("N")
-    fig.colorbar(img)
-    plt.title("\% of crossings " + branching)
-    plt.show()
-        
+
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/3_dir/branching")
+df_dwi2, _ = create_df(DWI_folder, T, N)
+df_dwi2 = df_dwi2[df_dwi2['b [um²/ms]'] > 0]
+df_dwi2['branch'] = 'branching'
+
+df_dwi_all = pd.concat([df_dwi, df_dwi2])
+print(df_dwi_all)
+
+fig, ax = plt.subplots(1, 1)
+sns.violinplot(data=df_dwi_all, y='Sb/So', x='b [um²/ms]', hue='branch', hue_order=['no branching', 'branching'], ax=ax)
+sns.move_legend(ax, "upper right")
+ax.set_xticklabels([f'{float(blab):.3f}' for blab in b_labels])
+
+couples = []
+couples_end = []
+for b in df_dwi_all['b [um²/ms]'].unique():
+    for i, branch in enumerate(df_dwi_all['branch'].unique()):
+        couples.append((b, branch))            
+for i in range(len(couples)):
+    if i % 2 == 0:
+        couples_end.append((couples[i-1], couples[i]))
+
+for b in df_dwi_all['b [um²/ms]'].unique():
+    for i in range(len(couples)):  
+        if (i + 1 < len(couples)) and (couples[i][0] == b) and (couples[i+1][0] == b): 
+            couples_end.append((couples[i], couples[i+1]))
+        if (i + 2 < len(couples)) and (couples[i][0] == b) and (couples[i+2][0] == b): 
+            couples_end.append((couples[i], couples[i+2]))
+statannot.add_stat_annotation(
+    ax,
+    data=df_dwi_all,
+    y='Sb/So', x='b [um²/ms]',
+    hue='branch',
+    hue_order=['no branching', 'branching'],
+    box_pairs=couples_end,
+    test="Mann-Whitney",
+    text_format="star",
+    loc="inside"
+    )
+ax.set_title(f'N = {N}, T = {T[0]}')
+plt.show()

@@ -148,7 +148,7 @@ DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulato
 # DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/3_dir/soma_only")
 
 plot = True
-log  = True
+log  = False
 df_dwi, df_crossings = create_df(DWI_folder)
 
 T_labels = df_dwi['T'].unique()
