@@ -139,15 +139,18 @@ def create_df(DWI_folder, T, N):
                 df_crossings = pd.concat([df_crossings, df_avg_crossings])
                 if t in T and n == N:
                     dwi_intra = create_data(DWI_folder / filename)
-                    data_x = dwi_intra.loc[(dwi_intra['x'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
-                    data_y = dwi_intra.loc[(dwi_intra['y'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
-                    data_z = dwi_intra.loc[(dwi_intra['z'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
-                    datas= [data_x, data_y, data_z]
-                    mean = list(map(lambda x,y,z : np.mean([x,y,z]), list(datas[0]["Sb/So"]),list(datas[1]["Sb/So"]),list(datas[2]["Sb/So"])))
-                    b_labels = data_x["b [um²/ms]"].unique()
-                    d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_labels}
-                    df_avg_dwi = pd.DataFrame(d)
-                    df_dwi = pd.concat([df_dwi, df_avg_dwi])
+            nb_G   = len(dwi_intra["G"].unique())
+            nb_dir = int(len(dwi_intra["x"].values) / nb_G)
+            for i in range(nb_G):
+                sb_so = []
+                for j in range(nb_dir):
+                    sb_so.append(dwi_intra.iloc[nb_G*j + i, :]["Sb/So"])
+                    b_lab = dwi_intra.iloc[nb_G*j + i, :]["b [um²/ms]"]
+                mean = np.mean(sb_so)
+                b_labels = dwi_intra["b [um²/ms]"].unique()
+                d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_lab}
+                df_avg_dwi = pd.DataFrame(d, index=[i])
+                df_dwi = pd.concat([df_dwi, df_avg_dwi])
     return df_dwi, df_crossings
 
 

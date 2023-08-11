@@ -19,8 +19,8 @@ import statannot
 
 cur_path = os.getcwd()
 giro = 2.6751525e8 #Gyromagnetic radio given in rad/(ms*T)
-# scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_21_dir.scheme"
-scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_3_dir_5_b.scheme"
+scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_21_dir.scheme"
+# scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_3_dir_5_b.scheme"
 icvf = 0.38
 def get_dwi_array(dwi_path):
     # create array with dwi values
@@ -141,7 +141,7 @@ def create_df(DWI_folder, T, N):
 
 
 # combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/3_dir/no_branching")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_benchmark/no_branching")
 # volumeSoma = 4/3*np.pi*10**3
 # volumeDendrites = 20*80*7*np.pi*0.5**2
 plot = True
@@ -201,7 +201,7 @@ for t_i, t in enumerate(T_labels):
 
 
 # combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/3_dir/branching")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_benchmark/branching")
 
 df_dwi, _ = create_df(DWI_folder, T, N)
 

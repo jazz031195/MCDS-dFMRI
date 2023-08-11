@@ -100,7 +100,6 @@ def create_df(DWI_folder, T, N):
 
             # Initialize a variable to store the number of particles eliminated due to crossings
             num_particles_crossings = None
-
             # Open the file in read mode
             with open(DWI_folder / filename_simu_info, 'r') as file:
                 # Read the file line by line
@@ -119,8 +118,7 @@ def create_df(DWI_folder, T, N):
                 d = {'nb_crossings': [num_particles_crossings], 'N': [n], 'T': [t]}
                 df_avg_crossings = pd.DataFrame(d)
                 df_crossings = pd.concat([df_crossings, df_avg_crossings])
-                
-                if t in T and n == N:
+                if t in T and n in N:
                     dwi_intra = create_data(DWI_folder / filename)
                     nb_G   = len(dwi_intra["G"].unique())
                     nb_dir = int(len(dwi_intra["x"].values) / nb_G)
@@ -142,31 +140,32 @@ def create_df(DWI_folder, T, N):
 
 
 
-
+branch = 'no_branching'
 # combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_benchmark/no_branching")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_benchmark/" + branch)
 
 plot = False
-T = ['1000', '5000', '10000', '15000']
-N = str(10000)
+T = ['15000'] #['1000', '5000', '10000', '15000']
+N = ['10000', '15000', '30000', '55000']
 df_dwi, _ = create_df(DWI_folder, T, N)
+print(df_dwi)
 df_dwi = df_dwi[df_dwi['b [um²/ms]'] > 0]
 b_labels = df_dwi['b [um²/ms]'].unique()
 
 fig, ax = plt.subplots(1, 1)
-sns.violinplot(data=df_dwi, y='Sb/So', x='b [um²/ms]', hue='T', hue_order=['1000', '5000', '10000', '15000'], ax=ax)
+sns.violinplot(data=df_dwi, y='Sb/So', x='b [um²/ms]', hue='N', hue_order=N, ax=ax)
 sns.move_legend(ax, "upper right")
 ax.set_xticklabels([f'{float(blab):.3f}' for blab in b_labels])
 
 couples = []
 for b in df_dwi['b [um²/ms]'].unique():
-    for T in df_dwi['T'].unique():
-        couples.append((b, T))            
+    for N in df_dwi['N'].unique():
+        couples.append((b, N))            
 
 couples_end = []
 for b in df_dwi['b [um²/ms]'].unique():
     for i in range(len(couples)):  
-        for j in range(1, len(T)):
+        for j in range(1, len(N)):
             if (i + j < len(couples)) and (couples[i][0] == b) and (couples[i+j][0] == b): 
                 couples_end.append((couples[i], couples[i+j]))
 
@@ -174,14 +173,13 @@ statannot.add_stat_annotation(
     ax,
     data=df_dwi,
     y='Sb/So', x='b [um²/ms]',
-    hue='T',
-    hue_order=['1000', '5000', '10000', '15000'],
+    hue='N',
+    hue_order=['10000', '15000', '30000', '55000'],
     box_pairs=couples_end,
     test="Mann-Whitney",
     text_format="star",
     loc="inside"
     )
-    
-ax.set_title(f"N = {N}")
+ax.set_title(f"T = {T[0]}")
 plt.show()
 

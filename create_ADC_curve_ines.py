@@ -142,7 +142,7 @@ def create_df(DWI_folder):
 
 
 
-branching = 'no_branching'
+branching = 'branching'
 # combine_intra_extra_adc("neurons")
 DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_benchmark/" + branching)
 
@@ -207,11 +207,11 @@ for t_i, t in enumerate(T_labels):
         heatmaps_crossings[n_i, t_i] = np.mean(nb_crossings_tmp)
 
         if np.sum(np.isnan(err_tmp)) == 0 and plot:
-            b_labels_shifted = [b_lab + n_i*0.05 for b_lab in b_labels]
+            b_labels_shifted = [b_lab + n_i*0.05*2 for b_lab in b_labels]
             if(len(signal_tmp) > 0):
                 lines = ax[t_i].errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}", fmt='.')
                 # lines[0].set_linestyle(LINE_STYLES[i%NUM_STYLES])
-                ax[t_i].set_xlabel('b values')
+                ax[t_i].set_xlabel('b values [um²/ms]')
                 ax[t_i].set_ylabel('S/S0')
                 ax[t_i].legend(loc=1)
                 ax[t_i].set_ylim([y_lim_min, y_lim_max])
@@ -261,15 +261,13 @@ if plot:
     for t_i, t in enumerate(T_labels):
         if plot:
             ax2 = ax[i].twinx()
-            
             # Replace the NaN corresponding to b=0 to 1
-            neurites_signal[0] = both_signal[0] = 1
-            ax2.errorbar([b_lab + (len(N_labels) )*0.05 for b_lab in b_labels], soma_signal, 
-                            yerr=[0], label=f"Soma (analytic)", fmt='*')
-            ax2.errorbar([b_lab + (len(N_labels) + 1)*0.05 for b_lab in b_labels], neurites_signal, 
-                            yerr=[0], label=f"Neurites (analytic)", fmt='*')
-            ax2.errorbar([b_lab + (len(N_labels) + 2)*0.05 for b_lab in b_labels], both_signal, 
-                            yerr=[0], label=f"Neurites & soma (analytic)", fmt='*')
+            ax2.errorbar([b_lab + (len(N_labels) + 6)*0.05 for b_lab in b_labels], soma_signal, 
+                            yerr=[0], label=f"Soma (analytic)", fmt='*', color='orange')
+            ax2.errorbar([b_lab + (len(N_labels) + 7)*0.05 for b_lab in b_labels], neurites_signal, 
+                            yerr=[0], label=f"Neurites (analytic)", fmt='*', color='g')
+            ax2.errorbar([b_lab + (len(N_labels) + 8)*0.05 for b_lab in b_labels], both_signal, 
+                            yerr=[0], label=f"Neurites & soma (analytic)", fmt='*', color='r')
             ax2.legend(loc=3)
             ax2.set_yticklabels([])
             ax2.set_yticks([])
@@ -278,7 +276,7 @@ if plot:
             ax2.set_title(f"T = {T_labels[i]}, step length = {step_length*1e6:.3f} um")
             i = i + 1
 
-fig.suptitle('S/S0 average over x, y, z direction, average over 5 rep, ' + branching, y=0.95)
+fig.suptitle('S/S0 average over 21 directions, average over 5 rep, ' + branching, y=0.95)
 plt.show()
 
 if plot:
