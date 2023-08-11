@@ -148,6 +148,7 @@ DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulato
 
 plot = True
 df_dwi, df_crossings = create_df(DWI_folder)
+df_dwi.to_csv('/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/Analysis/data/21_dir_benchmark_' + branching)
 
 T_labels = df_dwi['T'].unique()
 N_labels = df_dwi['N'].unique()
