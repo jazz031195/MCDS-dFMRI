@@ -123,15 +123,18 @@ def create_df(DWI_folder, T, N):
                 df_crossings = pd.concat([df_crossings, df_avg_crossings])
                 if t in T and n == N:
                     dwi_intra = create_data(DWI_folder / filename)
-                    data_x = dwi_intra.loc[(dwi_intra['x'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
-                    data_y = dwi_intra.loc[(dwi_intra['y'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
-                    data_z = dwi_intra.loc[(dwi_intra['z'] > 0.0) ].sort_values(by = ["b [um²/ms]"],ascending=True)
-                    datas= [data_x, data_y, data_z]
-                    mean = list(map(lambda x,y,z : np.mean([x,y,z]), list(datas[0]["Sb/So"]),list(datas[1]["Sb/So"]),list(datas[2]["Sb/So"])))
-                    b_labels = data_x["b [um²/ms]"].unique()
-                    d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_labels}
-                    df_avg_dwi = pd.DataFrame(d)
-                    df_dwi = pd.concat([df_dwi, df_avg_dwi])
+                    nb_G   = len(dwi_intra["G"].unique())
+                    nb_dir = int(len(dwi_intra["x"].values) / nb_G)
+                    for i in range(nb_G):
+                        sb_so = []
+                        for j in range(nb_dir):
+                            sb_so.append(dwi_intra.iloc[nb_G*j + i, :]["Sb/So"])
+                            b_lab = dwi_intra.iloc[nb_G*j + i, :]["b [um²/ms]"]
+                        mean = np.mean(sb_so)
+                        b_labels = dwi_intra["b [um²/ms]"].unique()
+                        d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_lab}
+                        df_avg_dwi = pd.DataFrame(d, index=[i])
+                        df_dwi = pd.concat([df_dwi, df_avg_dwi])
     return df_dwi, df_crossings
 
 
@@ -146,7 +149,7 @@ DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulato
 # volumeDendrites = 20*80*7*np.pi*0.5**2
 plot = True
 T = ['1000', '5000', '10000', '15000']
-N = str(15000)
+N = str(10000)
 df_dwi, _ = create_df(DWI_folder, T, N)
 
 T_labels = df_dwi['T'].unique()
@@ -251,7 +254,7 @@ for t_i, t in enumerate(T_labels):
 # Analytical solutions & Mesh
 if plot:
     # Analytical solutions
-    G         = np.array([0, 0.015, 0.034, 0.048, 0.059]) # in T/m
+    G         = np.array([0, 0.015, 0.034, 0.048, 0.059, 0.107]) # in T/m
     Delta     = np.array([0.05] * G.size)  # in s
     delta     = np.array([0.0165] * G.size)# in s
     TE        = np.array([0.067] * G.size) # in s
@@ -315,21 +318,20 @@ if plot:
     plt.show()
 
 
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/3_dir/no_branching")
-T = ['5000']
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_benchmark/no_branching")
+T = ['10000']
 df_dwi, _ = create_df(DWI_folder, T, N)
 df_dwi = df_dwi[df_dwi['b [um²/ms]'] > 0]
 b_labels = df_dwi['b [um²/ms]'].unique()
 df_dwi['branch'] = 'no branching'
 
 
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/3_dir/branching")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_benchmark/branching")
 df_dwi2, _ = create_df(DWI_folder, T, N)
 df_dwi2 = df_dwi2[df_dwi2['b [um²/ms]'] > 0]
 df_dwi2['branch'] = 'branching'
 
 df_dwi_all = pd.concat([df_dwi, df_dwi2])
-print(df_dwi_all)
 
 fig, ax = plt.subplots(1, 1)
 sns.violinplot(data=df_dwi_all, y='Sb/So', x='b [um²/ms]', hue='branch', hue_order=['no branching', 'branching'], ax=ax)
@@ -341,16 +343,10 @@ couples_end = []
 for b in df_dwi_all['b [um²/ms]'].unique():
     for i, branch in enumerate(df_dwi_all['branch'].unique()):
         couples.append((b, branch))            
-for i in range(len(couples)):
+for i in range(1, len(couples) + 1):
     if i % 2 == 0:
-        couples_end.append((couples[i-1], couples[i]))
+        couples_end.append((couples[i-2], couples[i-1]))
 
-for b in df_dwi_all['b [um²/ms]'].unique():
-    for i in range(len(couples)):  
-        if (i + 1 < len(couples)) and (couples[i][0] == b) and (couples[i+1][0] == b): 
-            couples_end.append((couples[i], couples[i+1]))
-        if (i + 2 < len(couples)) and (couples[i][0] == b) and (couples[i+2][0] == b): 
-            couples_end.append((couples[i], couples[i+2]))
 statannot.add_stat_annotation(
     ax,
     data=df_dwi_all,
@@ -364,3 +360,10 @@ statannot.add_stat_annotation(
     )
 ax.set_title(f'N = {N}, T = {T[0]}')
 plt.show()
+
+# # Check that similar than in R (it is !)
+# b_val = df_dwi_all['b [um²/ms]'].values
+# x = df_dwi_all.loc[(df_dwi_all['b [um²/ms]']==b_val[4]) & (df_dwi_all['branch']=='no branching')]['Sb/So'].values
+# y = df_dwi_all.loc[(df_dwi_all['b [um²/ms]']==b_val[4]) & (df_dwi_all['branch']=='branching')]['Sb/So'].values
+# print(stats.mannwhitneyu(x, y))
+

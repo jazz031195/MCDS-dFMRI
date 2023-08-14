@@ -49,24 +49,32 @@ stat.test <- data_all[data_all$N=="10000" & data_all$T=="10000" & data_all$b > 0
   group_by(b) %>%
   wilcox_test(Sb ~ branch, p.adjust.method = "fdr") 
 stat.test 
-stat.test <- stat.test %>% add_xy_position(x = "branch", fun = "mean_se")
+stat.test <- stat.test %>% add_xy_position(x = "branch", fun = "min")
+stat.test$y.position <- c(0.874, 0.588, 0.51, 0.413, 0.15)
 ggboxplot(
-  data_all[data_all$N=="10000" & data_all$T=="10000" & data_all$b > 0,], x = "branch", y = "Sb", fill = "#00AFBB",
-  add = c("mean_se", "dotplot"), facet = c("b"), scales="free_y"
-) +
-  stat_pvalue_manual(stat.test, hide.ns = TRUE, tip.length = 0, step.increase = 0) +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15)))+  theme(strip.background = element_blank())
+  data_all[data_all$N=="10000" & data_all$T=="10000" & data_all$b > 0,], x = "branch", y = "Sb",
+  add = c("mean_se", "dotplot"), facet.by = c("b"), scales="free_y", ncol=5, 
+  ylab="Sb/S0", xlab="B values [um²/ms]", strip.position="bottom", color="branch") +
+  stat_pvalue_manual(stat.test, hide.ns = TRUE) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  theme(strip.text.x = element_text(size=12,
+                                    face="bold"),
+        strip.background = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) 
 
 
 
 
 
-stat.test <- data_all[data_all$N=="10000" & data_all$T=="10000" & data_all$b > 0,] %>%
+  stat.test <- data_all[data_all$N=="10000" & data_all$T=="10000" & data_all$b > 0,] %>%
   group_by(b) %>%
   wilcox_test(Sb ~ branch) 
 stat.test 
 stat.test <- stat.test %>% add_xy_position(x = "branch", fun = "mean_se")
-ggplot(data_all[data_all$N=="10000" & data_all$T=="10000" & data_all$b > 0,], add="mean_se") + 
-  geom_boxplot(aes(x="branch", y = "Sb", fill='branch')) + facet_wrap(~b) +
-  stat_pvalue_manual(stat.test, hide.ns = TRUE, tip.length = 0, step.increase = 0) +
-  theme(strip.background = element_blank())
+ggplot(data_all[data_all$N=="10000" & data_all$T=="10000" & data_all$b > 0,], 
+       aes_string(x="as.factor(branch)", y = "Sb", fill="branch")) + 
+geom_boxplot() + facet_wrap(~b, scales="free", ncol=5) + stat_pvalue_manual(stat.test, hide.ns = TRUE) 
+
++
+theme(strip.background = element_blank())
