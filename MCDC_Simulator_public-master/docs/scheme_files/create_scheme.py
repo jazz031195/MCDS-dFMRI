@@ -23,16 +23,18 @@ with open(file_path, "r") as file:
         dir.append([ux, uy, uz])
         print(np.linalg.norm([ux, uy, uz]))
 
+
 dir = np.array(dir)
 # Now you have the extracted gradient components in the lists ux_values, uy_values, and uz_values
 print("dir:", dir)
 
 # Specify the path to the file
-file_path = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/scheme_files/PGSE_21_dir.scheme"
+file_path = "/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/docs/scheme_files/PGSE_21_dir_12_b.scheme"
 
-G = [0.0, 0.015, 0.034, 0.048, 0.059, 0.107]
+giro = 2.6751525e8
 Delta = 0.05 #s
 delta = 0.0165 #s
+G = [np.sqrt(b*1000/(giro**2*delta**2*(Delta - delta/3)))*1000 for b in [0, 0.2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]
 TE    = 0.067 #s
 # Open the file in write mode
 # If the file doesn't exist, it will be created. If it exists, its contents will be overwritten.

@@ -142,9 +142,9 @@ def create_df(DWI_folder):
 
 
 
-
+branching = "branching"
 # combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/soma_only")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/" + branching + "/soma_only")
 # DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/3_dir/soma_only")
 
 plot = True
@@ -209,7 +209,7 @@ for t_i, t in enumerate(T_labels):
                 ax.set_ylim([y_lim_min, y_lim_max])
 
 # combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/dendrites_only")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/" + branching + "/dendrites_only")
 
 df_dwi, df_crossings = create_df(DWI_folder)
 
@@ -255,7 +255,7 @@ for t_i, t in enumerate(T_labels):
                 ax.set_ylim([y_lim_min, y_lim_max])
 
 # combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/soma_dendrites")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/" + branching + "/soma_dendrites")
 
 df_dwi, df_crossings = create_df(DWI_folder)
 
@@ -302,7 +302,7 @@ for t_i, t in enumerate(T_labels):
                 ax.legend(loc=1)
                 ax.set_ylim([y_lim_min, y_lim_max])
 
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/soma_dendrites_ex")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/" + branching + "/soma_dendrites_ex")
 
 df_dwi, df_crossings = create_df(DWI_folder)
 
@@ -430,7 +430,7 @@ if plot:
             ax2.set_title(f"T = {T_labels[i]}, step length = {step_length*1e6:.3f} um")
             i = i + 1
 if log:
-    fig.suptitle('ln(S/S0) average over 21 directions, average over 5 rep', y=0.95)
+    fig.suptitle('ln(S/S0) average over 21 directions, average over 5 rep, ' + branching, y=0.95)
 else:
-    fig.suptitle('S/S0 average over 21 directions, average over 5 rep', y=0.95)
+    fig.suptitle('S/S0 average over 21 directions, average over 5 rep, ' + branching, y=0.95)
 plt.show()

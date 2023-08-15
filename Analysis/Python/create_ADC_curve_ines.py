@@ -142,7 +142,7 @@ def create_df(DWI_folder):
 
 
 
-branching = 'branching'
+branching = 'no_branching'
 # combine_intra_extra_adc("neurons")
 DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_benchmark/" + branching)
 
@@ -263,11 +263,11 @@ if plot:
         if plot:
             ax2 = ax[i].twinx()
             # Replace the NaN corresponding to b=0 to 1
-            ax2.errorbar([b_lab + (len(N_labels) + 6)*0.05 for b_lab in b_labels], soma_signal, 
+            ax2.errorbar([b_lab + (len(N_labels) + 10)*0.05 for b_lab in b_labels], soma_signal, 
                             yerr=[0], label=f"Soma (analytic)", fmt='*', color='orange')
-            ax2.errorbar([b_lab + (len(N_labels) + 7)*0.05 for b_lab in b_labels], neurites_signal, 
+            ax2.errorbar([b_lab + (len(N_labels) + 11)*0.05 for b_lab in b_labels], neurites_signal, 
                             yerr=[0], label=f"Neurites (analytic)", fmt='*', color='g')
-            ax2.errorbar([b_lab + (len(N_labels) + 8)*0.05 for b_lab in b_labels], both_signal, 
+            ax2.errorbar([b_lab + (len(N_labels) + 12)*0.05 for b_lab in b_labels], both_signal, 
                             yerr=[0], label=f"Neurites & soma (analytic)", fmt='*', color='r')
             ax2.legend(loc=3)
             ax2.set_yticklabels([])
