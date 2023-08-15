@@ -1525,10 +1525,10 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth)
     /*                                                     */
     /*********************   WARNING  **********************/
     unsigned w = 0;
-    int32_t count_soma_begin       = 0;
-    int32_t count_dendrites_begin  = 0;
-    int32_t count_soma_end         = 0;
-    int32_t count_dendrites_end    = 0;
+    // int32_t count_soma_begin       = 0;
+    // int32_t count_dendrites_begin  = 0;
+    // int32_t count_soma_end         = 0;
+    // int32_t count_dendrites_end    = 0;
     for (w = 0; w < params.num_walkers; w++)
     {
 
@@ -1548,10 +1548,10 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth)
         walker.setRealPosLog(walker.pos_r, 0);
         walker.setVoxPosLog(walker.pos_v, 0);
 
-        if(walker.in_soma_index == 0)
-            ++ count_soma_begin;
-        else
-            ++ count_dendrites_begin;
+        // if(walker.in_soma_index == 0)
+        //     ++ count_soma_begin;
+        // else
+        //     ++ count_dendrites_begin;
 
         for (unsigned t = 1; t <= params.num_steps; t++) // T+1 steps in total (avoid errors)
         {
@@ -1610,10 +1610,10 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth)
         // If no backtracking, delete the initial position
         walker.ini_pos = Vector3d(-1, -1, -1);
 
-        if(walker.in_soma_index == 0)
-            ++ count_soma_end;
-        else
-            ++ count_dendrites_end;
+        // if(walker.in_soma_index == 0)
+        //     ++ count_soma_end;
+        // else
+        //     ++ count_dendrites_end;
 
         // updates the phase shift.
         if (dataSynth)
@@ -1641,12 +1641,12 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth)
 
     } // for w
 
-    ofstream out(params.output_base_name+"_count_walker.txt", std::ofstream::app);
-    out << "Number walker in soma, begin : " << count_soma_begin << endl;
-    out << "Number walker in soma, end : " << count_soma_end << endl;
-    out << "Number walker in dendrites, begin : " << count_dendrites_begin << endl;
-    out << "Number walker in dendrites, end : " << count_dendrites_end << endl;
-    out.close();
+    // ofstream out(params.output_base_name+"_count_walker.txt", std::ofstream::app);
+    // out << "Number walker in soma, begin : " << count_soma_begin << endl;
+    // out << "Number walker in soma, end : " << count_soma_end << endl;
+    // out << "Number walker in dendrites, begin : " << count_dendrites_begin << endl;
+    // out << "Number walker in dendrites, end : " << count_dendrites_end << endl;
+    // out.close();
 
     /*********************   WARNING  **********************/
     /*                                                     */
