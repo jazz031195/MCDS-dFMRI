@@ -17,7 +17,7 @@ import math
 
 cur_path = os.getcwd()
 giro = 2.6751525e8 #Gyromagnetic radio given in rad/(ms*T)
-scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_21_dir.scheme"
+scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_21_dir_12_b.scheme"
 # scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_sample_scheme_new.scheme"
 icvf = 0.38
 def get_dwi_array(dwi_path):
@@ -144,17 +144,17 @@ def create_df(DWI_folder):
 
 branching = "branching"
 # combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/" + branching + "/soma_only")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_12_b/" + branching + "/soma_only")
 # DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/3_dir/soma_only")
 
 plot = True
-log  = False
+log  = True
 df_dwi, df_crossings = create_df(DWI_folder)
 
 T_labels = df_dwi['T'].unique()
 N_labels = df_dwi['N'].unique()
 b_labels = df_dwi["b [um²/ms]"].unique()
-print(b_labels)
+
 means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
 stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
 
@@ -188,7 +188,6 @@ for t_i, t in enumerate(T_labels):
                 else:
                     signal_tmp.append(S1)
 
-        
         for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
             err = data2[0]
             N2 = group2[0]
@@ -196,10 +195,13 @@ for t_i, t in enumerate(T_labels):
             if t==T2 and n==N2:
                 err_tmp.append(err)
 
-        if np.sum(np.isnan(err_tmp)) == 0 and plot:
+        if plot:
             b_labels_shifted = [b_lab for b_lab in b_labels]
             if(len(signal_tmp) > 0):
-                lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, soma only", fmt='.')
+                if np.sum(np.isnan(err_tmp)) == 0:
+                    lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, soma only", fmt='.')
+                else:
+                    lines = ax.errorbar(b_labels_shifted, signal_tmp, label=f"N {n}, soma only", fmt='.')
                 ax.set_xlabel('b [um²/ms]')
                 if log:
                     ax.set_ylabel('ln(S/S0)')
@@ -209,7 +211,7 @@ for t_i, t in enumerate(T_labels):
                 ax.set_ylim([y_lim_min, y_lim_max])
 
 # combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/" + branching + "/dendrites_only")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_12_b/" + branching + "/dendrites_only")
 
 df_dwi, df_crossings = create_df(DWI_folder)
 
@@ -247,15 +249,18 @@ for t_i, t in enumerate(T_labels):
             if t==T2 and n==N2:
                 err_tmp.append(err)
 
-        if np.sum(np.isnan(err_tmp)) == 0 and plot:
+        if plot:
             b_labels_shifted = [b_lab + 2*0.05 for b_lab in b_labels]
             if(len(signal_tmp) > 0):
-                lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, dendrites only", fmt='.')
+                if np.sum(np.isnan(err_tmp)) == 0:
+                    lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, dendrites only", fmt='.')
+                else:
+                    lines = ax.errorbar(b_labels_shifted, signal_tmp, label=f"N {n}, dendrites only", fmt='.')
                 ax.legend(loc=1)
                 ax.set_ylim([y_lim_min, y_lim_max])
 
 # combine_intra_extra_adc("neurons")
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/" + branching + "/soma_dendrites")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_12_b/" + branching + "/soma_dendrites")
 
 df_dwi, df_crossings = create_df(DWI_folder)
 
@@ -295,14 +300,17 @@ for t_i, t in enumerate(T_labels):
             if t==T2 and n==N2:
                 err_tmp.append(err)
 
-        if np.sum(np.isnan(err_tmp)) == 0 and plot:
+        if plot:
             b_labels_shifted = [b_lab + 4*0.05 for b_lab in b_labels]
             if(len(signal_tmp) > 0):
-                lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, soma & dendrites", fmt='.')
+                if np.sum(np.isnan(err_tmp)) == 0:
+                    lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, soma & dendrites", fmt='.')
+                else:
+                    lines = ax.errorbar(b_labels_shifted, signal_tmp, label=f"N {n}, soma & dendrites", fmt='.')
                 ax.legend(loc=1)
                 ax.set_ylim([y_lim_min, y_lim_max])
 
-DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir/" + branching + "/soma_dendrites_ex")
+DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_12_b/" + branching + "/soma_dendrites_ex")
 
 df_dwi, df_crossings = create_df(DWI_folder)
 
@@ -340,17 +348,20 @@ for t_i, t in enumerate(T_labels):
             if t==T2 and n==N2:
                 err_tmp.append(err)
 
-        if np.sum(np.isnan(err_tmp)) == 0 and plot:
+        if plot:
             b_labels_shifted = [b_lab + 5*0.05 for b_lab in b_labels]
             if(len(signal_tmp) > 0):
-                lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, soma & dendrites ex", fmt='2', color='g')
+                if np.sum(np.isnan(err_tmp)) == 0:
+                    lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, soma & dendrites ex", fmt='2', color='g')
+                else:
+                    lines = ax.errorbar(b_labels_shifted, signal_tmp, label=f"N {n}, soma & dendrites ex", fmt='2', color='g')
                 ax.legend(loc=1)
                 ax.set_ylim([y_lim_min, y_lim_max])
 
 # Analytical solutions & Mesh
 if plot:
     # Analytical solutions
-    G         = np.array([0, 0.015, 0.034, 0.048, 0.059, 0.107]) # in T/m
+    G         = np.array([0, 0.015, 0.034, 0.048, 0.059, 0.068, 0.076, 0.083, 0.090, 0.096, 0.102, 0.107]) # in T/m
     Delta     = np.array([0.05] * G.size)  # in s
     delta     = np.array([0.0165] * G.size)# in s
     TE        = np.array([0.067] * G.size) # in s
@@ -359,18 +370,23 @@ if plot:
     D0        = 2.5e-9 #m²/s
     gamma     = 2.6751525e8 #rad/(s*T)
     bb        = gamma**2 * G**2 * delta**2 * (Delta - delta/3) # rad² * s / m²
-    print((D0/(gamma*G))**(1/3))
-    print("b val ", bb)
+    # print((D0/(gamma*G))**(1/3))
+    # print("b val ", bb)
 
     nb_neurites     = 20
-    l_neurite       = 240e-6 # m
-    volume_neurites = nb_neurites * np.pi*r_neurite**2*l_neurite # in m³
+    if branching == 'branching':
+        nb_branching = 3
+        l_neurite       = 80e-6 #m
+        volume_neurites = nb_neurites * (2**nb_branching + 1) * np.pi*r_neurite**2*l_neurite # in m³
+    else:
+        l_neurite       = 240e-6 # m
+        volume_neurites = nb_neurites * np.pi*r_neurite**2*l_neurite # in m³
     volume_soma     = 4/3 * np.pi * r_soma**3 # in m³
     volume_neuron   = volume_neurites + volume_soma
     neurite_fraction= volume_neurites / volume_neuron
     soma_fraction   = volume_soma / volume_neuron
-    print("{:e}".format((volume_neuron*1e9)))
-    print("{:e}".format(1e10 * (volume_neuron*1e9)))
+    # print("{:e}".format((volume_neuron*1e9)))
+    # print("{:e}".format(1e10 * (volume_neuron*1e9)))
 
     soma_signal   = []
     soma_signal_neuman   = []
@@ -409,7 +425,7 @@ if plot:
     i = 0
     for t_i, t in enumerate(T_labels):
 
-        if np.sum(np.isnan(err_tmp)) == 0 and plot:
+        if plot:
             ax2 = ax.twinx()
             # Replace the NaN corresponding to b=0 to 1
             ax2.errorbar([b_lab + 0.05 for b_lab in b_labels], soma_signal, 
@@ -430,7 +446,7 @@ if plot:
             ax2.set_title(f"T = {T_labels[i]}, step length = {step_length*1e6:.3f} um")
             i = i + 1
 if log:
-    fig.suptitle('ln(S/S0) average over 21 directions, average over 5 rep, ' + branching, y=0.95)
+    fig.suptitle('ln(S/S0) average over 21 directions, ' + branching, y=0.95)
 else:
-    fig.suptitle('S/S0 average over 21 directions, average over 5 rep, ' + branching, y=0.95)
+    fig.suptitle('S/S0 average over 21 directions, ' + branching, y=0.95)
 plt.show()
