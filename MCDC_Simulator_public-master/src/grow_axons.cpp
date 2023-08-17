@@ -40,7 +40,7 @@ void Growth::shrink_sphere_rad(double& rad, double axon_rad, double& shrink_perc
 
 void Growth::find_shrinking_dichotomy(double& rad, double axon_rad, double min_shrink, double max_shrink, double& half_shrink){
 
-    half_shrink = (max_shrink-min_shrink)/2+min_shrink;
+    half_shrink = (max_shrink-min_shrink) / 2 + min_shrink;
     rad = axon_rad *(1-half_shrink);
     if (rad < 0.05*1e-3) {
         rad = 0.05*1e-3;
