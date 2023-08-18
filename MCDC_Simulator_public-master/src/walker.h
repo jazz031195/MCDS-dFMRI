@@ -68,6 +68,10 @@ public:
     
     int in_subbranch_index;                                          /*!< Auxiliar index to save in which subbranch of the dendrite of the Neuron the walker is    */
     
+    static int cross_soma_dendrites;                                          /*!< Auxiliar index to save in which subbranch of the dendrite of the Neuron the walker is    */
+    
+    static int cross_dendrites_soma;                                          /*!< Auxiliar index to save in which subbranch of the dendrite of the Neuron the walker is    */
+    
     //ObstacleCollisionSphere cylinders_collision_sphere;             /*!< Collision sphere for collition against cylidners                       */
 
     ObstacleCollisionSphere dyn_cylinders_collision_sphere;         /*!< Collision sphere for collition against dynamic cylidners               */
