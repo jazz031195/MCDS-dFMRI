@@ -7,6 +7,9 @@
 #include <random>       /*random_device for MAC */
 #include "cylinder.h"
 
+int Walker::cross_dendrites_soma  = 0;
+int Walker::cross_soma_dendrites  = 0;
+
 Walker::Walker()
 {
     pos_r       = pos_v.setZero(3,1);

@@ -126,12 +126,15 @@ def create_df(DWI_folder):
             nb_dir = int(len(dwi_intra["x"].values) / nb_G)
             for i in range(nb_G):
                 sb_so = []
+                adc = []
                 for j in range(nb_dir):
                     sb_so.append(dwi_intra.iloc[nb_G*j + i, :]["Sb/So"])
+                    adc.append(dwi_intra.iloc[nb_G*j + i, :]["adc [um²/ms]"])
                     b_lab = dwi_intra.iloc[nb_G*j + i, :]["b [um²/ms]"]
                 mean = np.mean(sb_so)
+                mean_adc = np.mean(adc)
                 b_labels = dwi_intra["b [um²/ms]"].unique()
-                d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_lab}
+                d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'adc': mean_adc, 'b [um²/ms]': b_lab}
                 df_avg_dwi = pd.DataFrame(d, index=[i])
                 df_dwi = pd.concat([df_dwi, df_avg_dwi])
 
@@ -142,12 +145,13 @@ def create_df(DWI_folder):
 
 
 
-branching = 'no_branching'
+branching = 'branching'
 # combine_intra_extra_adc("neurons")
 DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/21_dir_benchmark/" + branching)
 
 plot = True
 df_dwi, df_crossings = create_df(DWI_folder)
+print(df_dwi)
 df_dwi.to_csv('/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/Analysis/data/21_dir_benchmark_' + branching)
 
 T_labels = df_dwi['T'].unique()
