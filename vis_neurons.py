@@ -4,20 +4,24 @@ import numpy as np
 import os
 import plotly.graph_objs as go
 wd = os.getcwd()
-plot_3d = False
-plot_traj = True
-projection = True
+plot_3d = True
+plot_traj = False
+projection = False
 z_slice = [0.02, 0.04, 0.06, 0.08]
 # position = np.array([0.044359383652472821, 0.073838872992544963, 0.053730584153105686])
 # position2 = np.array([0.0450215294826024, 0.073325599802571709, 0.053024812566757319])
-max_lim = 1
-neuron_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_10_neurons_list.txt'
+max_lim = 0.75
+min_lim = 0.25
+neuron = "n1"
+neuron_file = wd + f'/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra//_neurons_list.txt'
 traj_file = wd + '/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/_rep_10.traj.txt'
+min_ = np.ones(3)
+max_ = np.zeros(3)
 with open(neuron_file) as f:
     lines = f.readlines()
     if plot_3d:
-        plt.figure()
-        ax = plt.axes(projection='3d')
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
         ax.set_xlabel('X [mm]')
         ax.set_ylabel('Y [mm]')
         ax.set_zlabel('Z [mm]')
@@ -76,10 +80,22 @@ with open(neuron_file) as f:
                         z = np.squeeze(z.reshape(1, -1))
             elif len(coords) > 2 and len(coords) < 6:
                 coords = [float(coord) for coord in coords]
+                if coords[0] < min_[0]:
+                    min_[0] = coords[0]
+                if coords[1] < min_[1]:
+                    min_[1] = coords[1]
+                if coords[2] < min_[2]:
+                    min_[2] = coords[2]
+                if coords[0] > max_[0]:
+                    max_[0] = coords[0]
+                if coords[1] > max_[1]:
+                    max_[1] = coords[1]
+                if coords[2] > max_[2]:
+                    max_[2] = coords[2]
                 # if max_lim < coords[0]:
                 #     max_lim = coords[0]
                 # Plot only one sphere out of four for the dendrites (otherwise, too expensive)
-                a = random.randint(1, 50)
+                # a = random.randint(1, 4)
                 # draw sphere
                 u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
                 x = np.cos(u)*np.sin(v)*float(coords[3]) + float(coords[0])
@@ -88,7 +104,7 @@ with open(neuron_file) as f:
                 r = float(coords[3])
                 # if np.linalg.norm(coords[:3] - position) <= r:
                 #     print("d", coords)
-                if a==1:
+                if i % 8 == 0:
                     
                     if plot_3d:
                         ax.plot_wireframe(x, y, z, color="r")
@@ -125,6 +141,7 @@ with open(neuron_file) as f:
                 if plot_3d:
                     ax.plot(xmin, ymin, zmin, color="g")
                     ax.plot(xmax, ymax, zmax, color="g")
+                    # fig.savefig("/home/localadmin/Images/ESMRMB_23/" + neuron, format="pdf")
                         # # Creating the plot
                         # line_marker = dict(color='blue', width=2)
                         # for l, m, n in zip(x, y, z):
@@ -136,7 +153,7 @@ with open(neuron_file) as f:
                     axs[1].plot(xmax, zmax, color="g")
                     axs[2].plot(zmin, ymin, color="g")
                     axs[2].plot(zmax, ymax, color="g")
-
+    print(min_ - max_)
     if not plot_3d:
         distance_from_borders = 0.0007
     # if plot_3d:
@@ -210,15 +227,15 @@ with open(neuron_file) as f:
             else:
                 ax.scatter(xp, yp, zp, color="g")
     if plot_3d:
-        ax.set_xlim([0, max_lim])
-        ax.set_ylim([0, max_lim])
-        ax.set_zlim([0, max_lim])
+        ax.set_xlim([min_lim, max_lim])
+        ax.set_ylim([min_lim, max_lim])
+        ax.set_zlim([min_lim, max_lim])
     elif projection:
         for k in range(3):
-            axs[k].set_xlim([0, max_lim])
-            axs[k].set_ylim([0, max_lim])
+            axs[k].set_xlim([min_lim, max_lim])
+            axs[k].set_ylim([min_lim, max_lim])
     else:
         for k in range(len(z_slice)):
-            axs[k].set_xlim([0, max_lim])
-            axs[k].set_ylim([0, max_lim])
+            axs[k].set_xlim([min_lim, max_lim])
+            axs[k].set_ylim([min_lim, max_lim])
     plt.show()
