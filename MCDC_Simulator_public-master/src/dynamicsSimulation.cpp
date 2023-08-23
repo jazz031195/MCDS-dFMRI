@@ -1541,11 +1541,18 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth)
         // Initial position;
         walker.setRealPosLog(walker.pos_r, 0);
         walker.setVoxPosLog(walker.pos_v, 0);
-
+        bool started_in_soma;
         if(walker.in_soma_index == 0)
+        {
             ++ count_soma_begin;
+            started_in_soma = true;
+        }
         else
+        {
             ++ count_dendrites_begin;
+            started_in_soma = false;
+        }
+            
         for (unsigned t = 1; t <= params.num_steps; t++) // T+1 steps in total (avoid errors)
         {
             // cout << t << endl;
@@ -1597,6 +1604,11 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth)
         if (back_tracking)
         {
             w--;
+            if(started_in_soma)
+                -- count_soma_begin;
+            else
+                -- count_dendrites_begin;
+
             continue;
         }
 
