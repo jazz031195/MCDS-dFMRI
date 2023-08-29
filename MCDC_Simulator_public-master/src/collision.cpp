@@ -13,6 +13,7 @@ bool Collision::doIHaveMorePiorityThan(Collision &coll)
 {
     // if my type is the same
     if (coll.type == type){
+        // if my t is smaller than the t of the collision, I have the priority
         return t < coll.t;
     }
     else{
@@ -36,6 +37,12 @@ void Collision::computeCollisionLocation()
         return;
     }
 }
+
+
+
+
+
+
 
 
 

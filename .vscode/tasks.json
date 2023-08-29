@@ -20,7 +20,6 @@
                 "dyncylindergammadistribution.cpp",
                 "dynamic_sphere.cpp",
                 "Axon.cpp",
-                "axongammadistribution.cpp",
                 "swipeprune.cpp",
                 "dynamicsSimulation.cpp",
                 "gradientwaveform.cpp",

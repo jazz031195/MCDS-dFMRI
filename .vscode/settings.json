@@ -53,6 +53,12 @@
         "tuple": "cpp",
         "typeinfo": "cpp",
         "utility": "cpp",
-        "core": "cpp"
+        "core": "cpp",
+        "cstdarg": "cpp",
+        "algorithm": "cpp",
+        "iterator": "cpp",
+        "memory_resource": "cpp",
+        "random": "cpp",
+        "unordered_set": "cpp"
     }
 }

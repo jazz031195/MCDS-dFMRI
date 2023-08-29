@@ -18,8 +18,8 @@ bool SimErrno::checkSimulationParameters(Parameters &params)
 {
     cout << "\033[1;35m/***************   MC/DC Simulation parameters check out:  ***************/" << SH_DEFAULT << "\n";
 
-    if(params.num_walkers > 1e9){
-        error( " Maximum number of particles is fixed to 1e9.",cout);
+    if(params.num_walkers > 1e11){
+        error( " Maximum number of particles is fixed to 1e11.",cout);
         assert(0);
         return true;
     }
@@ -560,6 +560,7 @@ bool SimErrno::checkCylindersListFile(Parameters &params)
         }
 
         bool first=true;
+        unsigned enum_ = 1;
         for( std::string line; getline( in, line ); )
         {
             if(first) {
@@ -570,21 +571,36 @@ bool SimErrno::checkCylindersListFile(Parameters &params)
                     assert(0);
                     return true;
                 }
+                enum_ += 1;
                 first-=1;continue;
+
+            }
+
+            if (enum_ <= 6){
+                std::vector<std::string> jkr = split_(line,' ');
+                if (jkr.size()!= 1){
+                    error( "line must be only the activation time: ",cout);
+                    in.close();
+                    assert(0);
+                    return true;
+                }
+                enum_ += 1;
+                continue;
+
             }
 
             std::vector<std::string> jkr = split_(line,' ');
 
-            if(jkr.size() != 7 && jkr.size() != 4){
+            if(jkr.size() != 8 && jkr.size() != 5){
                 error( "Cylinder list file is not in the correct format." ,cout);
                 in.close();
                 assert(0);
                 return true;
             }
 
-            if (jkr.size() != 7){
+            if (jkr.size() != 8){
                 z_flag = true;
-                warning("No cylinders orientation inlcluded. Cylinder orientation was set towards the Z direction by default for all cylinders.",cout);
+                warning("No cylinders orientation inlcluded. Dynamic Cylinder orientation was set towards the Z direction by default for all dynamic cylinders.",cout);
             }
             break;
         }
@@ -594,12 +610,17 @@ bool SimErrno::checkCylindersListFile(Parameters &params)
 
         if(!z_flag){
             double x,y,z,ox,oy,oz,r;
+            bool s;
             double scale;
+            double volume_inc_perc, dyn_perc, icvf;
             in >> scale;
-            while (in >> x >> y >> z >> ox >> oy >> oz >> r)
+            in >> volume_inc_perc;
+            in >> dyn_perc;
+            in >> icvf;
+            while (in >> x >> y >> z >> ox >> oy >> oz >> r >> s)
             {
                 if ((x - ox) == 0.0 && (z - oz) == 0.0 && (y - oy) == 0.0){
-                    error( "Cylinder list has wrongly defined cylinders. Invalid orientation: ",cout);
+                    error( "Dynamic Cylinder list has wrongly defined dynamic cylinders. Invalid orientation: ",cout);
                     in.close();
                     assert(0);
                     return true;
@@ -715,6 +736,7 @@ bool SimErrno::checkAxonsListFile(Parameters &params)
         unsigned enum_ = 1;
         for( std::string line; getline( in, line ); )
         {
+            /*
             if(first) {
                 std::vector<std::string> jkr = split_(line,' ');
                 if (jkr.size()!= 1){
@@ -740,9 +762,9 @@ bool SimErrno::checkAxonsListFile(Parameters &params)
                 continue;
 
             }
-
+            */
             std::vector<std::string> jkr = split_(line,' ');
-            if(jkr.size() != 2 && jkr.size() != 5){
+            if(jkr.size() != 8){
                 error( "Axon list file is not in the correct format." ,cout);
                 string mess  = "Length of line : "+ to_string(jkr.size());
                 error( mess,cout);

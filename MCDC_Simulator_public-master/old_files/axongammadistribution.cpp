@@ -1,5 +1,4 @@
 #include "axongammadistribution.h"
-#include "grow_axons.h"
 #include <algorithm> // std::sort
 #include <random>
 #include "simerrno.h"
@@ -31,8 +30,7 @@ std::vector<std::string> _split_line(const std::string &s, char delim) {
 
 AxonGammaDistribution::AxonGammaDistribution (double dyn_perc_,double volume_inc_perc_, unsigned& num_ax, double a, double b,double icvf_,Eigen::Vector3d &min_l, Eigen::Vector3d &max_l, double min_radius_,  double c2_, bool tortuous_, double step_length_, int num_proc_)
 {
-    dyn_perc = dyn_perc_;
-    volume_inc_perc = volume_inc_perc_;
+
     alpha = a;
     beta  = b;
     icvf = icvf_;
@@ -240,7 +238,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
     std::vector<double> radiis(num_obstacles, 0);
 
-    int number_swelling_axons = int(num_obstacles * dyn_perc);
+    int number_swelling_axons = int(num_obstacles);
     std::vector<bool> bool_swell_ax_id(num_obstacles, false);
 
     int tried = 0;
@@ -341,7 +339,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
                 for (unsigned int j =0; j < nbr_threads; j++){
                     get_begin_end_point(Q, D, radiis[i]);
-                    growths.push_back(new Growth (new Axon (id_, Q, D, volume_inc_perc,  bool_swell_ax_id[i], 0.0, radiis[i]), axons, max_limits, tortuous, min_radius));
+                    growths.push_back(new Growth (new Axon (id_, Q, D, radiis[i]), axons, max_limits, tortuous, min_radius));
                     growing_threads.push_back(std::thread(&Growth::GrowInParallel, growths.at(j), D));
 
                 }
@@ -425,7 +423,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
     for (unsigned i = 0; i < axons.size(); i++){
         out << "Axon :" << i << endl;
         for (unsigned s = 0; s < axons[i].spheres.size(); s++){
-            out << axons[i].spheres[s].center[0] << " " << axons[i].spheres[s].center[1] << " " << axons[i].spheres[s].center[2] << " " << axons[i].spheres[s].min_radius << endl;
+            out << axons[i].spheres[s].center[0] << " " << axons[i].spheres[s].center[1] << " " << axons[i].spheres[s].center[2] << " " << axons[i].spheres[s].radius << endl;
         }
     }
 
@@ -443,10 +441,7 @@ void AxonGammaDistribution::createGammaSubstrate(ostream& out)
 
 void AxonGammaDistribution::printSubstrate(ostream &out)
 {
-    double scale = 1;
-    out << scale << endl;
-    out << volume_inc_perc << endl;
-    out << dyn_perc << endl;
+
     out << icvf_current << endl;
     out << min_limits[2] << endl;
     out << max_limits[2] << endl;
@@ -455,7 +450,7 @@ void AxonGammaDistribution::printSubstrate(ostream &out)
     {
         for (unsigned s = 0; s < axons[i].spheres.size(); s++){
 
-            out<< axons[i].spheres[s].center[0]/scale << " " << axons[i].spheres[s].center[1]/scale << " " << axons[i].spheres[s].center[2]/scale<< " " << axons[i].spheres[s].min_radius/scale << " "<<axons[i].spheres[s].swell<<  endl;
+            out<< axons[i].spheres[s].center[0] << " " << axons[i].spheres[s].center[1] << " " << axons[i].spheres[s].center[2]<< " " << axons[i].spheres[s].radius <<  endl;
         }
         out << "Axon: " << axons[i].id << " tortuosity:"<< tortuosities[i] << endl;
     }

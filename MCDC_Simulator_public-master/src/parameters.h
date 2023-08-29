@@ -26,9 +26,7 @@ public:
     unsigned num_steps;                             /*!< T, number of steps                                                         */
     double diffusivity;                             /*!< D, diffusivity constant                                                    */
     double sim_duration;                            /*!< simulation total time                                                      */
-    double dyn_perc;                                /*!< percentage of swelling cylinders                                           */
-    double step_lenght;
-    double volume_inc_perc;  
+    double step_lenght; 
     bool write_traj;                                /*!< flag, write a traj file or not, binary format only                         */
     bool write_txt;                                 /*!< flag, writes DWI output signals in .txt if True                            */
     bool write_bin;                                 /*!< flag, writes the output signal in binary format (True by default)          */
@@ -86,7 +84,7 @@ public:
     double       min_obstacle_radii;                 /*!< Minimum radii (in um) to be sampled                                        */
     double c2;                                      /*!< for Orientation Density Function of axons (instead of kappa)                                                   */
     bool tortuous;
-
+    double concentration;                           /*!< concentration of water particles per mm3                                    */
     bool subdivision_flag           = false;        /*!< flag to check if we have several voxel subdivision to compute the signal   */
     unsigned number_subdivisions    = 0;            /*!< saves the number of subdivisions for an initialzied voxel (needed)         */
     std::string subdivisions_file   = "";           /*!< file with the list of subdivisions coordinates to compute the signal       */

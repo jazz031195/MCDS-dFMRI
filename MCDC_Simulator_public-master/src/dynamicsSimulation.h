@@ -22,7 +22,6 @@
 #include "cylinder.h"
 #include "dynamic_Cylinder.h"
 #include "dynamic_sphere.h"
-#include "axongammadistribution.h"
 #include "Axon.h"
 #include "sentinel.h"
 #include "propagator.h"
@@ -219,7 +218,8 @@ private:
      */
     inline void mapWalkerIntoVoxel(Eigen::Vector3d &amended_step, Collision &colision, double barrier_thickness);
     inline void mapWalkerIntoVoxel_tortuous(Eigen::Vector3d &amended_step, Collision &colision, double barrier_thickness);
-    
+    void mapWalkerIntoVoxel_tortuous_(Eigen::Vector3d& bounced_step, Collision &colision);
+
 
     /*! \fn     getTimeDt
      * \param   last_time_dt saves the last time step;

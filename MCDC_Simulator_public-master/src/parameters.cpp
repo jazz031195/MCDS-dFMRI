@@ -30,8 +30,8 @@ Parameters::Parameters()
     gamma_num_obstacles = 0;
     gamma_icvf          = 0;
     min_obstacle_radii  = 0;
-    volume_inc_perc     = 0;
-    dyn_perc            = 0; 
+    concentration       = 0;
+
 
 
     ini_walkers_file = "";
@@ -72,6 +72,10 @@ void Parameters::readSchemeFile(std::string conf_file_path)
         if(str_dist(tmp,"n") == 0){
             in >> num_walkers;
             walkers_ini = true;
+        }
+
+        else if(str_dist(tmp,"c") == 0){
+            in >> concentration;
         }
 
         else if(str_dist(tmp,"t") == 0){
@@ -686,15 +690,6 @@ void Parameters::readGammaParams(ifstream &in)
 
         else if(str_dist(tmp,"min_radius") <= 1){
             in >> min_obstacle_radii;
-        }
-        else if(str_dist(tmp,"percentage_dynamic_cylinders") <= 1){
-            in >> dyn_perc;
-        }
-        else if(str_dist(tmp,"percentage_dynamic_axons") <= 1){
-            in >> dyn_perc;
-        }
-        else if(str_dist(tmp,"percentage_increase_of_volume") <= 1){
-            in >> volume_inc_perc;
         }
         else if(str_dist(tmp,"icvf") <= 1){
             in >> gamma_icvf;

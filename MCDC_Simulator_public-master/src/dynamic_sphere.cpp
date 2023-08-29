@@ -2,7 +2,6 @@
 #include "constants.h"
 #include <Eigen/Dense>
 #include <iostream>
-#include "simerrno.h"
 using namespace Eigen;
 using namespace std;
 
@@ -11,12 +10,9 @@ using namespace std;
 Dynamic_Sphere::Dynamic_Sphere(const Dynamic_Sphere &sph)
 {
     center = sph.center;
-    radius = sph.radius;
-    swell = sph.swell;
-    volume_inc_perc = sph.volume_inc_perc; 
     ax_id = sph.ax_id;
     id = sph.id;
-    min_radius = sph.min_radius;
+    radius = sph.radius;
 
 }
 

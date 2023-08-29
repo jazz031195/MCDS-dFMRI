@@ -25,8 +25,6 @@ class AxonGammaDistribution
 {
 public:
 
-    double dyn_perc;                                /*!< Percentage of dynamic cylinders that swell                                 */ 
-    double volume_inc_perc;                         /*!< Percentage of Volume increase of cylinders that start to swell       */                                       
     std::vector<Axon> axons;                        /*!< Axon vector                                                            */
     unsigned num_obstacles;                         /*!< number of cylnders fit inside the substrate                                */
     double alpha;                                   /*!< alpha coefficient of the Gamma distribution                                */

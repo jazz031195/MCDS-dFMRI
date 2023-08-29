@@ -1,8 +1,7 @@
-#include "axongammadistribution.h"
+
 #include "grow_axons.h"
 #include <algorithm> // std::sort
 #include <random>
-#include "simerrno.h"
 #include <chrono>
 
 

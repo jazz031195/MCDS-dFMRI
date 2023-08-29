@@ -4,11 +4,8 @@
 
 #include "Eigen/Core"
 #include <vector>
-#include "constants.h"
-#include "simerrno.h"
 #include <iostream>
-#include "Axon.h"
-#include "dynamic_sphere.h"
+
 
 
 

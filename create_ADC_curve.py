@@ -265,19 +265,18 @@ def create_rel_df_(data):
 
 def create_df(straight,no_axial,no_radial, type, icvf_, b1, b0):
         locs = ["intra", "extra"]
-        swell = [0.0, 0.3, 0.5, 0.7, 1.0]
+        swell = [50, 70, 100]
         datas = []
-        for n in range(1):
+        for n in range(4):
             for s in swell:
                 for l in locs:
                     if not straight:
                         if type == "axons":
                             if n == 0:
-                                file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/{type}/Runs/Tortuous/icvf_{icvf_}_swell_{s}_{l}_DWI.txt"
+                                file = f"/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/axons/tortuous/icvf_{icvf_}/icvf_{icvf_}_vox_30_swell_{s}_{l}_DWI.txt"
                             elif n<=10:
-                                file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/{type}/Runs/Tortuous/icvf_{icvf_}_swell_{s}_{l}_rep_0{n-1}_DWI.txt"
-                            else:
-                                file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/{type}/Runs/Tortuous/icvf_{icvf_}_swell_{s}_{l}_rep_{n-1}_DWI.txt"
+                                file = f"/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/axons/tortuous/icvf_{icvf_}/icvf_{icvf_}_vox_30_swell_{s}_{l}_rep_0{n-1}_DWI.txt"
+                        """
                         elif type == "cylinders":
                             if n == 0:
                                 file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/{type}/Runs/icvf_{icvf_}_swell_{s}_{l}_DWI.txt"
@@ -304,25 +303,15 @@ def create_df(straight,no_axial,no_radial, type, icvf_, b1, b0):
                                 file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/{type}/Runs/icvf_{icvf_}_swell_{s}_straight_{l}_rep_{n-1}_DWI.txt"
                         else:
                             print(f"Wrong type : {type}")
+                    """
 
                     if (Path(file)).exists():
 
                         data = get_adc(file, b1, b0)
                         data["repetition"] = [n]*len(data)
-                        data["swelling percentage [%]"] = [s*100]*len(data)
+                        data["swelling percentage [%]"] = [s]*len(data)
                         data["location"] = [l]*len(data)
-                        
-                        if type == "cylinders":
-                            substrate_file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/{type}/Substrates/icvf_{icvf_}_swell_{s}_gamma_distributed_dyn_cylinder_list.txt"
-                            icvf = get_icvf_cylinders(substrate_file)
-                        else:
-                            if not straight:
-                                substrate_file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/{type}/Substrates/icvf_{icvf_}_swell_{s}_gamma_distributed_axon_list.txt"
-                            else:
-                                substrate_file = cur_path + f"/MCDC_Simulator_public-master/instructions/demos/output/{type}/Substrates/icvf_{icvf_}_swell_{s}_straight_gamma_distributed_axon_list.txt"
-                            
-                            icvf = get_icvf_axons(substrate_file)
-                        data["icvf"] = [icvf]*len(data)
+                        data["icvf"] = icvf_
     
                         datas.append(data)
 
@@ -338,8 +327,9 @@ def create_df(straight,no_axial,no_radial, type, icvf_, b1, b0):
              data = data.loc[data["orientations"] != "radial"]
 
         data = data.reset_index()
+ 
         # add weighted adc (taking into account ICVF)
-        data["adc_weighted [um²/ms]"] = list(map(lambda x,y,i : x*i if y == "intra" else x*(1-i) , list(data["adc [um²/ms]"] ), list(data["location"]), list(data["icvf"])))
+        #data["adc_weighted [um²/ms]"] = list(map(lambda x,y,i : x*i if y == "intra" else x*(1-i) , list(data["adc [um²/ms]"] ), list(data["location"]), list(data["icvf"])))
     
         return data
 
@@ -347,8 +337,8 @@ def plot_increase(no_axial, no_radial):
     
     b0 = 0.2
     b1 = 1
-    icvf_=0.7
-
+    icvf_='0.50'
+    """
     type = "cylinders"
     straight = False
 
@@ -358,7 +348,7 @@ def plot_increase(no_axial, no_radial):
     type = "axons"
     straight = True
     data_ax_str = create_df(straight,no_axial,no_radial, type, icvf_, b1, b0)
-
+    """
     type = "axons"
     straight = False
     data_ax = create_df(straight,no_axial,no_radial, type, icvf_, b1, b0)
@@ -366,10 +356,14 @@ def plot_increase(no_axial, no_radial):
     fig, ax = plt.subplots(figsize=(8, 6))
 
     data = data_ax
-    data = create_rel_df(data)
+    print(data)
+    #data = create_rel_df(data)
 
-    sns.regplot(data = data, x = "swelling percentage [%]",y = "Relative_adc", ax= ax, label = "Tortuous overlapping spheres", ci = None)
-    
+    sns.regplot(data = data.loc[data["location"]=="intra"], x = "swelling percentage [%]",y = "adc [um²/ms]",  label = "Tortuous overlapping spheres intra")
+    plt.show()
+    sns.regplot(data = data.loc[data["location"]=="extra"], x = "swelling percentage [%]",y = "adc [um²/ms]", label = "Tortuous overlapping spheres extra")
+    plt.show()
+    """
     data = data_cyl
     data = create_rel_df(data)
     sns.regplot(data = data, x = "swelling percentage [%]",y = "Relative_adc", ax= ax, label = "Straight cylinder", ci = None)
@@ -411,6 +405,7 @@ def plot_increase(no_axial, no_radial):
     else:
         plt.title("MD in Tortuous Axons")
     plt.show()
+    """
 
     
 
@@ -456,4 +451,4 @@ def get_icvf_axons(file):
     icvf = area_intra/total_area
     return icvf
 
-plot_increase(True, False)
+plot_increase(False, False)

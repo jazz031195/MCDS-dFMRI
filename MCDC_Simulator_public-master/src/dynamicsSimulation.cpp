@@ -21,7 +21,7 @@
 #include "collisionsphere.h"
 #include "simerrno.h"
 #include "simulablesequence.h"
-#include "axongammadistribution.h"
+
 
 using namespace Eigen;
 using namespace std;
@@ -346,7 +346,7 @@ void DynamicsSimulation::initSimulation()
     last_time_dt=0;
 
     //to predict time
-    std::time(&start);
+    time(&start);
 
     //Initialize reading file for the walker position (if passed as parameter)
     std::ios_base::iostate exceptionMask = iniPos.exceptions() | std::ios::failbit;
@@ -397,7 +397,7 @@ bool DynamicsSimulation::expectedTimeAndMaxTimeCheck(unsigned w)
     double completed_perc = int((w+1.0)/(params.num_walkers+1.0)*100.0);
     //unsigned tent_num_walkers = params.num_walkers/10 + 1;
 
-    std::time(&now);
+    time(&now);
 
     second_passed = now - start;
 
@@ -545,7 +545,8 @@ void DynamicsSimulation::initWalkerObstacleIndexes()
     // The inner collision sphere has radius l*T*collision_sphere_distance
     float inner_col_dist_factor = step_lenght*sqrt(params.num_steps)*params.collision_sphere_distance;
     //float inner_col_dist_factor = step_lenght*sqrt(params.num_steps);
-    //float inner_col_dist_factor = step_lenght*10;
+    //float inner_col_dist_factor = step_lenght*3;
+    cout << "inner_col_dist_factor: " << inner_col_dist_factor << endl;
     walker.cylinders_collision_sphere.setSmallSphereSize(inner_col_dist_factor);
 
     //std::cout << inner_col_dist_factor << endl;
@@ -716,8 +717,11 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos,int &cyl
         Vector3d pos_temp = {x,y,z};
 
         isintra = isInIntra(pos_temp,cyl_ind,ply_ind, sph_ind,ax_ind, -barrier_tickness);
+
+        
         if(checkIfPosInsideVoxel(pos_temp) && (isintra)){
-            
+            bool isinside = (!(*axons_list)[ax_ind].isNearAxon(walker.pos_v, barrier_tickness));
+            //cout << "isinside :" << isinside <<endl;
             //message = "is inside : "+std::to_string(isintra)+" \n";
             //SimErrno::info(message,cout);
             intra_pos = pos_temp;
@@ -725,6 +729,7 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos,int &cyl
         }
         count++;
     }
+    //cout << "achieved :" << achieved << endl;
 }
 
 void DynamicsSimulation::getAnIntraCellularPositionOnEdge(Vector3d &intra_pos,int &cyl_ind, int& ply_ind, std::vector<int>& sph_ind, int& ax_ind, double z)
@@ -1075,7 +1080,7 @@ bool DynamicsSimulation::isInsideAxons(Vector3d &position, int &ax_id, double di
 {
 
     for (unsigned i = 0; i < axons_list->size() ; i++){
-        bool isinside = axons_list->at(i).isPosInsideAxon(position,  distance_to_be_inside, col_sphere_ids);
+        bool isinside = axons_list->at(i).isPosInsideAxon_(position,  distance_to_be_inside, col_sphere_ids);
         if (isinside){
             ax_id = i;
             return true;
@@ -1245,14 +1250,16 @@ void DynamicsSimulation::startSimulation(SimulableSequence *dataSynth) {
             walker.steps_count++;
             walker.rejection_count = 0;
         }// end for t
-
+        
         if(!back_tracking)
             if(finalPositionCheck()){
+                cout << "Final back tracking" << endl;
                 back_tracking=true;
                 sentinela.illegal_count++;
                 w--;
             }
-
+        
+        
         //If there was an error, we don't compute the signal or write anything.
         if(back_tracking){
             continue;
@@ -1500,40 +1507,41 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
     }
 
     //For each Axon Obstacle
-    
-    if (walker.initial_location== Walker::intra && (*axons_list).size()>0){
-        Vector3d O;
-        walker.getVoxelPosition(O);
-        bool isintra = (*axons_list)[walker.in_ax_index].isPosInsideAxon(O, step_lenght+ barrier_tickness, walker.in_sph_index);
-        if (!isintra){
-            walker.location = Walker::extra;
-            unsigned int bouncing_count_ = 0;
-            sentinela.checkErrors(walker,params,((*plyObstacles_list).size() == 0), bouncing_count_);
-        }
+    if ((*axons_list).size()>0){
+        bool isnearaxon;
 
-        else {
-            (*axons_list)[walker.in_ax_index].checkCollision(walker,  bounced_step,tmax,colision_tmp);
-            handleCollisions(colision,colision_tmp,max_collision_distance,walker.in_ax_index);
+        // intra walkers
+        if (walker.initial_location== Walker::intra){
+            isnearaxon = (*axons_list)[walker.in_ax_index].isWalkerInsideAxon(walker, step_lenght+ barrier_tickness);
+
+            (*axons_list)[walker.in_ax_index].checkCollision(walker,bounced_step,tmax,colision_tmp);
+            handleCollisions(colision,colision_tmp,max_collision_distance,walker.in_ax_index);   
+            
+            if(!isnearaxon){
+                colision.col_location = Collision::outside;
+                walker.location = Walker::extra;
+                
+                //cout << "IS OUTSIDE !" << endl;
+                //assert(0);
+            }
+        }
+        // extra walkers
+        else{
+            //cout << "walker.axons_collision_sphere.small_sphere_list_end :" << walker.axons_collision_sphere.small_sphere_list_end << endl;
+            //for(unsigned int i = 0 ; i < walker.axons_collision_sphere.small_sphere_list_end; i++ ){
+            for(unsigned int i = 0 ; i < axons_list->size(); i++ ){
+                //unsigned index = walker.dyn_cylinders_collision_sphere.collision_list->at(i);
+                unsigned index = i;
+                isnearaxon = (*axons_list)[index].isWalkerInsideAxon(walker, 2*step_lenght+ barrier_tickness);
+                if (isnearaxon){
+                    (*axons_list)[index].checkCollision(walker,bounced_step,tmax,colision_tmp);
+                    handleCollisions(colision,colision_tmp,max_collision_distance,index);  
+                }
+            }
         }
     }
 
 
-    if (walker.initial_location== Walker::extra && (*axons_list).size()>0){  
-        //For each Sphere Obstacle
-      
-        for(unsigned int i = 0 ; i < walker.axons_collision_sphere.small_sphere_list_end; i++ ){
-            
-            unsigned index = walker.axons_collision_sphere.collision_list->at(i);
-            Vector3d O;
-            walker.getVoxelPosition(O);
-            bool isnear = (*axons_list)[index].isPosInsideAxon(O, step_lenght+ barrier_tickness, walker.in_sph_index);
-            if (isnear){
-                (*axons_list)[index].checkCollision(walker,bounced_step,tmax,colision_tmp);
-                handleCollisions(colision,colision_tmp,max_collision_distance,index);     
-            }  
-        } 
-    } 
-     
 
     //For each PLY Obstacles
     for(unsigned int i = 0 ; i < walker.ply_collision_sphere.collision_list->size(); i++ )
@@ -1696,6 +1704,29 @@ void DynamicsSimulation::mapWalkerIntoVoxel_tortuous(Eigen::Vector3d& bounced_st
     }
 }
 
+void DynamicsSimulation::mapWalkerIntoVoxel_tortuous_(Eigen::Vector3d& bounced_step, Collision &colision)
+{
+
+    walker.setRealPosition(walker.pos_r + colision.t*bounced_step);
+    Eigen::Vector3d position;
+    //cout << "mapped " << endl;
+    if (walker.initial_location== Walker::extra){
+        getAnExtraCellularPosition(position);
+    }
+    else{
+        std::vector<int> sph_ids;
+        int cyl_ind;
+        int ply_ind,ax_id;
+        getAnIntraCellularPosition(position, cyl_ind, ply_ind, sph_ids, ax_id);
+        walker.in_ax_index = ax_id;
+        walker.in_sph_index= sph_ids;
+    }
+    walker.setVoxelPosition(position);
+    
+
+}
+
+
 
 void DynamicsSimulation::getTimeDt(double &last_time_dt, double &time_dt, double &l, SimulableSequence* dataSynth, unsigned t, double time_step)
 {
@@ -1787,7 +1818,7 @@ bool DynamicsSimulation::updateWalkerPositionAndHandleBouncing(Vector3d &bounced
         //string message = "mapWalkerIntoVoxel \n";
         //SimErrno::info(message,cout);
         if (params.tortuous){
-            mapWalkerIntoVoxel_tortuous(bounced_step,colision,barrier_tickness);
+            mapWalkerIntoVoxel_tortuous_(bounced_step,colision);
         }
         else{
             mapWalkerIntoVoxel(bounced_step,colision,barrier_tickness);
