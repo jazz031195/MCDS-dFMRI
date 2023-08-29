@@ -56,7 +56,7 @@ def get_psge_data():
     data_dwi["Delta"] = Delta
     data_dwi["delta"] = delta
     data_dwi["TE"] = TE
-    data_dwi["b [um²/ms]"] = pow(data_dwi["G"]*giro*data_dwi["delta"],2) * (data_dwi["Delta"]-data_dwi["delta"]/3)/1000
+    data_dwi["b [ms/um²]"] = pow(data_dwi["G"]*giro*data_dwi["delta"],2) * (data_dwi["Delta"]-data_dwi["delta"]/3)/1000
 
     return data_dwi
 
@@ -69,14 +69,14 @@ def create_data(dwi_path):
     data_dwi = pd.DataFrame()
     for i in range(nb_dir):
         data_dir = data_psge.iloc[i*nb_G:(i+1)*nb_G]
-        b0 = list(data_dir["b [um²/ms]"])[0]
-        Sb0 = list(data_dir.loc[data_dir["b [um²/ms]"]== b0]["DWI"])[0]
+        b0 = list(data_dir["b [ms/um²]"])[0]
+        Sb0 = list(data_dir.loc[data_dir["b [ms/um²]"]== b0]["DWI"])[0]
         signal = list(map(lambda Sb : Sb/Sb0, list(data_dir["DWI"])))
         signal_log = list(map(lambda Sb : np.log(Sb/Sb0), list(data_dir["DWI"])))
-        adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(data_dir["b [um²/ms]"]),list(data_dir["DWI"])))
+        adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(data_dir["b [ms/um²]"]),list(data_dir["DWI"])))
         data_dir["Sb/So"] = signal
         data_dir["log(Sb/So)"] = signal_log
-        data_dir["adc [um²/ms]"] = adc
+        data_dir["adc [ms/um²]"] = adc
         data_dwi = pd.concat([data_dwi, data_dir])
     return data_dwi
 
@@ -139,10 +139,10 @@ def create_df(DWI_folder):
                     sb_so = []
                     for j in range(nb_dir):
                         sb_so.append(dwi_intra.iloc[nb_G*j + i, :]["Sb/So"])
-                        b_lab = dwi_intra.iloc[nb_G*j + i, :]["b [um²/ms]"]
+                        b_lab = dwi_intra.iloc[nb_G*j + i, :]["b [ms/um²]"]
                     mean = np.mean(sb_so)
-                    b_labels = dwi_intra["b [um²/ms]"].unique()
-                    d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_lab, 'case': subcase, 'neuron': neuron}
+                    b_labels = dwi_intra["b [ms/um²]"].unique()
+                    d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [ms/um²]': b_lab, 'case': subcase, 'neuron': neuron}
                     df_avg_dwi = pd.DataFrame(d, index=[i])
                     df_dwi = pd.concat([df_dwi, df_avg_dwi])
 
@@ -158,15 +158,19 @@ def create_df(DWI_folder):
 DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/intra/branch/")
 df_all = pd.DataFrame()
 for case in os.listdir(DWI_folder): 
-    if case != "1_branch":
+    # if case != "1_branch":
+    if not "." in case and case != "1_branch":
+        print(case)
         df_dwi, _ = create_df(DWI_folder / case)
         df_dwi["case"] = case
         df_all = pd.concat([df_all, df_dwi])
 
+print(df_all)
+df_all = df_all[df_all["neuron"] != "n2"] 
 plot = True
 T_labels = df_all['T'].unique()
 N_labels = df_all['N'].unique()
-b_labels = df_all["b [um²/ms]"].unique()
+b_labels = df_all["b [ms/um²]"].unique()
 
 MEDIUM_SIZE = 14
 BIGGER_SIZE = 16
@@ -179,9 +183,9 @@ plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 fig, ax = plt.subplots(1, 1)
-g = sns.violinplot(data=df_all[df_all['b [um²/ms]'] > 0], y='Sb/So', x='b [um²/ms]', hue='case', hue_order=['no_branch', '2_branch'], 
-               ax=ax, kind='box', col='b [um²/ms]', legend=False)
-b_labels = df_all[df_all['b [um²/ms]'] > 0]['b [um²/ms]'].unique()
+g = sns.violinplot(data=df_all[df_all['b [ms/um²]'] > 0], y='Sb/So', x='b [ms/um²]', hue='case', hue_order=['no_branch', '2_branch'], 
+               ax=ax, kind='box', col='b [ms/um²]', legend=False)
+b_labels = df_all[df_all['b [ms/um²]'] > 0]['b [ms/um²]'].unique()
 # sns.move_legend(ax, "upper right")
 ax.set_xticklabels([f'{float(blab):.3f}' for blab in b_labels])
 # check axes and find which is have legend
@@ -194,17 +198,18 @@ for t, l in zip(leg.texts, new_labels):
 
 couples = []
 couples_end = []
-for b in df_all[df_all['b [um²/ms]'] > 0]['b [um²/ms]'].unique():
+for b in df_all[df_all['b [ms/um²]'] > 0]['b [ms/um²]'].unique():
     for i, branch in enumerate(df_all['case'].unique()):
         couples.append((b, branch))            
 for i in range(1, len(couples) + 1):
     if i % 2 == 0:
         couples_end.append((couples[i-2], couples[i-1]))
 
+couples_end
 statannot.add_stat_annotation(
     ax,
-    data=df_all[df_all['b [um²/ms]'] > 0],
-    y='Sb/So', x='b [um²/ms]',
+    data=df_all[df_all['b [ms/um²]'] > 0],
+    y='Sb/So', x='b [ms/um²]',
     hue='case',
     hue_order=['no_branch', '2_branch'],
     box_pairs=couples_end,
@@ -217,21 +222,39 @@ plt.show()
 
 
 
-# plt.figure()
-# df_all['b [um²/ms]'] = df_all['b [um²/ms]'].round(4)
-# ax = sns.catplot(data=df_all[df_all['b [um²/ms]'] > 0], y='Sb/So', x='case', order=['no_branch', '1_branch', '2_branch'],
-#             kind="violin", col='b [um²/ms]', sharey=False, dodge=False, legend=True,
-#             legend_out=True, aspect=0.5)
-# # sns.move_legend(ax, "upper right")
-# ax.set_xticklabels(['0', '1', '2'])
-# ax.set_xlabels('branching')
-# plt.show()
+plt.figure()
+df_all['b [ms/um²]'] = df_all['b [ms/um²]'].round(1)
+ax = sns.catplot(data=df_all[df_all['b [ms/um²]'] > 0], y='Sb/So', x='case', order=['no_branch', '1_branch', '2_branch'],
+            kind="violin", col='b [ms/um²]', sharey=False, dodge=False, legend=True,
+            legend_out=True, aspect=0.5)
+# sns.move_legend(ax, "upper right")
+ax.set_xticklabels(['0', '1', '2'])
+ax.set_xlabels('branching')
+plt.show()
 
 
 
 # # # Check that similar than in R (it is !)
-# # b_val = df_dwi_all['b [um²/ms]'].values
-# # x = df_dwi_all.loc[(df_dwi_all['b [um²/ms]']==b_val[4]) & (df_dwi_all['branch']=='no branching')]['Sb/So'].values
-# # y = df_dwi_all.loc[(df_dwi_all['b [um²/ms]']==b_val[4]) & (df_dwi_all['branch']=='branching')]['Sb/So'].values
+# # b_val = df_dwi_all['b [ms/um²]'].values
+# # x = df_dwi_all.loc[(df_dwi_all['b [ms/um²]']==b_val[4]) & (df_dwi_all['branch']=='no branching')]['Sb/So'].values
+# # y = df_dwi_all.loc[(df_dwi_all['b [ms/um²]']==b_val[4]) & (df_dwi_all['branch']=='branching')]['Sb/So'].values
 # # print(stats.mannwhitneyu(x, y))
 
+grouped_means = df_all.groupby(['b [ms/um²]', 'case'])['Sb/So'].mean()
+
+signal = [] 
+for group, data in grouped_means.groupby(['b [ms/um²]', 'case']):
+    # print(group)
+#     b1   = group[0]
+#     case = group[1]
+#     S1   = data[0]
+    signal.append(data.values[0])
+
+print(signal)
+diff = [] 
+for i in range(len(signal)):
+    if (i % 2 == 0) & (i != 0):
+        print(signal[i-2], signal[i-1])
+        diff.append(signal[i-2] - signal[i-1])
+
+print(diff)

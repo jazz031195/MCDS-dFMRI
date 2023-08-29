@@ -57,7 +57,7 @@ def get_psge_data():
     data_dwi["Delta"] = Delta
     data_dwi["delta"] = delta
     data_dwi["TE"] = TE
-    data_dwi["b [um²/ms]"] = pow(data_dwi["G"]*giro*data_dwi["delta"],2) * (data_dwi["Delta"]-data_dwi["delta"]/3)/1000
+    data_dwi["b [ms/um²]"] = pow(data_dwi["G"]*giro*data_dwi["delta"],2) * (data_dwi["Delta"]-data_dwi["delta"]/3)/1000
 
     return data_dwi
 
@@ -70,14 +70,14 @@ def create_data(dwi_path):
     data_dwi = pd.DataFrame()
     for i in range(nb_dir):
         data_dir = data_psge.iloc[i*nb_G:(i+1)*nb_G]
-        b0 = list(data_dir["b [um²/ms]"])[0]
-        Sb0 = list(data_dir.loc[data_dir["b [um²/ms]"]== b0]["DWI"])[0]
+        b0 = list(data_dir["b [ms/um²]"])[0]
+        Sb0 = list(data_dir.loc[data_dir["b [ms/um²]"]== b0]["DWI"])[0]
         signal = list(map(lambda Sb : Sb/Sb0, list(data_dir["DWI"])))
         signal_log = list(map(lambda Sb : np.log(Sb/Sb0), list(data_dir["DWI"])))
-        adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(data_dir["b [um²/ms]"]),list(data_dir["DWI"])))
+        adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(data_dir["b [ms/um²]"]),list(data_dir["DWI"])))
         data_dir["Sb/So"] = signal
         data_dir["log(Sb/So)"] = signal_log
-        data_dir["adc [um²/ms]"] = adc
+        data_dir["adc [ms/um²]"] = adc
         data_dwi = pd.concat([data_dwi, data_dir])
     return data_dwi
 
@@ -140,10 +140,10 @@ def create_df(DWI_folder):
                     sb_so = []
                     for j in range(nb_dir):
                         sb_so.append(dwi_intra.iloc[nb_G*j + i, :]["Sb/So"])
-                        b_lab = dwi_intra.iloc[nb_G*j + i, :]["b [um²/ms]"]
+                        b_lab = dwi_intra.iloc[nb_G*j + i, :]["b [ms/um²]"]
                     mean = np.mean(sb_so)
-                    b_labels = dwi_intra["b [um²/ms]"].unique()
-                    d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_lab, 'case': subcase, 'neuron': neuron}
+                    b_labels = dwi_intra["b [ms/um²]"].unique()
+                    d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [ms/um²]': b_lab, 'case': subcase, 'neuron': neuron}
                     df_avg_dwi = pd.DataFrame(d, index=[i])
                     df_dwi = pd.concat([df_dwi, df_avg_dwi])
 
@@ -154,7 +154,7 @@ def create_df(DWI_folder):
 
 
 
-branching = "branching"
+branching = "no_branching"
 
 plot = True
 log  = False
@@ -187,10 +187,10 @@ T_labels = df_dwi['T'].unique()
 N_labels = df_dwi['N'].unique()
 # cases    = df_dwi['case'].unique()
 cases = ['soma', 'dendrites', 'soma dendrites', 'soma dendrites ex']
-b_labels = df_dwi["b [um²/ms]"].unique()
+b_labels = df_dwi["b [ms/um²]"].unique()
 
-means = df_dwi.groupby(['N', 'T', 'b [um²/ms]', 'case'])['Sb/So'].mean()
-stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]', 'case'])['Sb/So'].std()
+means = df_dwi.groupby(['N', 'T', 'b [ms/um²]', 'case'])['Sb/So'].mean()
+stds  = df_dwi.groupby(['N', 'T', 'b [ms/um²]', 'case'])['Sb/So'].std()
 N_indices = np.argsort(N_labels.astype(float))
 T_indices = np.argsort(T_labels.astype(float))
 T_labels  = T_labels[T_indices]
@@ -199,10 +199,11 @@ shifts = [0, 0.1, 0.2, 0.25]
 i= 0
 for t_i, t in enumerate(T_labels):
     for n_i, n in enumerate(N_labels):
+        signal_dict = dict()
         for c in cases:
             signal_tmp = []
             err_tmp    = []
-            for group, data in means.groupby(['N', 'T', 'b [um²/ms]', 'case']):
+            for group, data in means.groupby(['N', 'T', 'b [ms/um²]', 'case']):
                 N1   = group[0]
                 T1   = group[1]
                 b1   = group[2]
@@ -215,7 +216,7 @@ for t_i, t in enumerate(T_labels):
                     else:
                         signal_tmp.append(S1)
 
-            for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]', 'case']):
+            for group2, data2 in stds.groupby(['N', 'T', 'b [ms/um²]', 'case']):
                 err = data2[0]
                 N2 = group2[0]
                 T2 = group2[1]
@@ -225,21 +226,26 @@ for t_i, t in enumerate(T_labels):
 
             if plot:
                 fmt_ = '.'
+                c_tmp = c
                 if "soma dendrites ex" in c or "soma dendrites" in c:
                     color = "g"
                     if "soma dendrites ex" in c:
                         fmt_ = '2'
+                        c = "soma dendrites (connected)"
+                    else:
+                        c = "soma dendrites (disconnected)"
                 elif "dendrites" in c:
                     color = "orange"
                 elif "soma" in c:
                     color = "b"
                 b_labels_shifted = [b_lab + shifts[i] for b_lab in b_labels]
+                signal_dict[c_tmp] = signal_tmp
                 if(len(signal_tmp) > 0):
                     if np.sum(np.isnan(err_tmp)) == 0:
                         lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, {c}", fmt=fmt_, color=color)
                     else:
                         lines = ax.errorbar(b_labels_shifted, signal_tmp, label=f"N {n}, {c}", fmt=fmt_, color=color)
-                    ax.set_xlabel('b [um²/ms]')
+                    ax.set_xlabel('b [ms/um²]')
                     if log:
                         ax.set_ylabel('ln(S/S0)')
                     else:
@@ -247,17 +253,19 @@ for t_i, t in enumerate(T_labels):
                     ax.legend(loc=1)
                     ax.set_ylim([y_lim_min, y_lim_max])
                 i = i + 1
-
+print("SD vs SDE", np.array(signal_dict['soma dendrites']) - np.array(signal_dict['soma dendrites ex']))
+print("SD vs D", np.array(signal_dict['soma dendrites']) - np.array(signal_dict['dendrites']))
+print("SDE vs D", np.array(signal_dict['soma dendrites ex']) - np.array(signal_dict['dendrites']))
 # fig, ax = plt.subplots(1, 1)
-# # df_dwi_wt_0 = df_dwi[df_dwi['b [um²/ms]'] > 0]
-# # b_labels = df_dwi_wt_0['b [um²/ms]'].unique()
-# sns.violinplot(data=df_dwi, y='Sb/So', x='b [um²/ms]', hue='case', hue_order=['soma', 'dendrites', 'soma dendrites', 'soma dendrites ex'], ax=ax)
+# # df_dwi_wt_0 = df_dwi[df_dwi['b [ms/um²]'] > 0]
+# # b_labels = df_dwi_wt_0['b [ms/um²]'].unique()
+# sns.violinplot(data=df_dwi, y='Sb/So', x='b [ms/um²]', hue='case', hue_order=['soma', 'dendrites', 'soma dendrites', 'soma dendrites ex'], ax=ax)
 # sns.move_legend(ax, "upper right")
 # ax.set_xticklabels([f'{float(blab):.3f}' for blab in b_labels])
 
 # couples = []
 # couples_end = []
-# for b in df_dwi['b [um²/ms]'].unique():
+# for b in df_dwi['b [ms/um²]'].unique():
 #     for i, branch in enumerate(df_dwi['case'].unique()):
 #         couples.append((b, branch))    
       
@@ -273,7 +281,7 @@ for t_i, t in enumerate(T_labels):
 # statannot.add_stat_annotation(
 #     ax,
 #     data=df_dwi,
-#     y='Sb/So', x='b [um²/ms]',
+#     y='Sb/So', x='b [ms/um²]',
 #     hue='case',
 #     hue_order=['soma', 'dendrites', 'soma dendrites', 'soma dendrites ex'],
 #     box_pairs=couples_end,
@@ -307,7 +315,7 @@ if plot:
     else:
         l_neurite       = 240e-6 # m
         volume_neurites = nb_neurites * np.pi*r_neurite**2*l_neurite # in m³
-    volume_neurites = 8782.71 #5.64898e-06 (2 branching)
+    volume_neurites = 3767.95 #8782.71 #5.64898e-06 (2 branching)
     volume_soma     = 4/3 * np.pi * r_soma**3 # in m³
     volume_soma     = volume_soma * 1e18
     volume_neuron   = volume_neurites + volume_soma
