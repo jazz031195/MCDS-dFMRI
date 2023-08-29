@@ -54,7 +54,7 @@ def get_psge_data():
     data_dwi["Delta"] = Delta
     data_dwi["delta"] = delta
     data_dwi["TE"] = TE
-    data_dwi["b [um²/ms]"] = pow(data_dwi["G"]*giro*data_dwi["delta"],2)*(data_dwi["Delta"]-data_dwi["delta"]/3)/1000
+    data_dwi["b [ms/um²]"] = pow(data_dwi["G"]*giro*data_dwi["delta"],2)*(data_dwi["Delta"]-data_dwi["delta"]/3)/1000
 
     return data_dwi
 
@@ -70,11 +70,11 @@ def create_data(dwi_path):
     #data_1 = data_psge.loc[data_psge['x'] != x1]
     datas = [data_x,data_y,data_z]
     for i in range(len(datas)):
-        b0 = list(datas[i]["b [um²/ms]"])[0]
-        Sb0 = list(datas[i].loc[datas[i]["b [um²/ms]"]== b0]["DWI"])[0]
+        b0 = list(datas[i]["b [ms/um²]"])[0]
+        Sb0 = list(datas[i].loc[datas[i]["b [ms/um²]"]== b0]["DWI"])[0]
         signal = list(map(lambda Sb : Sb/Sb0, list(datas[i]["DWI"])))
         signal_log = list(map(lambda Sb : np.log(Sb/Sb0), list(datas[i]["DWI"])))
-        adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(datas[i]["b [um²/ms]"]),list(datas[i]["DWI"])))
+        adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(datas[i]["b [ms/um²]"]),list(datas[i]["DWI"])))
         datas[i]["Sb/So"] = signal
         datas[i]["log(Sb/So)"] = signal_log
         datas[i]["adc [um²/ms]"] = adc
@@ -145,10 +145,10 @@ def create_df(DWI_folder, T, N):
                 sb_so = []
                 for j in range(nb_dir):
                     sb_so.append(dwi_intra.iloc[nb_G*j + i, :]["Sb/So"])
-                    b_lab = dwi_intra.iloc[nb_G*j + i, :]["b [um²/ms]"]
+                    b_lab = dwi_intra.iloc[nb_G*j + i, :]["b [ms/um²]"]
                 mean = np.mean(sb_so)
-                b_labels = dwi_intra["b [um²/ms]"].unique()
-                d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_lab}
+                b_labels = dwi_intra["b [ms/um²]"].unique()
+                d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [ms/um²]': b_lab}
                 df_avg_dwi = pd.DataFrame(d, index=[i])
                 df_dwi = pd.concat([df_dwi, df_avg_dwi])
     return df_dwi, df_crossings
@@ -168,9 +168,9 @@ N = str(10000)
 df_dwi, _ = create_df(DWI_folder, T, N)
 T_labels = T
 N_labels = [str(N)]
-b_labels = df_dwi["b [um²/ms]"].unique()
-means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
-stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
+b_labels = df_dwi["b [ms/um²]"].unique()
+means = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].mean()
+stds  = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].std()
 
 
 if plot:
@@ -181,7 +181,7 @@ for t_i, t in enumerate(T_labels):
         signal_tmp = []
         err_tmp    = []
         nb_crossings_tmp = []
-        for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
+        for group, data in means.groupby(['N', 'T', 'b [ms/um²]']):
             N1 = group[0]
             T1 = group[1]
             b1 = group[2]
@@ -190,7 +190,7 @@ for t_i, t in enumerate(T_labels):
             if t==T1 and n==N1:
                 signal_tmp.append(S1)
         
-        for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
+        for group2, data2 in stds.groupby(['N', 'T', 'b [ms/um²]']):
             err = data2[0]
             N2 = group2[0]
             T2 = group2[1]
@@ -255,12 +255,12 @@ if plot:
         # DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulator_public-master/instructions/demos/output/neurons/mesh/") / mesh
         # N = str(5000)
         # df_dwi, _ = create_df(DWI_folder, T, N)
-        # means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
-        # stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
+        # means = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].mean()
+        # stds  = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].std()
         
         # signal_tmp = []
         # err_tmp    = []
-        # for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
+        # for group, data in means.groupby(['N', 'T', 'b [ms/um²]']):
         #     N1 = group[0]
         #     T1 = group[1]
         #     b1 = group[2]
@@ -268,7 +268,7 @@ if plot:
         #     if T1 == '5000':
         #         signal_tmp.append(S1)
         
-        # for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
+        # for group2, data2 in stds.groupby(['N', 'T', 'b [ms/um²]']):
         #     err = data2.values[0]
         #     T2 = group2[1]
         #     if T2 == '5000':

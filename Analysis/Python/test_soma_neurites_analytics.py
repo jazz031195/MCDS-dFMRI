@@ -55,7 +55,7 @@ def get_psge_data():
     data_dwi["Delta"] = Delta
     data_dwi["delta"] = delta
     data_dwi["TE"] = TE
-    data_dwi["b [um²/ms]"] = pow(data_dwi["G"]*giro*data_dwi["delta"],2) * (data_dwi["Delta"]-data_dwi["delta"]/3)/1000
+    data_dwi["b [ms/um²]"] = pow(data_dwi["G"]*giro*data_dwi["delta"],2) * (data_dwi["Delta"]-data_dwi["delta"]/3)/1000
 
     return data_dwi
 
@@ -68,11 +68,11 @@ def create_data(dwi_path):
     data_dwi = pd.DataFrame()
     for i in range(nb_dir):
         data_dir = data_psge.iloc[i*nb_G:(i+1)*nb_G]
-        b0 = list(data_dir["b [um²/ms]"])[0]
-        Sb0 = list(data_dir.loc[data_dir["b [um²/ms]"]== b0]["DWI"])[0]
+        b0 = list(data_dir["b [ms/um²]"])[0]
+        Sb0 = list(data_dir.loc[data_dir["b [ms/um²]"]== b0]["DWI"])[0]
         signal = list(map(lambda Sb : Sb/Sb0, list(data_dir["DWI"])))
         signal_log = list(map(lambda Sb : np.log(Sb/Sb0), list(data_dir["DWI"])))
-        adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(data_dir["b [um²/ms]"]),list(data_dir["DWI"])))
+        adc = list(map(lambda b,Sb : -np.log(Sb/Sb0)/(b-b0) if b!= b0 else np.nan, list(data_dir["b [ms/um²]"]),list(data_dir["DWI"])))
         data_dir["Sb/So"] = signal
         data_dir["log(Sb/So)"] = signal_log
         data_dir["adc [um²/ms]"] = adc
@@ -128,10 +128,10 @@ def create_df(DWI_folder):
                 sb_so = []
                 for j in range(nb_dir):
                     sb_so.append(dwi_intra.iloc[nb_G*j + i, :]["Sb/So"])
-                    b_lab = dwi_intra.iloc[nb_G*j + i, :]["b [um²/ms]"]
+                    b_lab = dwi_intra.iloc[nb_G*j + i, :]["b [ms/um²]"]
                 mean = np.mean(sb_so)
-                b_labels = dwi_intra["b [um²/ms]"].unique()
-                d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [um²/ms]': b_lab}
+                b_labels = dwi_intra["b [ms/um²]"].unique()
+                d = {'loc': "intra", 'N': n, 'T': t, 'Sb/So': mean, 'b [ms/um²]': b_lab}
                 df_avg_dwi = pd.DataFrame(d, index=[i])
                 df_dwi = pd.concat([df_dwi, df_avg_dwi])
 
@@ -153,10 +153,10 @@ df_dwi, df_crossings = create_df(DWI_folder)
 
 T_labels = df_dwi['T'].unique()
 N_labels = df_dwi['N'].unique()
-b_labels = df_dwi["b [um²/ms]"].unique()
+b_labels = df_dwi["b [ms/um²]"].unique()
 
-means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
-stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
+means = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].mean()
+stds  = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].std()
 
 N_indices = np.argsort(N_labels.astype(float))
 T_indices = np.argsort(T_labels.astype(float))
@@ -176,7 +176,7 @@ for t_i, t in enumerate(T_labels):
     for n_i, n in enumerate(N_labels):
         signal_tmp = []
         err_tmp    = []
-        for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
+        for group, data in means.groupby(['N', 'T', 'b [ms/um²]']):
             N1 = group[0]
             T1 = group[1]
             b1 = group[2]
@@ -188,7 +188,7 @@ for t_i, t in enumerate(T_labels):
                 else:
                     signal_tmp.append(S1)
 
-        for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
+        for group2, data2 in stds.groupby(['N', 'T', 'b [ms/um²]']):
             err = data2[0]
             N2 = group2[0]
             T2 = group2[1]
@@ -202,7 +202,7 @@ for t_i, t in enumerate(T_labels):
                     lines = ax.errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}, soma only", fmt='.')
                 else:
                     lines = ax.errorbar(b_labels_shifted, signal_tmp, label=f"N {n}, soma only", fmt='.')
-                ax.set_xlabel('b [um²/ms]')
+                ax.set_xlabel('b [ms/um²]')
                 if log:
                     ax.set_ylabel('ln(S/S0)')
                 else:
@@ -217,9 +217,9 @@ df_dwi, df_crossings = create_df(DWI_folder)
 
 T_labels = df_dwi['T'].unique()
 N_labels = df_dwi['N'].unique()
-b_labels = df_dwi["b [um²/ms]"].unique()
-means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
-stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
+b_labels = df_dwi["b [ms/um²]"].unique()
+means = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].mean()
+stds  = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].std()
 
 N_indices = np.argsort(N_labels.astype(float))
 T_indices = np.argsort(T_labels.astype(float))
@@ -231,7 +231,7 @@ for t_i, t in enumerate(T_labels):
         signal_tmp = []
         err_tmp    = []
         nb_crossings_tmp = []
-        for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
+        for group, data in means.groupby(['N', 'T', 'b [ms/um²]']):
             N1 = group[0]
             T1 = group[1]
             b1 = group[2]
@@ -242,7 +242,7 @@ for t_i, t in enumerate(T_labels):
             else:
                 signal_tmp.append(S1)
         
-        for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
+        for group2, data2 in stds.groupby(['N', 'T', 'b [ms/um²]']):
             err = data2[0]
             N2 = group2[0]
             T2 = group2[1]
@@ -266,9 +266,9 @@ df_dwi, df_crossings = create_df(DWI_folder)
 
 T_labels = df_dwi['T'].unique()
 N_labels = df_dwi['N'].unique()
-b_labels = df_dwi["b [um²/ms]"].unique()
-means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
-stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
+b_labels = df_dwi["b [ms/um²]"].unique()
+means = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].mean()
+stds  = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].std()
 
 
 N_indices = np.argsort(N_labels.astype(float))
@@ -282,7 +282,7 @@ for t_i, t in enumerate(T_labels):
         signal_tmp = []
         err_tmp    = []
         nb_crossings_tmp = []
-        for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
+        for group, data in means.groupby(['N', 'T', 'b [ms/um²]']):
             N1 = group[0]
             T1 = group[1]
             b1 = group[2]
@@ -293,7 +293,7 @@ for t_i, t in enumerate(T_labels):
             else:
                 signal_tmp.append(S1)
 
-        for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
+        for group2, data2 in stds.groupby(['N', 'T', 'b [ms/um²]']):
             err = data2[0]
             N2 = group2[0]
             T2 = group2[1]
@@ -316,9 +316,9 @@ df_dwi, df_crossings = create_df(DWI_folder)
 
 T_labels = df_dwi['T'].unique()
 N_labels = df_dwi['N'].unique()
-b_labels = df_dwi["b [um²/ms]"].unique()
-means = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].mean()
-stds  = df_dwi.groupby(['N', 'T', 'b [um²/ms]'])['Sb/So'].std()
+b_labels = df_dwi["b [ms/um²]"].unique()
+means = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].mean()
+stds  = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].std()
 
 N_indices = np.argsort(N_labels.astype(float))
 T_indices = np.argsort(T_labels.astype(float))
@@ -330,7 +330,7 @@ for t_i, t in enumerate(T_labels):
         signal_tmp = []
         err_tmp    = []
         nb_crossings_tmp = []
-        for group, data in means.groupby(['N', 'T', 'b [um²/ms]']):
+        for group, data in means.groupby(['N', 'T', 'b [ms/um²]']):
             N1 = group[0]
             T1 = group[1]
             b1 = group[2]
@@ -341,7 +341,7 @@ for t_i, t in enumerate(T_labels):
             else:
                 signal_tmp.append(S1)
 
-        for group2, data2 in stds.groupby(['N', 'T', 'b [um²/ms]']):
+        for group2, data2 in stds.groupby(['N', 'T', 'b [ms/um²]']):
             err = data2[0]
             N2 = group2[0]
             T2 = group2[1]
