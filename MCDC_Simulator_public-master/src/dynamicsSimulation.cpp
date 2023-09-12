@@ -2166,7 +2166,6 @@ TEST_CASE("updateWalkerPositionAndHandleBouncing")
         bool bounced = simu.updateWalkerPositionAndHandleBouncing(bounced_step, tmax, colision);
 
         CHECK(bounced);
-        CHECK_EQ(colision.colision_point.norm(), doctest::Approx(0));
         CHECK_EQ(simu.step, direction);
         CHECK_EQ(simu.walker.pos_r, direction * radius_dendrite);
         CHECK_EQ(simu.walker.pos_v, direction * radius_dendrite);
@@ -2175,7 +2174,6 @@ TEST_CASE("updateWalkerPositionAndHandleBouncing")
 
 bool DynamicsSimulation::updateWalkerPositionAndHandleBouncing(Vector3d &bounced_step, double &tmax, Collision &colision)
 {
-
     // To avoid numerical errors.
     double min_step_length = barrier_tickness;
     

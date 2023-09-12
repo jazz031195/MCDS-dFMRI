@@ -255,7 +255,8 @@ bool Neuron::isPosInsideNeuron(Eigen::Vector3d const &position, double const &di
     // Temporary variables to store the index before knowing if the walker is in the soma or in a dendrite
     int in_dendrite_index_tmp, in_subbranch_index_tmp, in_soma_index_tmp;
     in_dendrite_index_tmp = in_subbranch_index_tmp = in_soma_index_tmp = -1;
-    vector<int> in_sph_index_tmp, in_sph_index_tmp_tmp;
+    vector<int> in_sph_index_tmp, in_sph_index_tmp_tmp = {-1};
+    in_sph_index.clear();
     
     // When the walker is in several subbranches, we should find the sphere in which 
     // the walker is the closest from the center
@@ -296,7 +297,6 @@ bool Neuron::isPosInsideNeuron(Eigen::Vector3d const &position, double const &di
     in_subbranch_index = in_subbranch_index_tmp;
     in_sph_index       = in_sph_index_tmp;
     in_soma_index      = in_soma_index_tmp; 
-
     // If we are both in soma & dendrite
     if(in_soma_index_tmp == 0 && in_dendrite_index_tmp >=0)
     {
@@ -449,6 +449,7 @@ vector<int> Neuron::isNearDendrite(Vector3d const &position, double const &dista
         for (unsigned int axis = 0; axis < 3; ++axis)
         {
             Vector2d axis_limits = dendrites[i].projections.axon_projections[axis];
+
             if ((position[axis] >= axis_limits[0] - distance_to_be_inside) &&
                 (position[axis] <= axis_limits[1] + distance_to_be_inside))
             {
@@ -473,6 +474,7 @@ bool Neuron::checkCollision(Walker &walker, Vector3d const &step_dir, double con
     
     int in_soma     = walker.in_soma_index;
     int in_dendrite = walker.in_dendrite_index;
+    int in_sub      = walker.in_subbranch_index;
     // If in the soma, check Collision with soma
     if(walker.in_soma_index == 0)
     {
@@ -635,7 +637,6 @@ bool Neuron::checkCollision_branching(Walker &walker, Dynamic_Sphere* const& sph
     double c;
     // Find the intersection with the sphere in which the walker is
     bool intersect = intersection_sphere_vector(t1, t2, *sphere, step, step_lenght, O, c);
-
     // Technically, it should always intersect (TODO: [ines] check)
     if (intersect)
     {
@@ -693,7 +694,6 @@ bool Neuron::checkCollision_branching(Walker &walker, Dynamic_Sphere* const& sph
         double dist_to_collision = dist_intersections[0];
         colision.t = fmin(dist_to_collision, step_lenght);
         colision.colision_point = walker.pos_v + colision.t * step;
-        
         // If the distance is <= step_length => there is a collision
         if (dist_to_collision <= step_lenght + barrier_tickness)
         {

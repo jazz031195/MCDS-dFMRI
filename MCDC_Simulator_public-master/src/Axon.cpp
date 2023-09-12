@@ -179,15 +179,13 @@ bool Axon::isPosInsideAxon(Vector3d const& position,  double const& distance_to_
     double rad;
     sphere_ids.clear();
     distances.clear();
-
     // if position is in box with axon inside
     if(isNearAxon(position, distance_to_be_inside)){
         // find all projections in between the two projections of the edges
 
-        rad = radius+1000*barrier_tickness + distance_to_be_inside;
+        rad = radius + 1000 * barrier_tickness + distance_to_be_inside;
         
         coliding_projs = projections.find_collisions_all_axes(position, rad, id, distance_to_be_inside);
-
         if (coliding_projs.size() == 3){ 
 
             // for all coliding objects in x 
@@ -208,6 +206,7 @@ bool Axon::isPosInsideAxon(Vector3d const& position,  double const& distance_to_
                 } 
             }
         }
+
         if (sphere_ids.size() > 0){
             double min_dist_to_center = 1000;
             int min_id = 1000;
@@ -218,7 +217,6 @@ bool Axon::isPosInsideAxon(Vector3d const& position,  double const& distance_to_
                     min_dist_to_center = distances[sph_id];
                     min_id = sphere_ids[sph_id];
                 }
-                    
             }
             sphere_ids.clear();
             sphere_ids.push_back(min_id);

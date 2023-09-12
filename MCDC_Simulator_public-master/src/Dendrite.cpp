@@ -12,7 +12,7 @@ int Dendrite::nb_dendrites = 0;
 
 Dendrite::Dendrite()
 {
-    id          = nb_dendrites++;
+    id = nb_dendrites++;
 }
 
 Dendrite::Dendrite(std::vector<Axon> const& subbranches_):Dendrite()
@@ -22,8 +22,8 @@ Dendrite::Dendrite(std::vector<Axon> const& subbranches_):Dendrite()
 
 Dendrite::Dendrite(Dendrite const& dendrite)
 {
-    subbranches = dendrite.subbranches;
-    projections = dendrite.projections;
+    subbranches     = dendrite.subbranches;
+    projections     = dendrite.projections;
     projections_max = dendrite.projections_max;
 }
 
@@ -107,6 +107,7 @@ void Dendrite::add_projection()
             // double max_axis_projection_max = 0;
             for(size_t b=0; b < subbranches.size(); b++)
             {        
+                // TODO [ines] : why doesn't it work ??
                 // double min_axis_projection_tmp     = subbranches[0].projections.axon_projections[axis][0];
                 // double min_axis_projection_max_tmp = subbranches[0].projections_max.axon_projections[axis][0];
                 // if(min_axis_projection_tmp < min_axis_projection)
@@ -120,22 +121,27 @@ void Dendrite::add_projection()
                 //     max_axis_projection = max_axis_projection_tmp;
                 // if(max_axis_projection_max_tmp > max_axis_projection_max)
                 //     max_axis_projection_max = max_axis_projection_max_tmp;
-                int size = subbranches[b].spheres.size()-1;
-                double center0 = subbranches[b].spheres[0].center[axis];
+                
+                // Calculate the box around each subbranch
+                int size         = subbranches[b].spheres.size() - 1;
+                double center0   = subbranches[b].spheres[0].center[axis];
                 double centerEnd = subbranches[b].spheres[size].center[axis];
-                double radius = subbranches[b].spheres[size].radius;
-                double eps    = 0.1*radius;
+                double radius    = subbranches[b].spheres[size].radius;
+                // Take a margin to account for approximation errors
+                double eps       = 2 * radius;
 
+                // Find the smallest projection of all subbranches
                 if(min_axis_projection > center0)
                     min_axis_projection = center0 - radius - eps;
                 if(min_axis_projection > centerEnd)
                     min_axis_projection = centerEnd - radius - eps;
-
+                // Find the largest projection of all subbranches
                 if(max_axis_projection < center0)
                     max_axis_projection = center0 + radius + eps;
                 if(max_axis_projection < centerEnd)
                     max_axis_projection = centerEnd + radius + eps;
             }
+        // The box around the whole dendrite is between the min & max projections
         projections.axon_projections.push_back({min_axis_projection, max_axis_projection});  
         projections_max.axon_projections.push_back({min_axis_projection, max_axis_projection}); 
     }

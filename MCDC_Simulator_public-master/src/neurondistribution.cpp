@@ -177,9 +177,9 @@ void NeuronDistribution::growDendrites(Neuron& neuron)
                 for(int b=0; b < nb_branching; ++b)
                 {
                     // Length of a segment before branching
-                    double l_segment = 240e-3 / nb_branching;//generateLengthSegment();
+                    double l_segment = 240e-3 / double(nb_branching);//generateLengthSegment();
                     // Number of spheres per segment
-                    int nb_spheres = l_segment / (sphere_radius/4); //Let's assume that dendrites have a radius of 0.5microns so far
+                    int nb_spheres   = l_segment / (sphere_radius / 4.0); //Let's assume that dendrites have a radius of 0.5microns so far
                     vector<int> proximal_branch;
                     vector<int> distal_branch;
                     if(b == 0)
@@ -262,7 +262,7 @@ std::tuple<double, double>  phi_theta_to_target (Eigen::Vector3d parent_dir)
     // varies between 0 and pi
     if (vector_to_target[2] == 0)
     {
-        phi_to_target = M_PI / 2;
+        phi_to_target = M_PI / 2.0;
     }
     else if (vector_to_target == Eigen::Vector3d({0, 0, -1}))
     {
@@ -303,9 +303,9 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
     for(int sphere_id=0; sphere_id < nb_spheres ; ++sphere_id)
     {
         if(branch_id == 0)
-            center = sphere_id * parent.direction * sphere_radius/4 + parent.origin;
+            center = double(sphere_id) * parent.direction * sphere_radius / 4.0 + parent.origin;
         else
-            center = (sphere_id + 1) * parent.direction * sphere_radius/4 + parent.origin;
+            center = double(sphere_id + 1) * parent.direction * sphere_radius / 4.0 + parent.origin;
 
         if(isInVoxel(center, min_distance_from_border))
         {
@@ -366,8 +366,8 @@ NeuronDistribution::branching_pt NeuronDistribution::growSubbranch(Dendrite& den
 
     random_device dev;
     mt19937 rng(dev());
-    normal_distribution<float> theta_distr(M_PI/4, M_PI/16);
-    float delta_theta = theta_distr(rng) / 2;
+    normal_distribution<float> theta_distr(M_PI / 4.0, M_PI / 16.0);
+    float delta_theta = theta_distr(rng) / 2.0;
     float theta = theta_to_target + delta_theta;
     float delta_x, delta_y, delta_z;
     vector<Vector3d> children_dir;

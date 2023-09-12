@@ -88,6 +88,7 @@
         "unordered_set": "cpp",
         "variant": "cpp",
         "__nullptr": "cpp",
-        "__string": "cpp"
+        "__string": "cpp",
+        "alignedvector3": "cpp"
     }
 }

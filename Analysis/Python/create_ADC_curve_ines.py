@@ -17,7 +17,7 @@ import math
 
 cur_path = os.getcwd()
 giro = 2.6751525e8 #Gyromagnetic radio given in rad/(ms*T)
-scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_21_dir.scheme"
+scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_21_dir_12_b.scheme"
 # scheme_file = cur_path + "/MCDC_Simulator_public-master/docs/scheme_files/PGSE_sample_scheme_new.scheme"
 icvf = 0.38
 def get_dwi_array(dwi_path):
@@ -151,13 +151,11 @@ DWI_folder = Path("/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/MCDC_Simulato
 
 plot = True
 df_dwi, df_crossings = create_df(DWI_folder)
-print(df_dwi)
-df_dwi.to_csv('/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/Analysis/data/21_dir_benchmark_' + branching)
+# df_dwi.to_csv('/home/localadmin/Documents/MCDS_code/MCDS-dFMRI/Analysis/data/21_dir_benchmark_' + branching)
 
 T_labels = df_dwi['T'].unique()
 N_labels = df_dwi['N'].unique()
 b_labels = df_dwi["b [ms/um²]"].unique()
-print(b_labels)
 means = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].mean()
 stds  = df_dwi.groupby(['N', 'T', 'b [ms/um²]'])['Sb/So'].std()
 
@@ -211,10 +209,13 @@ for t_i, t in enumerate(T_labels):
         heatmaps_stds[n_i, t_i] = np.mean(err_tmp)
         heatmaps_crossings[n_i, t_i] = np.mean(nb_crossings_tmp)
 
-        if np.sum(np.isnan(err_tmp)) == 0 and plot:
+        if plot:
             b_labels_shifted = [b_lab + n_i*0.05*2 for b_lab in b_labels]
             if(len(signal_tmp) > 0):
-                lines = ax[t_i].errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}", fmt='.')
+                if np.sum(np.isnan(err_tmp)) == 0:
+                    lines = ax[t_i].errorbar(b_labels_shifted, signal_tmp, yerr=err_tmp, label=f"N {n}", fmt='.')
+                else:
+                    lines = ax[t_i].errorbar(b_labels_shifted, signal_tmp, label=f"N {n}", fmt='.')
                 # lines[0].set_linestyle(LINE_STYLES[i%NUM_STYLES])
                 ax[t_i].set_xlabel('b values [um²/ms]')
                 ax[t_i].set_ylabel('S/S0')
@@ -224,7 +225,7 @@ for t_i, t in enumerate(T_labels):
 # Analytical solutions & Mesh
 if plot:
     # Analytical solutions
-    G         = np.array([0, 0.015, 0.034, 0.048, 0.059, 0.107]) # in T/m
+    G         = np.array([0, 0.015, 0.034, 0.048, 0.059, 0.068, 0.076, 0.083, 0.090, 0.096, 0.102, 0.107]) # in T/m
     Delta     = np.array([0.05] * G.size)  # in s
     delta     = np.array([0.0165] * G.size)# in s
     TE        = np.array([0.067] * G.size) # in s
