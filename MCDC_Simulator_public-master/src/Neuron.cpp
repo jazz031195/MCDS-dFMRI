@@ -643,7 +643,7 @@ bool Neuron::checkCollision_branching(Walker &walker, Dynamic_Sphere* const& sph
         all_cs.push_back(c);
         
         // if the collision are too close or negative.
-        if (Walker::bouncing)
+        if (walker.status == Walker::bouncing)
         {
             if (t1 >= EPS_VAL)
             {
